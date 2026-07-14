@@ -28,6 +28,27 @@ function json(body: unknown, status = 200) {
   })
 }
 
+async function crearPipeline(admin: any, companyId: string): Promise<boolean> {
+  const { data: pipeline, error: pipeError } = await admin
+    .from('pipelines')
+    .insert({ company_id: companyId, name: 'Pipeline por defecto', description: 'Pipeline principal de ventas' })
+    .select('id')
+    .single()
+  if (pipeError || !pipeline) return false
+
+  const stages = [
+    { pipeline_id: pipeline.id, name: 'Nuevo', position: 0, probability: 10, color: '#6366f1' },
+    { pipeline_id: pipeline.id, name: 'Contactado', position: 1, probability: 25, color: '#3b82f6' },
+    { pipeline_id: pipeline.id, name: 'Propuesta', position: 2, probability: 50, color: '#f59e0b' },
+    { pipeline_id: pipeline.id, name: 'Negociacion', position: 3, probability: 75, color: '#f97316' },
+    { pipeline_id: pipeline.id, name: 'Cerrado ganado', position: 4, probability: 100, color: '#22c55e' },
+    { pipeline_id: pipeline.id, name: 'Cerrado perdido', position: 5, probability: 0, color: '#ef4444' },
+  ]
+
+  const { error: stagesError } = await admin.from('stages').insert(stages)
+  return !stagesError
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -38,7 +59,6 @@ Deno.serve(async (req: Request) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
   // Cliente admin (service_role)
   const admin = createClient(supabaseUrl, serviceKey, {
@@ -125,11 +145,11 @@ Deno.serve(async (req: Request) => {
     return json({ error: `Error al crear la empresa: ${companyError?.message}` }, 500)
   }
 
-  // 5. Crear el usuario (requiere verificación de email)
+  // 5. Crear el usuario (auto-confirmado)
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email,
     password,
-    email_confirm: false,
+    email_confirm: true,
   })
 
   if (createError || !created?.user) {
@@ -148,24 +168,22 @@ Deno.serve(async (req: Request) => {
     return json({ error: `Error al asignar rol: ${roleError.message}` }, 500)
   }
 
-  // 7. Disparar el email de verificación
-  try {
-    await fetch(`${supabaseUrl}/auth/v1/resend`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: anonKey,
-        Authorization: `Bearer ${serviceKey}`,
-      },
-      body: JSON.stringify({ type: 'signup', email }),
-    })
-  } catch {
-    // Si falla, el usuario puede reenviar desde la pantalla de verificación
-  }
+  // 7. Crear configuración de empresa
+  await admin.from('company_config').insert({ company_id: company.id, app_name: companyName }).maybeSingle()
+
+  // 8. Crear pipeline por defecto + etapas
+  const pipelineOk = await crearPipeline(admin, company.id)
+
+  // 9. Seed industrias por defecto (best-effort)
+  await admin.rpc('seed_default_industries', { p_company_id: company.id }).maybeSingle()
+
+  // 10. Webhook token
+  await admin.from('webhook_tokens').insert({ company_id: company.id, token: crypto.randomUUID() }).maybeSingle()
 
   return json({
     company: { id: company.id, name: company.name, rif: company.rif },
     user: { id: created.user.id, email: created.user.email },
-    email_confirmed: false,
+    email_confirmed: true,
+    pipeline_created: pipelineOk,
   })
 })
