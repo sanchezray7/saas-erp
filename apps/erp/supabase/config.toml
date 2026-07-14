@@ -1,0 +1,32 @@
+# Configuración de Edge Functions para SaaS Empresarial
+# Enlazado a proyecto: tcuhnfejftoxkbbbbftp
+
+[functions.company-signup]
+verify_jwt = false
+
+[functions.get-user-permissions]
+verify_jwt = true
+
+[functions.crear-usuario]
+verify_jwt = true
+
+[functions.form-webhook]
+verify_jwt = false
+
+[functions.summarize-contact]
+verify_jwt = true
+
+[functions.draft-email]
+verify_jwt = true
+
+[functions.send-whatsapp]
+verify_jwt = true
+
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.cobranza-auto]
+verify_jwt = false
+
+[functions.send-push]
+verify_jwt = true

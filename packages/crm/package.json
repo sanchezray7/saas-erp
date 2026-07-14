@@ -1,0 +1,17 @@
+{
+  "name": "@saas/crm",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@saas/core": "*",
+    "@saas/whatsapp": "*",
+    "react": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "recharts": "^3.8.1"
+  }
+}
