@@ -21,7 +21,7 @@ export function rolesFromSession(session) {
 
   if (Array.isArray(jwtCompanies)) {
     return {
-      companies: jwtCompanies.map((c) => ({ id: c.id, name: c.name })),
+      companies: jwtCompanies.map((c) => ({ id: c.id, name: c.name, plan: c.plan })),
       rolesByCompany: jwtRoles || {},
     }
   }
@@ -33,7 +33,7 @@ export function rolesFromSession(session) {
 
   if (meta.companies) {
     for (const c of meta.companies) {
-      companies.push({ id: c.id, name: c.name })
+      companies.push({ id: c.id, name: c.name, plan: c.plan })
     }
   }
 

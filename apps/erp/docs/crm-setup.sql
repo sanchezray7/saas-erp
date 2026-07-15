@@ -420,7 +420,7 @@ begin
   uid := (event->>'user_id')::uuid;
 
   select coalesce(
-           jsonb_agg(distinct jsonb_build_object('id', c.id, 'name', c.name)),
+            jsonb_agg(distinct jsonb_build_object('id', c.id, 'name', c.name, 'plan', c.plan)),
            '[]'::jsonb
          )
     into companies_json

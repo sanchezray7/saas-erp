@@ -35,6 +35,7 @@ export function AuthProvider({ children }) {
       id: c.id,
       name: c.name ?? 'Empresa',
       role: c.role,
+      plan: c.plan,
     }))
   }
 
