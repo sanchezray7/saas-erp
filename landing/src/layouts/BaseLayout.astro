@@ -1,0 +1,76 @@
+---
+import '../styles/global.css'
+import CookieBanner from '../components/CookieBanner.astro'
+import { t } from '../i18n/traducciones'
+
+const locale = Astro.currentLocale || 'es'
+const title = Astro.props.title ?? t(locale, 'meta.title')
+const description = Astro.props.description ?? t(locale, 'meta.description')
+const ogDescription = Astro.props.ogDescription ?? t(locale, 'meta.ogDescription')
+
+const canonical = new URL(Astro.url.pathname, Astro.site)
+const ogUrl = new URL(Astro.url.pathname, Astro.site)
+---
+
+<!doctype html>
+<html lang={locale === 'pt-BR' ? 'pt-BR' : locale}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="index, follow" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    <title>{title}</title>
+
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={ogUrl} />
+    <meta property="og:image" content="https://saas-empresarial.com/og-image.svg" />
+    <meta property="og:locale" content={locale === 'pt-BR' ? 'pt_BR' : locale === 'en' ? 'en_US' : 'es_ES'} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={ogDescription} />
+    <meta name="twitter:image" content="https://saas-empresarial.com/og-image.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Saas Empresarial",
+      "url": "https://saas-empresarial.com",
+      "logo": "https://saas-empresarial.com/favicon.svg",
+      "description": "ERP platform for Latin American businesses."
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Saas Empresarial",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Sistema ERP completo con CRM, facturación, inventario, contabilidad, RRHH y nómina",
+      "url": "https://saas-empresarial.com",
+      "offers": [
+        { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD" },
+        { "@type": "Offer", "name": "Starter", "price": "29", "priceCurrency": "USD" },
+        { "@type": "Offer", "name": "Business", "price": "79", "priceCurrency": "USD" }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <main>
+      <slot />
+    </main>
+    <CookieBanner locale={locale} />
+  </body>
+</html>

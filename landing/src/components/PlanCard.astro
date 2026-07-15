@@ -1,0 +1,62 @@
+---
+const { plan, destacado = false, locale = 'es' } = Astro.props
+const appUrl = 'https://app.saas-empresarial.com'
+---
+
+<div class="plan-card" class:list={{ destacado }}>
+  {destacado && <div class="plan-badge">Más popular</div>}
+  <h3 class="plan-name">{plan.nombre}</h3>
+  <p class="plan-desc">{plan.desc}</p>
+  <div class="plan-price">
+    <span class="plan-amount">{plan.precio}</span>
+    <span class="plan-period">{plan.period}</span>
+  </div>
+  <ul class="plan-features">
+    {plan.features.map((f) => (
+      <li class="plan-feature">✓ {f}</li>
+    ))}
+  </ul>
+  <a href={`${appUrl}/register`} class="btn" class:list={{ 'btn-primary': true, 'btn-lg': true }} style="width:100%;text-align:center;justify-content:center">
+    {plan.nombre === 'Free' || plan.nombre === 'Gratis' ? 'Comenzar gratis' : 'Contratar'}
+  </a>
+</div>
+
+<style is:global>
+  .plan-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .plan-card:hover { box-shadow: var(--shadow-lg); }
+  .plan-card.destacado {
+    border-color: var(--primary);
+    border-width: 2px;
+    transform: scale(1.03);
+  }
+  .plan-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    padding: 0.25rem 1rem;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .plan-name { font-size: 1.1rem; font-weight: 600; }
+  .plan-desc { font-size: 0.85rem; color: var(--text-muted); }
+  .plan-price { margin: 0.5rem 0; }
+  .plan-amount { font-size: 2.5rem; font-weight: 800; }
+  .plan-period { font-size: 1rem; color: var(--text-muted); }
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+  .plan-feature { font-size: 0.88rem; color: var(--text-muted); }
+</style>

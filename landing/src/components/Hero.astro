@@ -1,0 +1,73 @@
+---
+import { t } from '../i18n/traducciones'
+
+const { locale = 'es' } = Astro.props
+const appUrl = 'https://app.saas-empresarial.com'
+---
+
+<section class="hero">
+  <div class="container hero-content">
+    <div class="hero-badge">🚀 ERP todo-en-uno para empresas</div>
+    <h1 class="hero-title">{t(locale, 'hero.titulo')}</h1>
+    <p class="hero-subtitle">{t(locale, 'hero.subtitulo')}</p>
+    <div class="hero-cta">
+      <a href={`${appUrl}/register`} class="btn btn-primary btn-lg">{t(locale, 'hero.cta')}</a>
+      <a href="#features" class="btn btn-outline btn-lg">{t(locale, 'hero.demo')}</a>
+    </div>
+  </div>
+  <div class="hero-gradient"></div>
+</section>
+
+<style is:global>
+  .hero {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    padding-top: 64px;
+  }
+  .hero-gradient {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at center, rgba(99,102,241,0.08) 0%, transparent 60%);
+    z-index: -1;
+  }
+  .hero-content { max-width: 720px; }
+  .hero-badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    background: rgba(99,102,241,0.1);
+    color: var(--primary);
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+  }
+  .hero-title {
+    font-size: 3rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--text), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+  }
+  .hero-subtitle {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+  .hero-cta { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+  @media (max-width: 768px) {
+    .hero-title { font-size: 2rem; }
+    .hero-subtitle { font-size: 1rem; }
+  }
+</style>

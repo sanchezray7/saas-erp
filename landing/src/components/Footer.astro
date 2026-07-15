@@ -1,0 +1,61 @@
+---
+import { t } from '../i18n/traducciones'
+
+const { locale = 'es' } = Astro.props
+const appUrl = 'https://app.saas-empresarial.com'
+---
+
+<footer class="footer section-dark">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <div class="logo">Saas <span>Empresarial</span></div>
+      <p class="footer-desc">ERP todo-en-uno para empresas en Latinoamérica.</p>
+    </div>
+    <div class="footer-col">
+      <h4>{t(locale, 'footer.producto')}</h4>
+      <a href="#features">{t(locale, 'footer.modulos')}</a>
+      <a href="#pricing">{t(locale, 'footer.precios')}</a>
+    </div>
+    <div class="footer-col">
+      <h4>{t(locale, 'footer.acceso')}</h4>
+      <a href={`${appUrl}/login`}>{t(locale, 'footer.iniciarSesion')}</a>
+      <a href={`${appUrl}/register`}>{t(locale, 'footer.registrar')}</a>
+    </div>
+    <div class="footer-col">
+      <h4>{t(locale, 'footer.legal')}</h4>
+      <a href="/privacidad">{t(locale, 'footer.privacidad')}</a>
+      <a href="/terminos">{t(locale, 'footer.terminos')}</a>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p>{t(locale, 'footer.copyright')}</p>
+  </div>
+</footer>
+
+<style is:global>
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 2rem;
+    padding: 3rem 0;
+  }
+  .footer-brand .logo { font-size: 1.1rem; font-weight: 800; color: white; margin-bottom: 0.5rem; }
+  .footer-brand .logo span { color: var(--primary-light); }
+  .footer-desc { font-size: 0.85rem; color: #94a3b8; line-height: 1.6; }
+  .footer-col h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.75rem; color: white; }
+  .footer-col a {
+    display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.4rem; transition: color 0.2s;
+  }
+  .footer-col a:hover { color: var(--primary-light); }
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 1.5rem 0;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  @media (max-width: 768px) {
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>

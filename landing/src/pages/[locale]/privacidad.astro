@@ -1,0 +1,30 @@
+---
+export const prerender = true
+
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import Navbar from '../../components/Navbar.astro'
+import Footer from '../../components/Footer.astro'
+import { t } from '../../i18n/traducciones'
+
+export function getStaticPaths() {
+  return [
+    { params: { locale: 'en' } },
+    { params: { locale: 'pt-BR' } },
+  ]
+}
+
+const { locale } = Astro.params
+---
+
+<BaseLayout title={t(locale, 'privacidad.titulo') + ' - Saas Empresarial'}>
+  <Navbar locale={locale} />
+  <section class="section" style="padding-top:100px">
+    <div class="container" style="max-width:720px">
+      <h1 class="section-title">{t(locale, 'privacidad.titulo')}</h1>
+      <div class="legal-content">
+        <p>{t(locale, 'privacidad.contenido')}</p>
+      </div>
+    </div>
+  </section>
+  <Footer locale={locale} />
+</BaseLayout>

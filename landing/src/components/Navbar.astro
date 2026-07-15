@@ -1,0 +1,95 @@
+---
+import { t } from '../i18n/traducciones'
+
+const { locale = 'es' } = Astro.props
+const links = [
+  { href: '#features', label: t(locale, 'nav.productos') },
+  { href: '#pricing', label: t(locale, 'nav.precios') },
+  { href: '#faq', label: t(locale, 'nav.faq') },
+  { href: '#contacto', label: t(locale, 'nav.contacto') },
+]
+const appUrl = 'https://app.saas-empresarial.com'
+---
+
+<nav class="navbar">
+  <div class="container nav-inner">
+    <a href="/" class="logo">Saas <span>Empresarial</span></a>
+    <div class="nav-links">
+      {links.map((link) => (
+        <a href={link.href}>{link.label}</a>
+      ))}
+    </div>
+    <div class="nav-right">
+      <div class="lang-chips">
+        <a href="/" class="lang-chip" class:list={{ active: locale === 'es' }}>ES</a>
+        <a href="/en/" class="lang-chip" class:list={{ active: locale === 'en' }}>EN</a>
+        <a href="/pt-BR/" class="lang-chip" class:list={{ active: locale === 'pt-BR' }}>PT</a>
+      </div>
+      <a href={`${appUrl}/login`} class="btn btn-outline btn-sm">{t(locale, 'nav.iniciarSesion')}</a>
+      <a href={`${appUrl}/register`} class="btn btn-primary btn-sm">{t(locale, 'nav.registrar')}</a>
+    </div>
+    <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    {links.map((link) => (
+      <a href={link.href} class="mobile-link">{link.label}</a>
+    ))}
+    <div class="lang-chips" style="margin-top:1rem">
+      <a href="/" class="lang-chip" class:list={{ active: locale === 'es' }}>ES</a>
+      <a href="/en/" class="lang-chip" class:list={{ active: locale === 'en' }}>EN</a>
+      <a href="/pt-BR/" class="lang-chip" class:list={{ active: locale === 'pt-BR' }}>PT</a>
+    </div>
+    <a href={`${appUrl}/login`} class="btn btn-outline" style="width:100%;margin-top:1rem">{t(locale, 'nav.iniciarSesion')}</a>
+    <a href={`${appUrl}/register`} class="btn btn-primary" style="width:100%;margin-top:0.5rem">{t(locale, 'nav.registrar')}</a>
+  </div>
+</nav>
+
+<script>
+  document.getElementById('menuToggle')?.addEventListener('click', () => {
+    document.getElementById('mobileMenu')?.classList.toggle('open')
+  })
+</script>
+
+<style is:global>
+  .navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+  .logo { font-size: 1.25rem; font-weight: 800; color: var(--text); }
+  .logo span { color: var(--primary); }
+  .nav-links { display: flex; gap: 1.5rem; }
+  .nav-links a { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--primary); }
+  .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+  .lang-chips { display: flex; gap: 2px; background: var(--bg-alt); border-radius: 6px; padding: 2px; }
+  .lang-chip {
+    padding: 4px 8px; font-size: 0.75rem; font-weight: 600; border-radius: 4px;
+    color: var(--text-muted); transition: all 0.2s;
+  }
+  .lang-chip.active, .lang-chip:hover { background: white; color: var(--primary); box-shadow: var(--shadow); }
+  .btn-sm { padding: 0.5rem 1rem; font-size: 0.85rem; }
+  .menu-toggle { display: none; background: none; border: none; cursor: pointer; color: var(--text); }
+  .mobile-menu {
+    display: none; flex-direction: column; padding: 1rem 1.5rem;
+    background: white; border-bottom: 1px solid var(--border);
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-link { padding: 0.5rem 0; color: var(--text-muted); font-weight: 500; }
+
+  @media (max-width: 768px) {
+    .nav-links, .nav-right { display: none; }
+    .menu-toggle { display: block; }
+  }
+</style>
