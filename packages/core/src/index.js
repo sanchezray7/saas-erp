@@ -35,6 +35,7 @@ export { setLocaleFromPais } from './i18n/index'
 export { ProtectedRoute } from './routes/ProtectedRoute'
 export { RequireCompany } from './routes/RequireCompany'
 export { RequirePermission } from './routes/RequirePermission'
+export { RequireFeature } from './routes/RequireFeature'
 
 export { Sidebar } from './layouts/Sidebar'
 export { AppLayout } from './layouts/AppLayout'
