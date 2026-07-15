@@ -1,40 +1,17 @@
 import { useState, useEffect } from 'react'
 import { getSupabase } from '../lib/supabase'
+import { FEATURES, QUOTAS, QUOTA_LABELS, PLAN_LABELS } from './planConfig'
 
-const FEATURES_FALLBACK = {
-  catalogo: { enabled: true, plan: null },
-  crm: { enabled: true, plan: null },
-  facturacion: { enabled: true, plan: null },
-  notas_cd: { enabled: false, plan: 'starter' },
-  srm: { enabled: false, plan: 'starter' },
-  inventario: { enabled: false, plan: 'starter' },
-  contabilidad: { enabled: false, plan: 'starter' },
-  contabilidad_avanzada: { enabled: false, plan: 'business' },
-  asientos_automaticos_facturas: { enabled: false, plan: 'starter' },
-  asientos_automaticos_nomina: { enabled: false, plan: 'business' },
-  rrhh: { enabled: false, plan: 'business' },
-  nomina: { enabled: false, plan: 'business' },
-  whatsapp: { enabled: false, plan: 'business' },
-  reportes: { enabled: false, plan: 'starter' },
-  reportes_avanzados: { enabled: false, plan: 'business' },
-}
-
-const QUOTAS_FALLBACK = {
-  free: { usuarios: 2, productos: 50, contactos: 100, oportunidades: 50, facturas_mes: 50 },
-  starter: { usuarios: 10, productos: -1, contactos: -1, oportunidades: -1, facturas_mes: -1 },
-  business: { usuarios: -1, productos: -1, contactos: -1, oportunidades: -1, facturas_mes: -1 },
-}
-
-const PLAN_LABELS = {
-  free: { name: 'Free', price: 'Gratis' },
-  starter: { name: 'Starter', price: '$29/mes' },
-  business: { name: 'Business', price: '$79/mes' },
-}
+export { FEATURES, QUOTAS, PLAN_LABELS } from './planConfig'
 
 export function featureInfo(featureKey) {
-  const f = FEATURES_FALLBACK[featureKey]
+  const f = FEATURES[featureKey]
   if (!f) return { enabled: true, plan: null }
-  return f
+
+  // Para UpgradeBanner: determinar el plan mínimo que habilita la feature
+  if (f.free) return { enabled: true, plan: null }
+  if (f.starter) return { enabled: false, plan: 'starter' }
+  return { enabled: false, plan: 'business' }
 }
 
 export function planLabel(plan) {
@@ -63,8 +40,8 @@ export function usePlan({ companyId } = {}) {
       .then(({ data, error }) => {
         if (error) {
           setPlan('free')
-          setFeatures(FEATURES_FALLBACK)
-          setQuotas(QUOTAS_FALLBACK.free)
+          buildFeatureMap('free')
+          setQuotas(QUOTAS.free || {})
           setLoading(false)
           return
         }
@@ -77,21 +54,7 @@ export function usePlan({ companyId } = {}) {
           .select('feature_key, enabled')
           .eq('plan', currentPlan)
           .then(({ data: featData }) => {
-            const featMap = {}
-            for (const key of Object.keys(FEATURES_FALLBACK)) {
-              featMap[key] = {
-                enabled: false,
-                plan: FEATURES_FALLBACK[key].plan,
-              }
-            }
-            if (featData) {
-              for (const f of featData) {
-                if (featMap[f.feature_key]) {
-                  featMap[f.feature_key].enabled = f.enabled
-                }
-              }
-            }
-            setFeatures(featMap)
+            buildFeatureMap(currentPlan, featData)
           })
 
         supabase
@@ -99,7 +62,7 @@ export function usePlan({ companyId } = {}) {
           .select('quota_key, max_value')
           .eq('plan', currentPlan)
           .then(({ data: quotaData }) => {
-            const quotaMap = QUOTAS_FALLBACK[currentPlan] || {}
+            const quotaMap = { ...(QUOTAS[currentPlan] || {}) }
             if (quotaData) {
               for (const q of quotaData) {
                 quotaMap[q.quota_key] = q.max_value
@@ -111,12 +74,36 @@ export function usePlan({ companyId } = {}) {
       })
   }, [companyId])
 
+  function buildFeatureMap(currentPlan, dbData) {
+    const featMap = {}
+    for (const key of Object.keys(FEATURES)) {
+      const enabled = FEATURES[key][currentPlan] === true
+      featMap[key] = { enabled, plan: minPlanForFeature(key) }
+    }
+    if (dbData) {
+      for (const f of dbData) {
+        if (featMap[f.feature_key]) {
+          featMap[f.feature_key].enabled = f.enabled
+        }
+      }
+    }
+    setFeatures(featMap)
+  }
+
+  function minPlanForFeature(key) {
+    const f = FEATURES[key]
+    if (!f) return null
+    if (f.free) return null
+    if (f.starter) return 'starter'
+    return 'business'
+  }
+
   const featureEnabled = (key) => {
-    return features[key]?.enabled ?? FEATURES_FALLBACK[key]?.enabled ?? true
+    return features[key]?.enabled ?? false
   }
 
   const featurePlan = (key) => {
-    return features[key]?.plan ?? FEATURES_FALLBACK[key]?.plan ?? null
+    return features[key]?.plan ?? minPlanForFeature(key)
   }
 
   const quotaMax = (key) => {
@@ -146,14 +133,7 @@ export async function checkQuotaBefore(companyId, quotaKey) {
   if (!data) throw new Error('No se pudo verificar el cupo disponible')
 
   if (data.remaining === 0 && data.max !== -1) {
-    const nombres = {
-      usuarios: 'usuarios',
-      productos: 'productos',
-      contactos: 'contactos',
-      oportunidades: 'oportunidades',
-      facturas_mes: 'facturas este mes',
-    }
-    const nombre = nombres[quotaKey] || quotaKey
+    const nombre = QUOTA_LABELS[quotaKey] || quotaKey
     throw new Error(`Alcanzaste el límite de ${nombre} (${data.max}) para tu plan actual. Actualizá tu plan para ampliarlo.`)
   }
 

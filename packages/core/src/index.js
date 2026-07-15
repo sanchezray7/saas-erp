@@ -22,6 +22,7 @@ export { InstallPrompt } from './components/InstallPrompt'
 
 export { getSupabase } from './lib/supabase'
 export { usePlan, featureInfo, planLabel, checkQuotaBefore } from './data/plan'
+export { FEATURES as PLAN_FEATURES, QUOTAS as PLAN_QUOTAS, PLAN_LABELS } from './data/planConfig'
 export { UpgradeBanner } from './components/UpgradeBanner'
 export { alertError, notify, confirmAction } from './lib/alert'
 export { formatDate, formatDateTime } from './lib/formatDate'
