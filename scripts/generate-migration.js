@@ -13,6 +13,7 @@ const orden = [
   'reports-setup.sql', 'push-setup.sql',
   'paises-setup.sql', 'localizacion-setup.sql', 'moneda-setup.sql',
   'perfil-empresa-setup.sql', 'empresa-rpc-setup.sql', 'actividades-setup.sql',
+  'plan-limites-setup.sql',
   'catalogo-setup.sql', 'unidades-setup.sql',
   'srm-setup.sql', 'sugerencias-oc-setup.sql', 'pagos-setup.sql',
 

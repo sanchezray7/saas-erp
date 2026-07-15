@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/useAuth'
@@ -6,6 +6,7 @@ import { useTheme } from '../theme/context'
 import { useCompanyConfig } from '../theme/companyConfigContext'
 import { Logo } from '../components/Logo'
 import { NAV_TOPS, NAV_SECTIONS_BASE } from './navItems'
+import { usePlan } from '../data/plan'
 
 export function Sidebar({ open, onClose, extraSections = [], footerExtra, headerExtra }) {
   const { t, i18n } = useTranslation()
@@ -14,6 +15,7 @@ export function Sidebar({ open, onClose, extraSections = [], footerExtra, header
   const { config } = useCompanyConfig()
   const location = useLocation()
   const [collapsed, setCollapsed] = useState({})
+  const { featureEnabled, loading: planLoading } = usePlan({ companyId: activeCompanyId })
 
   const activeCompany = companies.find((c) => c.id === activeCompanyId)
 
@@ -44,7 +46,11 @@ export function Sidebar({ open, onClose, extraSections = [], footerExtra, header
         ))}
 
         {[...extraSections, ...NAV_SECTIONS_BASE].map((section) => {
-          const visible = section.items.filter((item) => !item.permission || can(item.permission))
+          const visible = section.items.filter((item) => {
+            if (item.permission && !can(item.permission)) return false
+            if (item.feature && !featureEnabled(item.feature)) return false
+            return true
+          })
           if (visible.length === 0) return null
           const isOpen = collapsed[section.sectionKey] === true
 

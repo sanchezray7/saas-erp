@@ -5,6 +5,6 @@ export const NAV_SECTION_CONSOLIDACION = {
   labelKey: 'nav.sectionConsolidacion',
   icon: '🏢',
   items: [
-    { to: '/consolidacion', labelKey: 'nav.consolidacion', icon: '📊', permission: PERMISSIONS.CONFIG_VER },
+    { to: '/consolidacion', labelKey: 'nav.consolidacion', icon: '📊', permission: PERMISSIONS.CONFIG_VER, feature: 'contabilidad_avanzada' },
   ],
 }
