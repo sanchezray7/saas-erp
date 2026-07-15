@@ -71,8 +71,8 @@ Deno.serve(async (req: Request) => {
   const url = new URL(req.url)
   const path = url.pathname
 
-  // ── POST /sifen/recepcion ──
-  if (req.method === 'POST' && path.endsWith('/sifen/recepcion')) {
+  // ── POST /recepcion ──
+  if (req.method === 'POST' && path.endsWith('/recepcion')) {
     let body: { xml?: string } = {}
     try { body = await req.json() } catch { return json({ error: 'JSON inválido' }, 400) }
 
@@ -111,16 +111,16 @@ Deno.serve(async (req: Request) => {
     })
   }
 
-  // ── GET /sifen/consulta/:cdc ──
-  if (req.method === 'GET' && path.includes('/sifen/consulta/')) {
-    const cdc = path.split('/sifen/consulta/').pop() || ''
+  // ── GET /consulta/:cdc ──
+  if (req.method === 'GET' && path.includes('/consulta/')) {
+    const cdc = path.split('/consulta/').pop() || ''
     const dte = dteDB.find((d) => d.cdc === cdc)
     if (!dte) return json({ error: 'DTE no encontrado' }, 404)
     return json(dte)
   }
 
-  // ── GET /sifen/estado ──
-  if (req.method === 'GET' && path.endsWith('/sifen/estado')) {
+  // ── GET /estado ──
+  if (req.method === 'GET' && path.endsWith('/estado')) {
     return json({
       ambiente: 'MOCK',
       version: '150',
