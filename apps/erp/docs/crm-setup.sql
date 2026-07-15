@@ -521,7 +521,7 @@ declare
   result jsonb;
 begin
   select coalesce(
-    jsonb_agg(jsonb_build_object('id', cm.company_id, 'name', c.name, 'role', cm.role)),
+    jsonb_agg(    jsonb_build_object('id', cm.company_id, 'name', c.name, 'role', cm.role, 'plan', c.plan)),
     '[]'::jsonb
   )
   into result
