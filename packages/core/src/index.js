@@ -21,7 +21,7 @@ export { PushPrompt } from './components/PushPrompt'
 export { InstallPrompt } from './components/InstallPrompt'
 
 export { getSupabase } from './lib/supabase'
-export { usePlan, featureInfo, planLabel } from './data/plan'
+export { usePlan, featureInfo, planLabel, checkQuotaBefore } from './data/plan'
 export { UpgradeBanner } from './components/UpgradeBanner'
 export { alertError, notify, confirmAction } from './lib/alert'
 export { formatDate, formatDateTime } from './lib/formatDate'

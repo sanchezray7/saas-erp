@@ -1,4 +1,4 @@
-import { getSupabase } from '@saas/core'
+import { getSupabase, checkQuotaBefore } from '@saas/core'
 
 const CAMPOS_BASE = ['id', 'name', 'email', 'phone', 'position', 'organization_id', 'source', 'notes', 'assigned_to', 'company_id']
 const CAMPOS_FISCALES = ['ruc', 'dv', 'tipo_documento', 'num_documento', 'pais', 'direccion', 'codigo_cliente']
@@ -27,6 +27,11 @@ export async function obtenerContacto(id) {
 
 export async function guardarContacto(companyId, contact) {
   const supabase = getSupabase()
+
+  // Solo validar cuota en creación
+  if (!contact.id) {
+    await checkQuotaBefore(companyId, 'contactos')
+  }
 
   // Construir payload solo con campos base (siempre existen)
   const payload = { company_id: companyId }

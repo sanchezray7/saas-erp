@@ -1,4 +1,4 @@
-import { getSupabase } from '@saas/core'
+import { getSupabase, checkQuotaBefore } from '@saas/core'
 
 export async function listarDeals(companyId) {
   const supabase = getSupabase()
@@ -24,6 +24,12 @@ export async function obtenerDeal(id) {
 
 export async function guardarDeal(companyId, deal) {
   const supabase = getSupabase()
+
+  // Solo validar cuota en creación
+  if (!deal.id) {
+    await checkQuotaBefore(companyId, 'oportunidades')
+  }
+
   const payload = { ...deal, company_id: companyId }
   if (payload.stage_id) {
     const esGanada = await _esEtapaGanada(payload.stage_id)

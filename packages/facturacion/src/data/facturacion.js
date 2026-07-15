@@ -1,4 +1,4 @@
-import { getSupabase } from '@saas/core'
+import { getSupabase, checkQuotaBefore } from '@saas/core'
 
 export async function listarFacturas(companyId) {
   const supabase = getSupabase()
@@ -24,6 +24,9 @@ export async function obtenerFactura(id) {
 
 export async function guardarFactura(companyId, { cotizacion_id, cdc, numero, timbrado, xml_generado, total, moneda, estado = 'emitida', errores, fecha_vencimiento, subtotal, impuesto }) {
   const supabase = getSupabase()
+
+  await checkQuotaBefore(companyId, 'facturas_mes')
+
   const { data, error } = await supabase
     .from('facturas')
     .insert({

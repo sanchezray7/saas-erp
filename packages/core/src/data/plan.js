@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getSupabase } from './supabase'
+import { getSupabase } from '../lib/supabase'
 
 const FEATURES_FALLBACK = {
   catalogo: { enabled: true, plan: null },
@@ -134,4 +134,28 @@ export function usePlan({ companyId } = {}) {
     isUnlimited,
     planInfo: PLAN_LABELS[plan] || PLAN_LABELS.free,
   }
+}
+
+export async function checkQuotaBefore(companyId, quotaKey) {
+  const supabase = getSupabase()
+  const { data, error } = await supabase.rpc('check_quota', {
+    p_company_id: companyId,
+    p_quota_key: quotaKey,
+  })
+  if (error) throw new Error(`Error al verificar cupo: ${error.message}`)
+  if (!data) throw new Error('No se pudo verificar el cupo disponible')
+
+  if (data.remaining === 0 && data.max !== -1) {
+    const nombres = {
+      usuarios: 'usuarios',
+      productos: 'productos',
+      contactos: 'contactos',
+      oportunidades: 'oportunidades',
+      facturas_mes: 'facturas este mes',
+    }
+    const nombre = nombres[quotaKey] || quotaKey
+    throw new Error(`Alcanzaste el límite de ${nombre} (${data.max}) para tu plan actual. Actualizá tu plan para ampliarlo.`)
+  }
+
+  return data
 }

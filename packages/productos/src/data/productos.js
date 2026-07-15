@@ -1,4 +1,4 @@
-import { getSupabase } from '@saas/core'
+import { getSupabase, checkQuotaBefore } from '@saas/core'
 
 export async function listarProductos(companyId, soloActivos = true) {
   const supabase = getSupabase()
@@ -17,6 +17,12 @@ export async function listarProductos(companyId, soloActivos = true) {
 
 export async function guardarProducto(companyId, producto) {
   const supabase = getSupabase()
+
+  // Solo validar cuota en creación, no en edición
+  if (!producto.id) {
+    await checkQuotaBefore(companyId, 'productos')
+  }
+
   const payload = { company_id: companyId, ...producto }
   if (!payload.id) delete payload.id
   if (!payload.codigo) delete payload.codigo

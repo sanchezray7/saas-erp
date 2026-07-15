@@ -1,7 +1,10 @@
-import { getSupabase } from '@saas/core'
+import { getSupabase, checkQuotaBefore } from '@saas/core'
 
 export async function crearUsuario(companyId, email, password, role = 'vendedor', fullName = '', phone = '') {
   const supabase = getSupabase()
+
+  await checkQuotaBefore(companyId, 'usuarios')
+
   const { data, error } = await supabase.functions.invoke('crear-usuario', {
     body: { company_id: companyId, email, password, role, full_name: fullName, phone },
   })
