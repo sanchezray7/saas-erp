@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import {
   ThemeProvider, AuthProvider, ProtectedRoute, RequireCompany,
-  RequirePermission, RequireFeature, AppLayout, PERMISSIONS, ErrorBoundary, useAuth,
+  RequirePermission, AppLayout, PERMISSIONS, ErrorBoundary, useAuth,
   PushPrompt, InstallPrompt, getSupabase,
   NAV_SECTION_FINANZAS, NAV_SECTION_CONSOLIDACION,
 } from '@saas/core'
@@ -122,90 +122,78 @@ export default function App() {
                 <Route path="contacts/:id/edit" element={<RequirePermission perm={PERMISSIONS.CONTACT_EDITAR}><ContactFormPage /></RequirePermission>} />
                 <Route path="leads" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><LeadsPage /></RequirePermission>} />
                 <Route path="catalogo" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><CatalogPage /></RequirePermission>} />
-                <Route path="proveedores" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><ProveedoresPage /></RequirePermission></RequireFeature>} />
-                <Route path="proveedores/nuevo" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.CONTACT_CREAR}><ProveedorFormPage /></RequirePermission></RequireFeature>} />
-                <Route path="proveedores/:id" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><ProveedorDetailPage /></RequirePermission></RequireFeature>} />
-                <Route path="proveedores/:id/editar" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.CONTACT_EDITAR}><ProveedorFormPage /></RequirePermission></RequireFeature>} />
-                <Route path="ordenes-compra" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenesCompraPage /></RequirePermission></RequireFeature>} />
-                <Route path="ordenes-compra/nueva" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_CREAR}><OrdenCompraFormPage /></RequirePermission></RequireFeature>} />
-                <Route path="ordenes-compra/:id" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenCompraDetailPage /></RequirePermission></RequireFeature>} />
-                <Route path="ordenes-compra/:id/editar" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_EDITAR}><OrdenCompraFormPage /></RequirePermission></RequireFeature>} />
-                <Route path="calendario-pagos" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_VER}><CalendarioPagosPage /></RequirePermission></RequireFeature>} />
-                <Route path="facturas-proveedor" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_VER}><FacturasProveedorPage /></RequirePermission></RequireFeature>} />
-                <Route path="facturas-proveedor/nueva" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_CREAR}><FacturaProveedorFormPage /></RequirePermission></RequireFeature>} />
-                <Route path="facturas-proveedor/:id" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_VER}><FacturaProveedorDetailPage /></RequirePermission></RequireFeature>} />
-                <Route path="facturas-proveedor/:id/editar" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_EDITAR}><FacturaProveedorFormPage /></RequirePermission></RequireFeature>} />
-                <Route path="scorecards" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_VER}><ScorecardsPage /></RequirePermission></RequireFeature>} />
-                <Route path="alertas-vencimiento" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_VER}><AlertasVencimientoPage /></RequirePermission></RequireFeature>} />
-                <Route path="historial-precios" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_VER}><HistorialPreciosPage /></RequirePermission></RequireFeature>} />
-                <Route path="sugerencias-oc" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_CREAR}><SugerenciasOCPage /></RequirePermission></RequireFeature>} />
-                <Route path="cuentas-pagar" element={<RequireFeature featureKey="srm"><RequirePermission perm={PERMISSIONS.DEAL_VER}><CuentasPagarPage /></RequirePermission></RequireFeature>} />
-                <Route path="impuestos" element={<RequireFeature featureKey="contabilidad"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><ImpuestosConfigPage /></RequirePermission></RequireFeature>} />
-                <Route path="plan-contable" element={<RequireFeature featureKey="contabilidad"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><PlanContablePage /></RequirePermission></RequireFeature>} />
-                <Route path="reportes-contables" element={<RequireFeature featureKey="contabilidad_avanzada"><RequirePermission perm={PERMISSIONS.DEAL_VER}><AccountingReportsPage /></RequirePermission></RequireFeature>} />
-                <Route path="aging" element={<RequireFeature featureKey="contabilidad_avanzada"><RequirePermission perm={PERMISSIONS.DEAL_VER}><AgingPage /></RequirePermission></RequireFeature>} />
-                <Route path="conciliacion" element={<RequireFeature featureKey="contabilidad_avanzada"><RequirePermission perm={PERMISSIONS.DEAL_VER}><ConciliacionPage /></RequirePermission></RequireFeature>} />
-                <Route path="conciliacion/nueva" element={<RequireFeature featureKey="contabilidad_avanzada"><RequirePermission perm={PERMISSIONS.DEAL_CREAR}><ConciliacionNuevaPage /></RequirePermission></RequireFeature>} />
-                <Route path="conciliacion/:id" element={<RequireFeature featureKey="contabilidad_avanzada"><RequirePermission perm={PERMISSIONS.DEAL_VER}><ConciliacionDetailPage /></RequirePermission></RequireFeature>} />
-                <Route path="consolidacion" element={<RequireFeature featureKey="contabilidad_avanzada"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><ConsolidacionPage /></RequirePermission></RequireFeature>} />
-                <Route path="inventario" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><InventarioPage /></RequirePermission></RequireFeature>} />
-                <Route path="movimientos-stock" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><MovimientosPage /></RequirePermission></RequireFeature>} />
-                <Route path="centros" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><CentrosPage /></RequirePermission></RequireFeature>} />
-                <Route path="almacenes" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><AlmacenesPage /></RequirePermission></RequireFeature>} />
-                <Route path="transferencias" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><TransferenciasPage /></RequirePermission></RequireFeature>} />
-                <Route path="kardex" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><KardexPage /></RequirePermission></RequireFeature>} />
-                <Route path="conteos" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><ConteosPage /></RequirePermission></RequireFeature>} />
-                <Route path="conteos/:id" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><ConteoDetailPage /></RequirePermission></RequireFeature>} />
-                <Route path="ubicaciones" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><UbicacionesPage /></RequirePermission></RequireFeature>} />
-                <Route path="transportistas" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><TransportistasPage /></RequirePermission></RequireFeature>} />
-                <Route path="picking" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><PickingPage /></RequirePermission></RequireFeature>} />
-                <Route path="picking/:id" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><PickingDetailPage /></RequirePermission></RequireFeature>} />
-                <Route path="remitos" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><RemitosPage /></RequirePermission></RequireFeature>} />
-                <Route path="remitos/:id" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><RemitoDetailPage /></RequirePermission></RequireFeature>} />
-                <Route path="valuacion" element={<RequireFeature featureKey="inventario"><RequirePermission perm={PERMISSIONS.DEAL_VER}><ValuacionPage /></RequirePermission></RequireFeature>} />
-                <Route path="asientos" element={<RequireFeature featureKey="contabilidad"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><AsientosPage /></RequirePermission></RequireFeature>} />
-                <Route path="asientos/nuevo" element={<RequireFeature featureKey="contabilidad"><RequirePermission perm={PERMISSIONS.CONFIG_CREAR}><NuevoAsientoPage /></RequirePermission></RequireFeature>} />
-                <Route path="asientos/:id" element={<RequireFeature featureKey="contabilidad"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><AsientoDetailPage /></RequirePermission></RequireFeature>} />
-                <Route path="organizations" element={<RequirePermission perm={PERMISSIONS.ORGANIZATION_VER}><OrganizationsPage /></RequirePermission>} />
-                <Route path="organizations/new" element={<RequirePermission perm={PERMISSIONS.ORGANIZATION_CREAR}><OrganizationFormPage /></RequirePermission>} />
-                <Route path="organizations/:id/edit" element={<RequirePermission perm={PERMISSIONS.ORGANIZATION_EDITAR}><OrganizationFormPage /></RequirePermission>} />
-                <Route path="deals" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><DealsPage /></RequirePermission>} />
-                <Route path="deals/new" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><DealFormPage /></RequirePermission>} />
-                <Route path="deals/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><DealDetailPage /></RequirePermission>} />
-                <Route path="deals/:id/edit" element={<RequirePermission perm={PERMISSIONS.DEAL_EDITAR}><DealFormPage /></RequirePermission>} />
-                <Route path="cotizaciones" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><CotizacionesPage /></RequirePermission>} />
-                <Route path="cotizaciones/new" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><CotizacionFormPage /></RequirePermission>} />
-                <Route path="cotizaciones/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><CotizacionDetailPage /></RequirePermission>} />
-                <Route path="cotizaciones/:id/edit" element={<RequirePermission perm={PERMISSIONS.DEAL_EDITAR}><CotizacionFormPage /></RequirePermission>} />
-                <Route path="cuentas-cobrar" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><CuentasCobrarPage /></RequirePermission>} />
-                <Route path="notas-cd" element={<RequireFeature featureKey="notas_cd"><RequirePermission perm={PERMISSIONS.DEAL_VER}><NotasCDPage /></RequirePermission></RequireFeature>} />
-                <Route path="notas-cd/nueva" element={<RequireFeature featureKey="notas_cd"><RequirePermission perm={PERMISSIONS.DEAL_CREAR}><NotaCDFormPage /></RequirePermission></RequireFeature>} />
-                <Route path="notas-cd/:id" element={<RequireFeature featureKey="notas_cd"><RequirePermission perm={PERMISSIONS.DEAL_VER}><NotaCDDetailPage /></RequirePermission></RequireFeature>} />
+                <Route path="proveedores" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><ProveedoresPage /></RequirePermission>} />
+                <Route path="proveedores/nuevo" element={<RequirePermission perm={PERMISSIONS.CONTACT_CREAR}><ProveedorFormPage /></RequirePermission>} />
+                <Route path="proveedores/:id" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><ProveedorDetailPage /></RequirePermission>} />
+                <Route path="proveedores/:id/editar" element={<RequirePermission perm={PERMISSIONS.CONTACT_EDITAR}><ProveedorFormPage /></RequirePermission>} />
+                <Route path="ordenes-compra" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenesCompraPage /></RequirePermission>} />
+                <Route path="ordenes-compra/nueva" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><OrdenCompraFormPage /></RequirePermission>} />
+                <Route path="ordenes-compra/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenCompraDetailPage /></RequirePermission>} />
+                <Route path="ordenes-compra/:id/editar" element={<RequirePermission perm={PERMISSIONS.DEAL_EDITAR}><OrdenCompraFormPage /></RequirePermission>} />
+                <Route path="calendario-pagos" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><CalendarioPagosPage /></RequirePermission>} />
+                <Route path="facturas-proveedor" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><FacturasProveedorPage /></RequirePermission>} />
+                <Route path="facturas-proveedor/nueva" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><FacturaProveedorFormPage /></RequirePermission>} />
+                <Route path="facturas-proveedor/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><FacturaProveedorDetailPage /></RequirePermission>} />
+                <Route path="facturas-proveedor/:id/editar" element={<RequirePermission perm={PERMISSIONS.DEAL_EDITAR}><FacturaProveedorFormPage /></RequirePermission>} />
+                <Route path="scorecards" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><ScorecardsPage /></RequirePermission>} />
+                <Route path="alertas-vencimiento" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><AlertasVencimientoPage /></RequirePermission>} />
+                <Route path="historial-precios" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><HistorialPreciosPage /></RequirePermission>} />
+                <Route path="sugerencias-oc" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><SugerenciasOCPage /></RequirePermission>} />
+                <Route path="cuentas-pagar" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><CuentasPagarPage /></RequirePermission>} />
+                <Route path="impuestos" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><ImpuestosConfigPage /></RequirePermission>} />
+                <Route path="plan-contable" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><PlanContablePage /></RequirePermission>} />
+                <Route path="reportes-contables" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><AccountingReportsPage /></RequirePermission>} />
+                <Route path="aging" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><AgingPage /></RequirePermission>} />
+                <Route path="conciliacion" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><ConciliacionPage /></RequirePermission>} />
+                <Route path="conciliacion/nueva" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><ConciliacionNuevaPage /></RequirePermission>} />
+                <Route path="conciliacion/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><ConciliacionDetailPage /></RequirePermission>} />
+                <Route path="consolidacion" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><ConsolidacionPage /></RequirePermission>} />
+                <Route path="inventario" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><InventarioPage /></RequirePermission>} />
+                <Route path="movimientos-stock" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><MovimientosPage /></RequirePermission>} />
+                <Route path="centros" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><CentrosPage /></RequirePermission>} />
+                <Route path="almacenes" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><AlmacenesPage /></RequirePermission>} />
+                <Route path="transferencias" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><TransferenciasPage /></RequirePermission>} />
+                <Route path="kardex" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><KardexPage /></RequirePermission>} />
+                <Route path="conteos" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><ConteosPage /></RequirePermission>} />
+                <Route path="conteos/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><ConteoDetailPage /></RequirePermission>} />
+                <Route path="ubicaciones" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><UbicacionesPage /></RequirePermission>} />
+                <Route path="transportistas" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><TransportistasPage /></RequirePermission>} />
+                <Route path="picking" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><PickingPage /></RequirePermission>} />
+                <Route path="picking/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><PickingDetailPage /></RequirePermission>} />
+                <Route path="remitos" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><RemitosPage /></RequirePermission>} />
+                <Route path="remitos/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><RemitoDetailPage /></RequirePermission>} />
+                <Route path="valuacion" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><ValuacionPage /></RequirePermission>} />
+                <Route path="asientos" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><AsientosPage /></RequirePermission>} />
+                <Route path="asientos/nuevo" element={<RequirePermission perm={PERMISSIONS.CONFIG_CREAR}><NuevoAsientoPage /></RequirePermission>} />
+                <Route path="asientos/:id" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><AsientoDetailPage /></RequirePermission>} />
+                <Route path="notas-cd" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><NotasCDPage /></RequirePermission>} />
+                <Route path="notas-cd/nueva" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><NotaCDFormPage /></RequirePermission>} />
+                <Route path="notas-cd/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><NotaCDDetailPage /></RequirePermission>} />
                 <Route path="alertas-ar" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><AlertasARPage /></RequirePermission>} />
-                <Route path="empleados" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><EmpleadosPage /></RequirePermission></RequireFeature>} />
-                <Route path="empleados/nuevo" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_CREAR}><EmpleadoFormPage /></RequirePermission></RequireFeature>} />
-                <Route path="empleados/:id" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><EmpleadoDetailPage /></RequirePermission></RequireFeature>} />
-                <Route path="empleados/:id/editar" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_EDITAR}><EmpleadoFormPage /></RequirePermission></RequireFeature>} />
-                <Route path="organigrama" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><OrganigramaPage /></RequirePermission></RequireFeature>} />
-                <Route path="asistencia" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><AsistenciaPage /></RequirePermission></RequireFeature>} />
-                <Route path="asistencia/importar" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_CREAR}><ImportarAsistenciaPage /></RequirePermission></RequireFeature>} />
-                <Route path="ausencias" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><AusenciasPage /></RequirePermission></RequireFeature>} />
-                <Route path="vacaciones" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><VacacionesPage /></RequirePermission></RequireFeature>} />
-                <Route path="reporte-asistencia" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><ReporteAsistenciaPage /></RequirePermission></RequireFeature>} />
-                <Route path="turnos" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><TurnosPage /></RequirePermission></RequireFeature>} />
-                <Route path="patrones" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONFIG_VER}><RotacionPatronesPage /></RequirePermission></RequireFeature>} />
-                <Route path="planificar-turnos" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><PlanificarTurnosPage /></RequirePermission></RequireFeature>} />
-                <Route path="control-horario" element={<RequireFeature featureKey="rrhh"><RequirePermission perm={PERMISSIONS.CONTACT_VER}><ControlHorarioPage /></RequirePermission></RequireFeature>} />
-                <Route path="nomina" element={<RequireFeature featureKey="nomina"><RequirePermission perm={PERMISSIONS.NOMINA_VER}><NominaDashboardPage /></RequirePermission></RequireFeature>} />
-                <Route path="nomina/periodos" element={<RequireFeature featureKey="nomina"><RequirePermission perm={PERMISSIONS.NOMINA_VER}><PeriodosNominaPage /></RequirePermission></RequireFeature>} />
-                <Route path="nomina/periodos/:id" element={<RequireFeature featureKey="nomina"><RequirePermission perm={PERMISSIONS.NOMINA_VER}><PeriodoDetailPage /></RequirePermission></RequireFeature>} />
-                <Route path="nomina/novedades/:periodoId" element={<RequireFeature featureKey="nomina"><RequirePermission perm={PERMISSIONS.NOMINA_CREAR}><NovedadesPage /></RequirePermission></RequireFeature>} />
-                <Route path="nomina/recibos/:id" element={<RequireFeature featureKey="nomina"><RequirePermission perm={PERMISSIONS.NOMINA_VER}><ReciboPage /></RequirePermission></RequireFeature>} />
-                <Route path="nomina/configuracion" element={<RequireFeature featureKey="nomina"><RequirePermission perm={PERMISSIONS.NOMINA_CONFIG}><ConfigNominaPage /></RequirePermission></RequireFeature>} />
-                <Route path="nomina/libro-sueldos" element={<RequireFeature featureKey="nomina"><RequirePermission perm={PERMISSIONS.NOMINA_VER}><LibroSueldosPage /></RequirePermission></RequireFeature>} />
+                <Route path="empleados" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><EmpleadosPage /></RequirePermission>} />
+                <Route path="empleados/nuevo" element={<RequirePermission perm={PERMISSIONS.CONTACT_CREAR}><EmpleadoFormPage /></RequirePermission>} />
+                <Route path="empleados/:id" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><EmpleadoDetailPage /></RequirePermission>} />
+                <Route path="empleados/:id/editar" element={<RequirePermission perm={PERMISSIONS.CONTACT_EDITAR}><EmpleadoFormPage /></RequirePermission>} />
+                <Route path="organigrama" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><OrganigramaPage /></RequirePermission>} />
+                <Route path="asistencia" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><AsistenciaPage /></RequirePermission>} />
+                <Route path="asistencia/importar" element={<RequirePermission perm={PERMISSIONS.CONTACT_CREAR}><ImportarAsistenciaPage /></RequirePermission>} />
+                <Route path="ausencias" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><AusenciasPage /></RequirePermission>} />
+                <Route path="vacaciones" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><VacacionesPage /></RequirePermission>} />
+                <Route path="reporte-asistencia" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><ReporteAsistenciaPage /></RequirePermission>} />
+                <Route path="turnos" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><TurnosPage /></RequirePermission>} />
+                <Route path="patrones" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><RotacionPatronesPage /></RequirePermission>} />
+                <Route path="planificar-turnos" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><PlanificarTurnosPage /></RequirePermission>} />
+                <Route path="control-horario" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><ControlHorarioPage /></RequirePermission>} />
+                <Route path="nomina" element={<RequirePermission perm={PERMISSIONS.NOMINA_VER}><NominaDashboardPage /></RequirePermission>} />
+                <Route path="nomina/periodos" element={<RequirePermission perm={PERMISSIONS.NOMINA_VER}><PeriodosNominaPage /></RequirePermission>} />
+                <Route path="nomina/periodos/:id" element={<RequirePermission perm={PERMISSIONS.NOMINA_VER}><PeriodoDetailPage /></RequirePermission>} />
+                <Route path="nomina/novedades/:periodoId" element={<RequirePermission perm={PERMISSIONS.NOMINA_CREAR}><NovedadesPage /></RequirePermission>} />
+                <Route path="nomina/recibos/:id" element={<RequirePermission perm={PERMISSIONS.NOMINA_VER}><ReciboPage /></RequirePermission>} />
+                <Route path="nomina/configuracion" element={<RequirePermission perm={PERMISSIONS.NOMINA_CONFIG}><ConfigNominaPage /></RequirePermission>} />
+                <Route path="nomina/libro-sueldos" element={<RequirePermission perm={PERMISSIONS.NOMINA_VER}><LibroSueldosPage /></RequirePermission>} />
                 <Route path="activities" element={<RequirePermission perm={PERMISSIONS.ACTIVITY_VER}><ActivitiesPage /></RequirePermission>} />
                 <Route path="calendar" element={<RequirePermission perm={PERMISSIONS.EVENTO_VER}><CalendarPage /></RequirePermission>} />
-                <Route path="reports" element={<RequireFeature featureKey="reportes"><RequirePermission perm={PERMISSIONS.REPORTE_VER}><ReportsPage /></RequirePermission></RequireFeature>} />
+                <Route path="reports" element={<RequirePermission perm={PERMISSIONS.REPORTE_VER}><ReportsPage /></RequirePermission>} />
                 <Route path="settings" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><SettingsPage /></RequirePermission>} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
