@@ -5,6 +5,20 @@
 
 ---
 
+## Canal de reportes
+
+- **GitHub Issues**: https://github.com/sanchezray7/saas-erp/issues — bugs confirmados con seguimiento
+- **WhatsApp**: https://chat.whatsapp.com/EX9BT6vHQNW3lRLs1Y1d4q — dudas rápidas y capturas
+
+Al reportar un bug incluí:
+1. Módulo donde ocurre
+2. Pasos para reproducir
+3. Qué esperabas que pase
+4. Qué pasó realmente
+5. Captura de pantalla (si aplica)
+
+---
+
 ## Primeros pasos
 
 1. **Crear cuenta** en la URL de arriba (Registrarse). El email se auto-confirma.
