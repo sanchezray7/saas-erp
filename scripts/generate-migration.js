@@ -38,6 +38,7 @@ const orden = [
   'rrhh-reportes-setup.sql', 'feriados-setup.sql',
   'nomina-setup.sql', 'nomina-asientos-setup.sql',
   'nomina-orden-calculo.sql', 'nomina-complementario-fix.sql',
+  'plan-triggers-setup.sql',
 ]
 
 const lines = [
