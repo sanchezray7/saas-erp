@@ -16,6 +16,7 @@ import { CobranzaConfigForm } from '@saas/facturacion'
 import { listarMetas, guardarMeta, eliminarMeta, obtenerProgreso } from '../data/metas'
 import { TiposCambioSection } from '../components/TiposCambioSection'
 import { VacacionReglasSection, FeriadosSection } from '@saas/rrhh'
+import PlanSection from '../components/PlanSection'
 
 export function SettingsPage() {
   const { t } = useTranslation()
@@ -64,6 +65,19 @@ export function SettingsPage() {
       <p className="meta" style={{ marginBottom: '1.25rem' }}>
         {t('settings.configDescripcion')}
       </p>
+
+      <details
+        className="config-section"
+        open={openSection === 'plan'}
+        onToggle={(e) => setOpenSection(e.target.open ? 'plan' : null)}
+      >
+        <summary className="config-section__summary">
+          Plan y facturación
+        </summary>
+        <div style={{ padding: '0.75rem 0' }}>
+          <PlanSection />
+        </div>
+      </details>
 
       <details
         className="config-section"
