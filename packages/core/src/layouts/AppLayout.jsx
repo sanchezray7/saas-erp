@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useCompanyConfig } from '../theme/companyConfigContext'
 import { Logo } from '../components/Logo'
 import { CompanyConfigProvider } from '../theme/CompanyConfigProvider'
 import { Sidebar } from './Sidebar'
+import { PlanOutlet } from './PlanOutlet'
 
 function LayoutInner({ extraSections = [], footerExtra, headerExtra }) {
   const { t } = useTranslation()
@@ -30,7 +30,7 @@ function LayoutInner({ extraSections = [], footerExtra, headerExtra }) {
         </header>
         {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
         <main className="app-main">
-          <Outlet />
+          <PlanOutlet />
         </main>
       </div>
 

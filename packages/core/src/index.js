@@ -39,6 +39,7 @@ export { RequireFeature } from './routes/RequireFeature'
 
 export { Sidebar } from './layouts/Sidebar'
 export { AppLayout } from './layouts/AppLayout'
+export { PlanOutlet } from './layouts/PlanOutlet'
 export { NAV_TOPS, NAV_SECTIONS_BASE } from './layouts/navItems'
 export { NAV_SECTION_FINANZAS } from './layouts/navItemsFinanzas'
 export { NAV_SECTION_CONSOLIDACION } from './layouts/navItemsConsolidacion'
