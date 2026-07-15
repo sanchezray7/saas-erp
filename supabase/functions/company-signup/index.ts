@@ -145,11 +145,11 @@ Deno.serve(async (req: Request) => {
     return json({ error: `Error al crear la empresa: ${companyError?.message}` }, 500)
   }
 
-  // 5. Crear el usuario (auto-confirmado)
+  // 5. Crear el usuario (requiere confirmación de email vía SMTP)
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email,
     password,
-    email_confirm: true,
+    email_confirm: false,
   })
 
   if (createError || !created?.user) {
@@ -168,22 +168,38 @@ Deno.serve(async (req: Request) => {
     return json({ error: `Error al asignar rol: ${roleError.message}` }, 500)
   }
 
-  // 7. Crear configuración de empresa
+  // 7. Disparar email de confirmación (SMTP debe estar configurado)
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+  try {
+    await fetch(`${supabaseUrl}/auth/v1/resend`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: anonKey,
+        Authorization: `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({ type: 'signup', email }),
+    })
+  } catch {
+    // Si falla, el usuario puede reenviar desde la pantalla de verificación
+  }
+
+  // 8. Crear configuración de empresa
   await admin.from('company_config').insert({ company_id: company.id, app_name: companyName }).maybeSingle()
 
-  // 8. Crear pipeline por defecto + etapas
+  // 9. Crear pipeline por defecto + etapas
   const pipelineOk = await crearPipeline(admin, company.id)
 
-  // 9. Seed industrias por defecto (best-effort)
+  // 10. Seed industrias por defecto (best-effort)
   await admin.rpc('seed_default_industries', { p_company_id: company.id }).maybeSingle()
 
-  // 10. Webhook token
+  // 11. Webhook token
   await admin.from('webhook_tokens').insert({ company_id: company.id, token: crypto.randomUUID() }).maybeSingle()
 
   return json({
     company: { id: company.id, name: company.name, rif: company.rif },
     user: { id: created.user.id, email: created.user.email },
-    email_confirmed: true,
+    email_confirmed: false,
     pipeline_created: pipelineOk,
   })
 })
