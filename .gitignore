@@ -5,3 +5,7 @@ dist
 *.log
 .DS_Store
 .vite
+.astro
+.netlify/build
+.netlify/v1
+netlify/functions
