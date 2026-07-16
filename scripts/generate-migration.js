@@ -15,6 +15,7 @@ const orden = [
   'perfil-empresa-setup.sql', 'empresa-rpc-setup.sql', 'actividades-setup.sql',
   'plan-limites-setup.sql',
   'catalogo-setup.sql', 'unidades-setup.sql',
+  'precio-compra-venta-setup.sql',
   'srm-setup.sql', 'sugerencias-oc-setup.sql', 'pagos-setup.sql',
 
   'taxes-setup.sql',

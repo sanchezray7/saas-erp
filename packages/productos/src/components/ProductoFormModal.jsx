@@ -25,13 +25,14 @@ export function ProductoFormModal({ producto, companyId, productos, onClose, onS
     codigo: '',
     tipo: 'producto',
     descripcion: '',
-    precio_unitario: '',
-    moneda: MONEDA_POR_PAIS[pais] || 'PYG',
+    precio_venta: '',
+    precio_compra: '',
+    moneda: 'PYG',
     unidad_medida: 'UNI',
-    account_compra_id: '',
-    account_venta_id: '',
     stock_minimo: '',
     codigo_barras: '',
+    account_compra_id: null,
+    account_venta_id: null,
   })
 
   useEffect(() => {
@@ -45,7 +46,8 @@ export function ProductoFormModal({ producto, companyId, productos, onClose, onS
         codigo: producto.codigo || '',
         tipo: producto.tipo || 'producto',
         descripcion: producto.descripcion || '',
-        precio_unitario: producto.precio_unitario?.toString() || '',
+        precio_venta: producto.precio_venta?.toString() || '',
+    precio_compra: producto.precio_compra?.toString() || '',
         moneda: producto.moneda || MONEDA_POR_PAIS[pais] || 'PYG',
         unidad_medida: producto.unidad_medida || 'UNI',
         account_compra_id: producto.account_compra_id || '',
@@ -84,7 +86,8 @@ export function ProductoFormModal({ producto, companyId, productos, onClose, onS
         codigo: form.codigo.trim() || null,
         tipo: form.tipo,
         descripcion: form.descripcion.trim() || null,
-        precio_unitario: Number(form.precio_unitario) || 0,
+        precio_venta: Number(form.precio_venta) || 0,
+      precio_compra: Number(form.precio_compra) || 0,
         moneda: form.moneda || 'PYG',
         unidad_medida: form.unidad_medida || 'UNI',
         cod_unidad: (unidades.find((u) => u.sigla === form.unidad_medida)?.codigo) || 77,
@@ -133,7 +136,10 @@ export function ProductoFormModal({ producto, companyId, productos, onClose, onS
           <FormField label={t('productos.nombre')} required value={form.nombre} onChange={(e) => set('nombre', e.target.value)} autoFocus />
           <FormField label={t('productos.descripcion')} as="textarea" rows={2} value={form.descripcion} onChange={(e) => set('descripcion', e.target.value)} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <FormField label={t('productos.precioUnitario')} type="number" min="0" step="1" value={form.precio_unitario} onChange={(e) => set('precio_unitario', e.target.value)} />
+            <FormField label={t('productos.precioVenta') || 'Precio venta'} type="number" min="0" step="1" value={form.precio_venta} onChange={(e) => set('precio_venta', e.target.value)} />
+            <FormField label={t('productos.precioCompra') || 'Precio compra'} type="number" min="0" step="1" value={form.precio_compra} onChange={(e) => set('precio_compra', e.target.value)} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <FormField label={t('productos.moneda')} as="select" value={form.moneda} onChange={(e) => set('moneda', e.target.value)}>
               <option value="PYG">Gs. (PYG)</option>
               <option value="USD">$ (USD)</option>

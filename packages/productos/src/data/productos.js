@@ -54,7 +54,7 @@ export async function importarProductos(companyId, rows) {
     codigo: r.codigo || r.code || null,
     tipo: (r.tipo || r.type) === 'servicio' || (r.tipo || r.type) === 'service' ? 'servicio' : 'producto',
     descripcion: r.descripcion || r.description || null,
-    precio_unitario: Number(r.precio_unitario || r.price || 0),
+      precio_unitario: Number(r.precio_venta || r.price || 0),
     moneda: r.moneda || r.currency || 'PYG',
     unidad_medida: r.unidad_medida || r.unit || 'UNI',
   }))

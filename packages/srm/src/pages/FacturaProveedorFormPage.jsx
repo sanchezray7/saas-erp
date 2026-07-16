@@ -73,7 +73,7 @@ export function FacturaProveedorFormPage() {
 
   function handleSelectProducto(idx, prodId) {
     const prod = productos.find((p) => p.id === prodId)
-    setItems((prev) => prev.map((item, i) => i === idx ? { ...item, producto_id: prodId, descripcion: prod?.nombre || '', precio_unitario: item.precio_unitario || Number(prod?.precio_unitario || 0) } : item))
+    setItems((prev) => prev.map((item, i) => i === idx ? { ...item, producto_id: prodId, descripcion: prod?.nombre || '',       precio_unitario: item.precio_unitario || Number(prod?.precio_compra || 0) } : item))
   }
 
   function updateItem(idx, field, value) {

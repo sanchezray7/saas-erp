@@ -77,7 +77,7 @@ export function CotizacionFormPage() {
   function removeItem(idx) { setItems((prev) => prev.filter((_, i) => i !== idx)) }
 
   function handleSelectProducto(producto) {
-    setItems((prev) => [...prev, { descripcion: producto.descripcion || '', cantidad: producto.cantidad || 1, precio_unitario: producto.precio_unitario || 0, iva_id: '', account_venta_id: producto.account_venta_id || '', producto_id: producto.producto_id || '' }])
+    setItems((prev) => [...prev, { descripcion: producto.descripcion || '', cantidad: producto.cantidad || 1,       precio_unitario: producto.precio_venta || 0, iva_id: '', account_venta_id: producto.account_venta_id || '', producto_id: producto.producto_id || '' }])
   }
 
   const totales = items.reduce((acc, item) => {

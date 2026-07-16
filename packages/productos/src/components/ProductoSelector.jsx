@@ -28,7 +28,7 @@ export function ProductoSelector({ companyId, onSelect, onClose }) {
     onSelect({
       descripcion: selected.nombre,
       cantidad: 1,
-      precio_unitario: Number(selected.precio_unitario),
+      precio_unitario: Number(selected.precio_venta),
       codigoInterno: selected.codigo || undefined,
       unidadMedida: selected.unidad_medida,
       account_venta_id: selected.account_venta_id || '',

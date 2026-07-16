@@ -79,7 +79,7 @@ export function CatalogPage() {
       codigo: p.codigo || '',
       tipo: p.tipo || 'producto',
       descripcion: p.descripcion || '',
-      precio_unitario: p.precio_unitario,
+                precio_venta: p.precio_venta,
       moneda: p.moneda || 'PYG',
       unidad_medida: p.unidad_medida || 'UNI',
     }))
@@ -144,7 +144,8 @@ export function CatalogPage() {
               <td><span className="badge" style={{ fontSize: '0.7rem', background: p.tipo === 'servicio' ? '#ede9fe' : '#dbeafe', color: p.tipo === 'servicio' ? '#7c3aed' : '#1d4ed8' }}>{p.tipo === 'servicio' ? 'SER' : 'PRO'}</span></td>
               <td style={{ fontWeight: 600 }}>{p.nombre}</td>
               <td className="meta">{p.descripcion || '—'}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{Number(p.precio_unitario).toLocaleString()} {p.moneda || 'PYG'}</td>
+                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{Number(p.precio_venta).toLocaleString()} {p.moneda || 'PYG'}</td>
+                    <td style={{ textAlign: 'right' }}>{Number(p.precio_compra).toLocaleString()} {p.moneda || 'PYG'}</td>
                     <td style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}>{p.codigo_barras || '—'}</td>
                     <td>{p.unidad_medida || 'UNI'}</td>
               <td style={{ textAlign: 'right', fontWeight: 700 }}>

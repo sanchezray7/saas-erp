@@ -44,7 +44,7 @@ export function OrdenCompraFormPage() {
       producto_id: prodId,
       descripcion: prod?.nombre || '',
       cantidad: item.cantidad,
-      precio_unitario: item.precio_unitario || Number(prod?.precio_unitario || 0),
+      precio_unitario: item.precio_unitario || Number(prod?.precio_compra || 0),
     } : item))
   }
 
