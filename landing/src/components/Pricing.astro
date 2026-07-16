@@ -15,10 +15,9 @@ const plans = [
     <h2 class="section-title">{t(locale, 'pricing.titulo')}</h2>
     <p class="section-subtitle">{t(locale, 'pricing.subtitulo')}</p>
     <div class="pricing-grid">
-      {plans.map(({ key, destacado }) => {
-        const plan = t(locale, `pricing.${key}`)
-        return <PlanCard plan={plan} destacado={destacado} locale={locale} />
-      })}
+      {plans.map(({ key, destacado }) => (
+        <PlanCard planKey={key} destacado={destacado} />
+      ))}
     </div>
   </div>
 </section>

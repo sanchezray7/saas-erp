@@ -1,0 +1,105 @@
+---
+import { FEATURES, FEATURE_LABELS, QUOTAS, QUOTA_LABELS, PLAN_LABELS, qty } from '../data/planConfig'
+import { t } from '../i18n/traducciones'
+
+const { locale = 'es' } = Astro.props
+const plans = ['free', 'starter', 'business']
+---
+
+<section class="section section-alt">
+  <div class="container">
+    <h2 class="section-title">{t(locale, 'pricing.titulo')}</h2>
+    <p class="section-subtitle">{t(locale, 'pricing.subtitulo')}</p>
+
+    <div class="pricing-table-wrapper">
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th class="pricing-th-left"></th>
+            {plans.map((plan) => {
+              const p = PLAN_LABELS[plan]
+              return (
+                <th class="pricing-th-plan" data-destacado={plan === 'starter' ? '' : undefined}>
+                  <div class="pricing-plan-name">{p.name}</div>
+                  <div class="pricing-plan-price">
+                    <span class="pricing-amount">{p.price}</span>
+                    <span class="pricing-period">{p.period}</span>
+                  </div>
+                </th>
+              )
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Features -->
+          {Object.entries(FEATURE_LABELS).map(([key, label]) => {
+            const vals = plans.map((p) => FEATURES[key][p])
+            const allSame = vals.every((v) => v === vals[0])
+            return (
+              <tr class="pricing-row" class:list={{ 'pricing-row--muted': allSame && vals[0] }}>
+                <td class="pricing-cell-label">{label}</td>
+                {plans.map((plan) => {
+                  const enabled = FEATURES[key][plan]
+                  return (
+                    <td class="pricing-cell-value">
+                      {enabled
+                        ? <span class="pricing-check" title="Disponible">✓</span>
+                        : <span class="pricing-cross" title="No disponible">—</span>
+                      }
+                    </td>
+                  )
+                })}
+              </tr>
+            )
+          })}
+
+          <!-- Cuotas -->
+          <tr class="pricing-row pricing-row--separator">
+            <td class="pricing-cell-label pricing-cell-label--strong">Límites</td>
+            {plans.map(() => <td></td>)}
+          </tr>
+          {Object.entries(QUOTA_LABELS).map(([key, label]) => {
+            const vals = plans.map((p) => QUOTAS[p][key])
+            return (
+              <tr class="pricing-row">
+                <td class="pricing-cell-label">{label}</td>
+                {plans.map((plan) => {
+                  const val = QUOTAS[plan][key]
+                  return (
+                    <td class="pricing-cell-value">{qty(val, label.toLowerCase())}</td>
+                  )
+                })}
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .pricing-table-wrapper { overflow-x: auto; }
+  .pricing-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  .pricing-th-left { width: 200px; padding: 1rem; text-align: left; }
+  .pricing-th-plan { padding: 1.5rem 1rem; text-align: center; border-bottom: 2px solid var(--border); position: relative; }
+  .pricing-th-plan[data-destacado] { background: rgba(99,102,241,0.05); border-color: var(--primary); }
+  .pricing-plan-name { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .pricing-plan-price { font-size: 0.85rem; color: var(--text-muted); }
+  .pricing-amount { font-size: 1.2rem; font-weight: 700; color: var(--text); }
+  .pricing-period { font-size: 0.8rem; }
+  .pricing-row { border-bottom: 1px solid var(--border); }
+  .pricing-row--muted { opacity: 0.6; }
+  .pricing-row--separator td { padding-top: 1.5rem; border-bottom: 2px solid var(--text); }
+  .pricing-cell-label { padding: 0.7rem 1rem; color: var(--text); font-size: 0.85rem; }
+  .pricing-cell-label--strong { font-weight: 700; }
+  .pricing-cell-value { padding: 0.7rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+  .pricing-check { color: #22c55e; font-weight: 700; font-size: 1.1rem; }
+  .pricing-cross { color: #94a3b8; font-size: 1rem; }
+
+  @media (max-width: 768px) {
+    .pricing-table { font-size: 0.8rem; }
+    .pricing-cell-label { font-size: 0.8rem; }
+    .pricing-th-left { width: 120px; }
+  }
+</style>

@@ -1,23 +1,46 @@
 ---
-const { plan, destacado = false, locale = 'es' } = Astro.props
+import { PLAN_LABELS, FEATURES, FEATURE_LABELS, QUOTAS, QUOTA_LABELS, qty } from '../data/planConfig'
+
+const { planKey, destacado = false } = Astro.props
 const appUrl = 'https://app.saas-empresarial.com'
+const plan = PLAN_LABELS[planKey]
+const isEs = planKey === 'free'
+
+// Features más relevantes para mostrar en la card
+const HIGHLIGHTS = {
+  free: ['catalogo', 'crm', 'facturacion'],
+  starter: ['catalogo', 'crm', 'facturacion', 'notas_cd', 'srm', 'inventario', 'contabilidad', 'asientos_automaticos_facturas'],
+  business: ['catalogo', 'crm', 'facturacion', 'srm', 'inventario', 'rrhh', 'nomina', 'whatsapp'],
+}
+
+const featureList = HIGHLIGHTS[planKey] || Object.keys(FEATURES)
+const maxUsuarios = QUOTAS[planKey]?.usuarios ?? -1
 ---
 
 <div class="plan-card" class:list={{ destacado }}>
   {destacado && <div class="plan-badge">Más popular</div>}
-  <h3 class="plan-name">{plan.nombre}</h3>
-  <p class="plan-desc">{plan.desc}</p>
+  <h3 class="plan-name">{plan.name}</h3>
+  <p class="plan-desc">
+    {planKey === 'free' ? 'Para empezar' : planKey === 'starter' ? 'Para pequeñas empresas' : 'Para empresas en crecimiento'}
+  </p>
   <div class="plan-price">
-    <span class="plan-amount">{plan.precio}</span>
+    <span class="plan-amount">{plan.price}</span>
     <span class="plan-period">{plan.period}</span>
   </div>
   <ul class="plan-features">
-    {plan.features.map((f) => (
-      <li class="plan-feature">✓ {f}</li>
-    ))}
+    <li class="plan-feature">{qty(maxUsuarios, 'usuario' + (maxUsuarios !== 1 ? 's' : ''))}</li>
+    {featureList.map((key) => {
+      const enabled = FEATURES[key]?.[planKey]
+      const label = FEATURE_LABELS[key]
+      return (
+        <li class="plan-feature" class:list={{ 'plan-feature--off': !enabled }}>
+          {enabled ? '✓' : '—'} {label}
+        </li>
+      )
+    })}
   </ul>
   <a href={`${appUrl}/register`} class="btn" class:list={{ 'btn-primary': true, 'btn-lg': true }} style="width:100%;text-align:center;justify-content:center">
-    {plan.nombre === 'Free' || plan.nombre === 'Gratis' ? 'Comenzar gratis' : 'Contratar'}
+    {isEs ? 'Comenzar gratis' : 'Contratar'}
   </a>
 </div>
 
@@ -59,4 +82,5 @@ const appUrl = 'https://app.saas-empresarial.com'
   .plan-period { font-size: 1rem; color: var(--text-muted); }
   .plan-features { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
   .plan-feature { font-size: 0.88rem; color: var(--text-muted); }
+  .plan-feature--off { opacity: 0.4; }
 </style>
