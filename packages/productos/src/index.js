@@ -1,4 +1,5 @@
 export { listarProductos, guardarProducto, eliminarProducto } from './data/productos'
+export { listarCategorias, guardarCategoria, eliminarCategoria, COLORES_CATEGORIA, ICONOS_CATEGORIA } from './data/categorias'
 export { CatalogPage } from './pages/CatalogPage'
 export { ProductoSelector } from './components/ProductoSelector'
 export { ProductoFormModal } from './components/ProductoFormModal'

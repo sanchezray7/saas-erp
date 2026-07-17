@@ -92,7 +92,7 @@ export async function listarProductosPos(companyId) {
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('catalogo_productos')
-    .select('id, nombre, codigo, precio_venta, precio_compra, codigo_barras, tipo, moneda, unidad_medida')
+    .select('id, nombre, codigo, precio_venta, precio_compra, codigo_barras, tipo, moneda, unidad_medida, categoria:categoria_id(nombre, icono, color)')
     .eq('company_id', companyId)
     .eq('activo', true)
     .eq('tipo', 'producto')

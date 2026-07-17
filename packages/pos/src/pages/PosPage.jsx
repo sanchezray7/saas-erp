@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useAuth, alertError, notify, getSupabase } from '@saas/core'
 import { listarProductosPos, listarCajas, abrirCaja, registrarVentaPos, seedConsumidorFinal } from '../data/pos'
+import { listarCategorias } from '@saas/productos'
 import Cart from '../components/Cart'
 import PaymentModal from '../components/PaymentModal'
 import { imprimirTicket } from '../components/TicketPrint'
@@ -11,8 +12,9 @@ export function PosPage() {
   const [cajas, setCajas] = useState([])
   const [cajaActiva, setCajaActiva] = useState(null)
   const [almacenId, setAlmacenId] = useState(null)
+  const [categorias, setCategorias] = useState([])
   const [search, setSearch] = useState('')
-  const [categoria, setCategoria] = useState('')
+  const [catSeleccionada, setCatSeleccionada] = useState(null)
   const [items, setItems] = useState([])
   const [showPayment, setShowPayment] = useState(false)
   const [saldoApertura, setSaldoApertura] = useState(0)
@@ -23,19 +25,20 @@ export function PosPage() {
 
   const load = useCallback(async () => {
     try {
-      const [prods, caj, almacenes] = await Promise.all([
+      const [prods, caj, almacenes, cats] = await Promise.all([
         listarProductosPos(activeCompanyId),
         listarCajas(activeCompanyId),
         supabase.from('almacenes').select('id').eq('company_id', activeCompanyId).limit(1),
+        listarCategorias(activeCompanyId, 'producto'),
       ])
       setProductos(prods)
       setCajas(caj)
+      setCategorias(cats)
       if (almacenes?.data?.length > 0) setAlmacenId(almacenes.data[0].id)
       const activa = caj.find((c) => c.estado === 'abierta')
       setCajaActiva(activa || null)
       if (!activa && caj.length > 0) setShowApertura(true)
 
-      // Consumidor final
       const cid = await seedConsumidorFinal(activeCompanyId)
       setClienteId(cid)
     } catch (err) { alertError('Error', err.message) }
@@ -43,9 +46,24 @@ export function PosPage() {
 
   useEffect(() => { load() }, [load])
 
+  // IDs de categoría + todas sus subcategorías
+  function expandirCategoria(catId) {
+    const ids = [catId]
+    const subs = categorias.filter((c) => c.parent_id === catId)
+    for (const sub of subs) {
+      ids.push(sub.id)
+      const nested = categorias.filter((c) => c.parent_id === sub.id)
+      ids.push(...nested.map((n) => n.id))
+    }
+    return ids
+  }
+
   const filtered = useMemo(() => {
     let res = productos
-    if (categoria) res = res.filter((p) => p.tipo === categoria)
+    if (catSeleccionada) {
+      const ids = expandirCategoria(catSeleccionada)
+      res = res.filter((p) => p.categoria && ids.includes(p.categoria.id))
+    }
     if (search) {
       const s = search.toLowerCase()
       res = res.filter((p) =>
@@ -55,9 +73,9 @@ export function PosPage() {
       )
     }
     return res
-  }, [productos, search, categoria])
+  }, [productos, search, catSeleccionada, categorias])
 
-  const categorias = useMemo(() => [...new Set(productos.map((p) => p.tipo))], [productos])
+  const categoriasPadre = useMemo(() => categorias.filter((c) => !c.parent_id), [categorias])
 
   function agregarProducto(p) {
     setItems((prev) => {
@@ -100,29 +118,15 @@ export function PosPage() {
     if (!cajaActiva) { alertError('Error', 'No hay caja abierta'); return }
     try {
       const res = await registrarVentaPos(activeCompanyId, {
-        cajaId: cajaActiva.id,
-        clienteId,
-        items: items.map((i) => ({
-          producto_id: i.producto_id,
-          nombre: i.nombre,
-          cantidad: i.cantidad,
-          precio: i.precio,
-          almacen_id: almacenId,
-        })),
-        subtotal: total,
-        descuento: datos.descuento || 0,
-        total: total - (datos.descuento || 0),
-        formaPago: datos.formaPago,
-        montoEfectivo: datos.montoEfectivo || 0,
-        montoTarjeta: datos.montoTarjeta || 0,
-        montoTransferencia: datos.montoTransferencia || 0,
-        montoRecibido: datos.montoRecibido || 0,
-        montoCambio: datos.montoCambio || 0,
+        cajaId: cajaActiva.id, clienteId,
+        items: items.map((i) => ({ producto_id: i.producto_id, nombre: i.nombre, cantidad: i.cantidad, precio: i.precio, almacen_id: almacenId })),
+        subtotal: total, descuento: datos.descuento || 0, total: total - (datos.descuento || 0),
+        formaPago: datos.formaPago, montoEfectivo: datos.montoEfectivo || 0,
+        montoTarjeta: datos.montoTarjeta || 0, montoTransferencia: datos.montoTransferencia || 0,
+        montoRecibido: datos.montoRecibido || 0, montoCambio: datos.montoCambio || 0,
       })
       notify(`Venta #${res.numero} registrada`)
       setShowPayment(false)
-
-      // Ticket
       const { data: ventaCompleta } = await supabase.from('ventas_pos').select('*').eq('id', res.venta_id).single()
       if (ventaCompleta) imprimirTicket(ventaCompleta, 'Saas Empresarial')
       setItems([])
@@ -132,7 +136,6 @@ export function PosPage() {
 
   return (
     <div className="card" style={{ padding: 0 }}>
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-alt)' }}>
         <h2 style={{ margin: 0, fontSize: '1rem' }}>🛒 POS</h2>
         <input ref={searchRef} type="search" placeholder="🔍 Buscar por nombre, código o barras..." className="form-input"
@@ -144,17 +147,27 @@ export function PosPage() {
       </div>
 
       <div style={{ display: 'flex', height: 'calc(100vh - 260px)', minHeight: 400 }}>
-        {/* Columnas de categorías */}
-        <div style={{ width: 140, borderRight: '1px solid var(--border)', overflowY: 'auto', padding: 8 }}>
-          <button className={`btn ${!categoria ? 'btn-primary' : 'btn-outline'}`}
-            onClick={() => setCategoria('')} style={{ width: '100%', justifyContent: 'center', marginBottom: 4, fontSize: '0.75rem', padding: '6px' }}>
-            Todos
+        {/* Categorías */}
+        <div style={{ width: 160, borderRight: '1px solid var(--border)', overflowY: 'auto', padding: 8 }}>
+          <button className={`btn ${!catSeleccionada ? 'btn-primary' : 'btn-outline'}`}
+            onClick={() => setCatSeleccionada(null)} style={{ width: '100%', justifyContent: 'center', marginBottom: 4, fontSize: '0.75rem', padding: '6px' }}>
+            📦 Todas
           </button>
-          {categorias.map((cat) => (
-            <button key={cat} className={`btn ${categoria === cat ? 'btn-primary' : 'btn-outline'}`}
-              onClick={() => setCategoria(cat)} style={{ width: '100%', justifyContent: 'center', marginBottom: 4, fontSize: '0.75rem', padding: '6px' }}>
-              {cat}
-            </button>
+          {categoriasPadre.map((cat) => (
+            <div key={cat.id}>
+              <button className={`btn ${catSeleccionada === cat.id ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setCatSeleccionada(catSeleccionada === cat.id ? null : cat.id)}
+                style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 2, fontSize: '0.75rem', padding: '6px 8px' }}>
+                {cat.icono || '📦'} {cat.nombre}
+              </button>
+              {categorias.filter((s) => s.parent_id === cat.id).map((sub) => (
+                <button key={sub.id} className={`btn ${catSeleccionada === sub.id ? 'btn-primary' : 'btn-ghost'}`}
+                  onClick={() => setCatSeleccionada(catSeleccionada === sub.id ? null : sub.id)}
+                  style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 2, fontSize: '0.7rem', padding: '4px 8px 4px 24px' }}>
+                  {sub.icono || '•'} {sub.nombre}
+                </button>
+              ))}
+            </div>
           ))}
         </div>
 
@@ -164,10 +177,7 @@ export function PosPage() {
             <p className="meta" style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem' }}>Sin productos</p>
           ) : filtered.slice(0, 50).map((p) => (
             <button key={p.id} onClick={() => agregarProducto(p)}
-              style={{
-                padding: '12px 8px', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer',
-                background: 'white', textAlign: 'center', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 4,
-              }}
+              style={{ padding: '12px 8px', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', background: 'white', textAlign: 'center', transition: 'all 0.15s', display: 'flex', flexDirection: 'column', gap: 4 }}
               onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--primary)'}
               onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border)'}
             >
@@ -185,7 +195,6 @@ export function PosPage() {
         </div>
       </div>
 
-      {/* Modal apertura de caja */}
       {showApertura && (
         <div className="modal-overlay" onClick={() => setShowApertura(false)}>
           <div className="modal" style={{ maxWidth: 360 }} onClick={(e) => e.stopPropagation()}>
@@ -195,17 +204,12 @@ export function PosPage() {
               <label>Saldo inicial</label>
               <input type="number" className="form-input" value={saldoApertura} onChange={(e) => setSaldoApertura(Number(e.target.value) || 0)} min="0" autoFocus />
             </div>
-            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 12 }} onClick={handleAbrirCaja}>
-              Abrir caja
-            </button>
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: 12 }} onClick={handleAbrirCaja}>Abrir caja</button>
           </div>
         </div>
       )}
 
-      {/* Modal cobro */}
-      {showPayment && (
-        <PaymentModal total={total} onConfirm={handlePagar} onClose={() => setShowPayment(false)} />
-      )}
+      {showPayment && <PaymentModal total={total} onConfirm={handlePagar} onClose={() => setShowPayment(false)} />}
     </div>
   )
 }

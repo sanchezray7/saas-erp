@@ -143,6 +143,7 @@ export function CatalogPage() {
             <th>{t('productos.tipo')}</th>
             <th>{t('productos.nombre')}</th>
             <th>{t('productos.descripcion')}</th>
+            <th>Categoría</th>
             <th style={{ textAlign: 'right' }}>Precio Venta</th>
             <th style={{ textAlign: 'right' }}>Precio Compra</th>
             <th style={{ textAlign: 'right' }}>Últ. Compra</th>
@@ -156,7 +157,7 @@ export function CatalogPage() {
         <tbody>
           {filtered.length === 0 ? (
             <tr>
-              <td colSpan={12} className="meta" style={{ textAlign: 'center', padding: 32 }}>
+              <td colSpan={13} className="meta" style={{ textAlign: 'center', padding: 32 }}>
                 {t('common.sinDatos')}
               </td>
             </tr>
@@ -166,7 +167,8 @@ export function CatalogPage() {
               <td><span className="badge" style={{ fontSize: '0.7rem', background: p.tipo === 'servicio' ? '#ede9fe' : '#dbeafe', color: p.tipo === 'servicio' ? '#7c3aed' : '#1d4ed8' }}>{p.tipo === 'servicio' ? 'SER' : 'PRO'}</span></td>
               <td style={{ fontWeight: 600 }}>{p.nombre}</td>
               <td className="meta">{p.descripcion || '—'}</td>
-                    <td style={{ textAlign: 'right', fontWeight: 600 }}>{Number(p.precio_venta).toLocaleString()} {p.moneda || 'PYG'}</td>
+              <td style={{ fontSize: '0.82rem' }}>{p.categoria?.nombre || '—'}</td>
+              <td style={{ textAlign: 'right', fontWeight: 600 }}>{Number(p.precio_venta).toLocaleString()} {p.moneda || 'PYG'}</td>
                     <td style={{ textAlign: 'right' }}>{Number(p.precio_compra).toLocaleString()} {p.moneda || 'PYG'}</td>
                     <td style={{ textAlign: 'right' }}>{ultCompraMap[p.id] ? `${Number(ultCompraMap[p.id]).toLocaleString()} ${p.moneda || 'PYG'}` : <span className="meta">—</span>}</td>
                     <td style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}>{p.codigo_barras || '—'}</td>
