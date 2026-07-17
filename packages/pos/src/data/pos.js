@@ -45,7 +45,7 @@ export async function registrarVentaPos(companyId, venta) {
     p_company_id: companyId,
     p_caja_id: venta.cajaId,
     p_cliente_id: venta.clienteId,
-    p_items: JSON.stringify(venta.items),
+    p_items: venta.items,
     p_subtotal: venta.subtotal,
     p_descuento: venta.descuento,
     p_total: venta.total,
