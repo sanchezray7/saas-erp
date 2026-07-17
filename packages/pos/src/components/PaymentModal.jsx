@@ -41,8 +41,17 @@ export default function PaymentModal({ total, onConfirm, onClose }) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" style={{ maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'rgba(0,0,0,0.4)',
+    }} onClick={onClose}>
+      <div style={{
+        background: 'var(--color-surface)', borderRadius: 12,
+        padding: 24, width: '90%', maxWidth: 420,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+        maxHeight: '90vh', overflow: 'auto',
+      }} onClick={(e) => e.stopPropagation()}>
         <h3 style={{ marginBottom: 16 }}>Cobrar — Total: <strong>{total.toLocaleString()} Gs.</strong></h3>
 
         <div style={{ marginBottom: 16 }}>
