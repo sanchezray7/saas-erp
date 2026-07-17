@@ -108,6 +108,29 @@ export const HELP = {
           'Se puede configurar cobranza automática en Settings → Cobranza',
         ],
       },
+      {
+        titulo: '6. Calendario',
+        descripcion: 'Agenda de actividades, eventos y recordatorios vinculados a contactos y oportunidades',
+        pasos: [
+          'Ir a **Calendario** en el menú VENTAS',
+          'Seleccionar vista: **Mes**, **Semana** o **Día** usando los botones superiores',
+          'Click en una fecha/hora para crear un nuevo evento',
+          'Completar: título, fecha, hora, tipo (llamada/reunión/tarea), contacto asociado',
+          'Click **"Guardar"** — el evento aparece en el calendario',
+        ],
+        tips: [
+          'Los eventos se pueden arrastrar para cambiar la fecha/hora (drag & drop)',
+          'Se puede cambiar el tamaño de un evento arrastrando los bordes (redimensionar)',
+          'Los colores de los eventos ayudan a distinguir tipos: llamadas, reuniones, tareas',
+          'El calendario también muestra actividades registradas desde el timeline de contactos',
+          'Usar los filtros superiores para ver solo eventos de un contacto o tipo específico',
+        ],
+        acciones: [
+          { label: 'Crear evento rápido', desc: 'Click en cualquier espacio vacío del calendario → se abre el formulario con la fecha/hora pre-seleccionada' },
+          { label: 'Editar evento', desc: 'Click sobre un evento existente → se abre el detalle para modificar' },
+          { label: 'Eliminar evento', desc: 'Desde el detalle del evento, click en "Eliminar"' },
+        ],
+      },
     ],
   },
 }
