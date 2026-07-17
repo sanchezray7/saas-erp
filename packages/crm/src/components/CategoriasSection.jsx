@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { alertError } from '@saas/core'
+import { alertError, Button } from '@saas/core'
 import { listarCategorias, guardarCategoria, eliminarCategoria, COLORES_CATEGORIA, ICONOS_CATEGORIA } from '@saas/productos'
 
 export default function CategoriasSection({ companyId }) {
@@ -31,10 +31,10 @@ export default function CategoriasSection({ companyId }) {
   return (
     <div style={{ padding: '0.75rem 0' }}>
       <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-        <button className={`btn ${tipoFiltro === 'producto' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTipoFiltro('producto')} size="sm">📦 Productos</button>
-        <button className={`btn ${tipoFiltro === 'servicio' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTipoFiltro('servicio')} size="sm">🔧 Servicios</button>
+        <Button size="sm" variant={tipoFiltro === 'producto' ? 'primary' : 'outline'} onClick={() => setTipoFiltro('producto')}>📦 Productos</Button>
+        <Button size="sm" variant={tipoFiltro === 'servicio' ? 'primary' : 'outline'} onClick={() => setTipoFiltro('servicio')}>🔧 Servicios</Button>
         <div style={{ flex: 1 }} />
-        <button className="btn btn-primary btn-sm" onClick={() => setEditando({ nombre: '', tipo: tipoFiltro, icono: '📦', color: '#6366f1' })}>+ Nueva categoría</button>
+        <Button size="sm" onClick={() => setEditando({ nombre: '', tipo: tipoFiltro, icono: '📦', color: '#6366f1' })}>+ Nueva categoría</Button>
       </div>
 
       <table className="table">
@@ -50,9 +50,9 @@ export default function CategoriasSection({ companyId }) {
                 <td><span style={{ display: 'inline-block', width: 20, height: 20, background: cat.color, borderRadius: 4 }} /></td>
                 <td>{hijas(cat.id).length} subcategorías</td>
                 <td style={{ display: 'flex', gap: 4 }}>
-                  <button className="btn btn-sm btn-ghost" onClick={() => setEditando(cat)}>✏️</button>
-                  <button className="btn btn-sm btn-ghost" onClick={() => setEditando({ nombre: '', tipo: tipoFiltro, icono: '📦', color: '#6366f1', parent_id: cat.id })}>+ Sub</button>
-                  <button className="btn btn-sm btn-ghost" onClick={() => handleEliminar(cat.id)}>🗑️</button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditando(cat)}>✏️</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditando({ nombre: '', tipo: tipoFiltro, icono: '📦', color: '#6366f1', parent_id: cat.id })}>+ Sub</Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleEliminar(cat.id)}>🗑️</Button>
                 </td>
               </tr>
               {hijas(cat.id).map((sub) => (
@@ -62,8 +62,8 @@ export default function CategoriasSection({ companyId }) {
                   <td><span style={{ display: 'inline-block', width: 20, height: 20, background: sub.color, borderRadius: 4 }} /></td>
                   <td>—</td>
                   <td style={{ display: 'flex', gap: 4 }}>
-                    <button className="btn btn-sm btn-ghost" onClick={() => setEditando(sub)}>✏️</button>
-                    <button className="btn btn-sm btn-ghost" onClick={() => handleEliminar(sub.id)}>🗑️</button>
+                    <Button size="sm" variant="ghost" onClick={() => setEditando(sub)}>✏️</Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleEliminar(sub.id)}>🗑️</Button>
                   </td>
                 </tr>
               ))}
@@ -101,8 +101,8 @@ export default function CategoriasSection({ companyId }) {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
-                <button type="button" className="btn btn-outline btn-sm" onClick={() => setEditando(null)}>Cancelar</button>
-                <button type="submit" className="btn btn-primary btn-sm">{editando.id ? 'Guardar' : 'Crear'}</button>
+                <Button variant="ghost" size="sm" onClick={() => setEditando(null)}>Cancelar</Button>
+                <Button type="submit" size="sm">{editando.id ? 'Guardar' : 'Crear'}</Button>
               </div>
             </form>
           </div>
