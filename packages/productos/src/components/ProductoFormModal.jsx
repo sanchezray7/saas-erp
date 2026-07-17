@@ -22,7 +22,6 @@ export function ProductoFormModal({ producto, companyId, productos, onClose, onS
   const [unidades, setUnidades] = useState([])
   const [accounts, setAccounts] = useState([])
   const [categorias, setCategorias] = useState([])
-  const isServicio = form?.tipo === 'servicio' || false
   const [form, setForm] = useState({
     nombre: '', codigo: '', tipo: 'producto', descripcion: '',
     precio_venta: '', precio_compra: '', moneda: 'PYG',
@@ -30,6 +29,7 @@ export function ProductoFormModal({ producto, companyId, productos, onClose, onS
     account_compra_id: null, account_venta_id: null,
     categoria_id: '',
   })
+  const isServicio = form?.tipo === 'servicio' || false
 
   useEffect(() => {
     Promise.all([listarUnidadesMedida(), listarAccounts(companyId)]).then(([u, a]) => {
