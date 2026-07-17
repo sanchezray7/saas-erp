@@ -814,4 +814,60 @@ export const HELP = {
       },
     ],
   },
+  consolidacion: {
+    titulo: 'Consolidación',
+    icon: '🏢',
+    descripcion: 'Consolidación contable de múltiples empresas del mismo grupo económico (holding)',
+    modulos: [
+      {
+        titulo: '1. Holding / Grupo Económico',
+        descripcion: 'Agrupación de empresas bajo una misma controladora para reportes consolidados',
+        pasos: [
+          'Ir a **Consolidación** en FINANZAS',
+          'Ver el listado de empresas del grupo',
+          'La empresa matriz consolida los estados de todas sus filiales',
+          'Cada sucursal o filial se registra como una empresa independiente vinculada a la matriz',
+        ],
+        tips: [
+          'Las empresas del holding comparten el mismo plan de cuentas',
+          'Cada empresa opera independientemente (factura, compra, paga impuestos)',
+          'La consolidación suma los saldos de todas las empresas eliminando transacciones entre ellas',
+          'Para crear una filial, ir a Settings → Sucursales',
+        ],
+      },
+      {
+        titulo: '2. Balance General Consolidado',
+        descripcion: 'Balance del grupo económico sumando activos, pasivos y patrimonio de todas las empresas',
+        pasos: [
+          'Ir a **Consolidación → Balance** en FINANZAS',
+          'Seleccionar el período y las empresas a consolidar',
+          'El sistema suma los saldos de cada cuenta contable de todas las empresas seleccionadas',
+          'Se eliminan automáticamente las transacciones entre empresas del grupo',
+          'El resultado muestra: Activo = Pasivo + Patrimonio del grupo consolidado',
+        ],
+        tips: [
+          'El balance consolidado refleja la salud financiera del grupo completo',
+          'Las transacciones intercompañía se eliminan para evitar duplicación',
+          'Se requiere que todas las empresas tengan el mismo plan de cuentas',
+          'Util para presentación a bancos, inversores o accionistas',
+        ],
+      },
+      {
+        titulo: '3. Estado de Resultados Consolidado',
+        descripcion: 'Ingresos, costos y gastos del grupo económico consolidado',
+        pasos: [
+          'Ir a **Consolidación → Resultados** en FINANZAS',
+          'Seleccionar período y empresas',
+          'El sistema suma ingresos, costos y gastos de todas las empresas',
+          'Las ventas entre empresas del grupo se eliminan',
+          'El resultado neto consolidado muestra la ganancia o pérdida del grupo',
+        ],
+        tips: [
+          'Las ventas de una empresa a otra del mismo grupo se eliminan en la consolidación',
+          'Esto evita contar ingresos duplicados',
+          'El resultado consolidado es el que realmente genera el grupo hacia terceros',
+        ],
+      },
+    ],
+  },
 }
