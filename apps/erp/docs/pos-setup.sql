@@ -148,7 +148,7 @@ begin
   if v_caja.estado = 'cerrada' then
     return jsonb_build_object('error', 'La caja ya está cerrada');
   end if;
-  select count(*), coalesce(sum(total), 0) into v_ventas
+  select count(*) as count, coalesce(sum(total), 0) as sum into v_ventas
   from ventas_pos
   where caja_id = p_caja_id and created_at >= v_caja.apertura_en;
 
