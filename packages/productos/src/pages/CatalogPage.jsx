@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth, Button, Skeleton, ConfirmModal, alertError, notify, MONEDA_POR_PAIS, getSupabase } from '@saas/core'
 import { listarProductos, eliminarProducto, importarProductos } from '../data/productos'
 import { ProductoFormModal } from '../components/ProductoFormModal'
+import { generarStickers, TAMANOS } from '../components/StickerPrint'
 import { listarStockGeneral } from '@saas/inventario'
 
 export function CatalogPage() {
@@ -16,6 +17,9 @@ export function CatalogPage() {
   const [modal, setModal] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [importing, setImporting] = useState(false)
+  const [stickerProd, setStickerProd] = useState(null)
+  const [stickerCant, setStickerCant] = useState(1)
+  const [stickerTam, setStickerTam] = useState('mediano')
   const fileRef = useRef(null)
 
   const load = useCallback(async () => {
@@ -186,6 +190,7 @@ export function CatalogPage() {
               <td>
                 <div style={{ display: 'flex', gap: 4 }}>
                   <Button size="xs" variant="ghost" onClick={() => setModal(p)}>{t('common.editar')}</Button>
+                  <Button size="xs" variant="ghost" onClick={() => { setStickerProd(p); setStickerCant(1); setStickerTam('mediano') }}>🏷️</Button>
                   {p.activo && <Button size="xs" danger onClick={() => setDeleting(p.id)}>{t('common.eliminar')}</Button>}
                 </div>
               </td>
@@ -203,6 +208,39 @@ export function CatalogPage() {
           onClose={() => setModal(null)}
           onSaved={load}
         />
+      )}
+
+      {stickerProd && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.4)',
+        }} onClick={() => setStickerProd(null)}>
+          <div style={{
+            background: 'var(--color-surface)', borderRadius: 12,
+            padding: 24, width: '90%', maxWidth: 360,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ marginBottom: 8, fontSize: '1rem' }}>🏷️ Stickers: {stickerProd.nombre}</h3>
+            <p className="meta" style={{ marginBottom: 16 }}>Precio: {Number(stickerProd.precio_venta).toLocaleString()} {stickerProd.moneda || 'PYG'}</p>
+            <div className="form-field" style={{ marginBottom: 12 }}>
+              <label>Tamaño</label>
+              <select className="form-input" value={stickerTam} onChange={(e) => setStickerTam(e.target.value)}>
+                {Object.entries(TAMANOS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              </select>
+            </div>
+            <div className="form-field" style={{ marginBottom: 16 }}>
+              <label>Cantidad de stickers</label>
+              <input type="number" className="form-input" value={stickerCant} onChange={(e) => setStickerCant(Math.max(1, Number(e.target.value) || 1))} min="1" />
+            </div>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <Button variant="ghost" size="sm" onClick={() => setStickerProd(null)}>Cancelar</Button>
+              <Button size="sm" onClick={() => { generarStickers(stickerProd, stickerCant, stickerTam); setStickerProd(null) }}>
+                🖨️ Imprimir
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {deleting && (

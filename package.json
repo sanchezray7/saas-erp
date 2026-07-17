@@ -15,6 +15,7 @@
     "eslint": "^9.0.0"
   },
   "dependencies": {
+    "jsbarcode": "^3.12.3",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
     "moment": "^2.30.1",
