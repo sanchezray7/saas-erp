@@ -30,7 +30,7 @@ export default function CategoriasSection({ companyId }) {
 
   return (
     <div style={{ padding: '0.75rem 0' }}>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12, paddingLeft: 4 }}>
         <Button size="sm" variant={tipoFiltro === 'producto' ? 'primary' : 'outline'} onClick={() => setTipoFiltro('producto')}>📦 Productos</Button>
         <Button size="sm" variant={tipoFiltro === 'servicio' ? 'primary' : 'outline'} onClick={() => setTipoFiltro('servicio')}>🔧 Servicios</Button>
         <div style={{ flex: 1 }} />
@@ -78,7 +78,12 @@ export default function CategoriasSection({ companyId }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           background: 'rgba(0,0,0,0.4)',
         }} onClick={() => setEditando(null)}>
-          <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
+          <div style={{
+            background: 'var(--color-surface)', borderRadius: 12,
+            padding: 24, width: '90%', maxWidth: 400,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            maxHeight: '90vh', overflow: 'auto',
+          }} onClick={(e) => e.stopPropagation()}>
             <h3>{editando.id ? 'Editar categoría' : 'Nueva categoría'}</h3>
             <form onSubmit={handleGuardar} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div className="form-field">
