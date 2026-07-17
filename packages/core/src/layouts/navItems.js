@@ -2,6 +2,7 @@ import { PERMISSIONS } from '../auth/permissions'
 
 export const NAV_TOPS = [
   { to: '/dashboard', labelKey: 'nav.dashboard', icon: '🏠', permission: null, end: true },
+  { to: '/ayuda', labelKey: 'nav.help', icon: '📖', permission: null },
 ]
 
 export const NAV_SECTIONS_BASE = [
@@ -29,7 +30,6 @@ export const NAV_SECTIONS_BASE = [
     icon: '⚙️',
     items: [
       { to: '/settings', labelKey: 'nav.settings', icon: '⚙️', permission: PERMISSIONS.CONFIG_VER },
-      { to: '/ayuda', labelKey: 'nav.help', icon: '📖', permission: null },
     ],
   },
 ]
