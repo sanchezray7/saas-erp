@@ -27,7 +27,29 @@ export const HELP = {
         ],
       },
       {
-        titulo: '2. Oportunidades (Deals)',
+        titulo: '2. Leads',
+        descripcion: 'Captura de prospectos desde formularios web públicos',
+        pasos: [
+          'Los leads llegan automáticamente desde el formulario del sitio web o landing page',
+          'Ir a **Leads** en el menú VENTAS',
+          'Ver el listado de leads entrantes con nombre, email, teléfono y mensaje',
+          'Click en un lead para ver el detalle completo',
+          'Click **"Convertir en contacto"** para pasarlo a la base de contactos',
+          'Opcional: asignar un vendedor, agregar etiquetas, crear oportunidad',
+        ],
+        tips: [
+          'Los leads se capturan mediante un formulario web que envía los datos a Supabase',
+          'Se pueden filtrar por fuente, fecha o vendedor asignado',
+          'Un lead convertido queda marcado como "convertido" en el listado',
+          'Configurar el formulario web en Settings → Webhook',
+        ],
+        acciones: [
+          { label: 'Convertir', desc: 'Click "Convertir en contacto" → se crea el contacto y se abre para completar datos' },
+          { label: 'Eliminar', desc: 'Click en "Eliminar" si el lead no es válido o es spam' },
+        ],
+      },
+      {
+        titulo: '3. Oportunidades (Deals)',
         descripcion: 'Pipeline de ventas con tablero Kanban por etapas',
         pasos: [
           'Ir a **Oportunidades** en VENTAS',
@@ -44,7 +66,7 @@ export const HELP = {
         ],
       },
       {
-        titulo: '3. Cotizaciones',
+        titulo: '4. Cotizaciones',
         descripcion: 'Presupuestos detallados para enviar a clientes',
         pasos: [
           'Ir a **Cotizaciones** o desde una Oportunidad click **"Cotizar"**',
@@ -69,7 +91,7 @@ export const HELP = {
         ],
       },
       {
-        titulo: '4. Facturación Electrónica',
+        titulo: '5. Facturación Electrónica',
         descripcion: 'Emisión de facturas electrónicas SIFEN/e-kuatia (Paraguay)',
         pasos: [
           '**Configurar antes**: Settings → Facturación → completar RUC, DV, Timbrado, Establecimiento, Punto de expedición, Actividad económica',
@@ -93,7 +115,7 @@ export const HELP = {
         ],
       },
       {
-        titulo: '5. Cuentas por Cobrar',
+        titulo: '6. Cuentas por Cobrar',
         descripcion: 'Gestión de cobranza y seguimiento de pagos',
         pasos: [
           'Ir a **Cuentas por Cobrar**',
@@ -109,7 +131,7 @@ export const HELP = {
         ],
       },
       {
-        titulo: '6. Calendario',
+        titulo: '7. Calendario',
         descripcion: 'Agenda de actividades, eventos y recordatorios vinculados a contactos y oportunidades',
         pasos: [
           'Ir a **Calendario** en el menú VENTAS',
@@ -129,6 +151,29 @@ export const HELP = {
           { label: 'Crear evento rápido', desc: 'Click en cualquier espacio vacío del calendario → se abre el formulario con la fecha/hora pre-seleccionada' },
           { label: 'Editar evento', desc: 'Click sobre un evento existente → se abre el detalle para modificar' },
           { label: 'Eliminar evento', desc: 'Desde el detalle del evento, click en "Eliminar"' },
+        ],
+      },
+      {
+        titulo: '8. Actividades',
+        descripcion: 'Registro de interacciones con contactos: llamadas, emails, reuniones y notas',
+        pasos: [
+          'Ir a **Actividades** en el menú VENTAS',
+          'Ver el listado completo de actividades registradas',
+          'Click **"+ Actividad"** para registrar una nueva',
+          'Seleccionar tipo: **Llamada**, **Email**, **Reunión**, **Nota** o **Tarea**',
+          'Completar: contacto asociado, descripción, fecha, vendedor',
+          'Click **"Guardar"**',
+        ],
+        tips: [
+          'Las actividades también se pueden registrar desde el timeline de cada contacto',
+          'Cada tipo de actividad tiene un icono y color diferente',
+          'Las actividades de tipo "Llamada" y "Reunión" pueden tener fecha y hora programada',
+          'El timeline del contacto muestra todas las actividades en orden cronológico',
+          'Las actividades se pueden filtrar por tipo, contacto o vendedor',
+        ],
+        acciones: [
+          { label: 'Registrar llamada', desc: 'Desde el contacto → Click **"+ Actividad"** → seleccionar "Llamada" → completar duración y resultado' },
+          { label: 'Enviar email', desc: 'Desde el contacto → Click en el icono de email → se abre el cliente de correo' },
         ],
       },
     ],
