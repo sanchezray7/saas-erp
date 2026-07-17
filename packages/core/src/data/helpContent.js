@@ -372,4 +372,113 @@ export const HELP = {
       },
     ],
   },
+  finanzas: {
+    titulo: 'Finanzas',
+    icon: '💰',
+    descripcion: 'Configuración contable, impuestos, plan de cuentas, asientos y reportes',
+    modulos: [
+      {
+        titulo: '1. Plan de Cuentas',
+        descripcion: 'Catálogo de cuentas contables para la empresa',
+        pasos: [
+          'Ir a **Plan de Cuentas** en FINANZAS',
+          'Click **"Cargar plantilla PY"** para generar las 29 cuentas base de Paraguay',
+          'Revisar y personalizar: agregar cuentas bancarias, cuentas específicas',
+          'Las cuentas se organizan por tipo: Activo, Pasivo, Patrimonio, Ingreso, Costo, Gasto',
+        ],
+        tips: [
+          'Sin plan de cuentas no funcionan los asientos automáticos',
+          'La plantilla PY incluye cuentas hasta nivel 4 (ej: 1.1.1.1 Caja)',
+          'Se pueden agregar cuentas personalizadas según la necesidad',
+          'Cada cuenta tiene un código único y un nombre descriptivo',
+        ],
+      },
+      {
+        titulo: '2. Impuestos',
+        descripcion: 'Configuración de grupos de impuestos y tasas (IVA, retenciones)',
+        pasos: [
+          'Ir a **Impuestos** en FINANZAS',
+          'Crear grupos: Débito Fiscal (IVA ventas), Crédito Fiscal (IVA compras)',
+          'Agregar tasas: IVA 5%, IVA 10%, Ret. Renta 1%, etc.',
+          'Asignar una cuenta contable a cada impuesto',
+        ],
+        tips: [
+          'Los impuestos se vinculan a productos y facturas automáticamente',
+          'Cada impuesto necesita una cuenta contable para los asientos',
+          'Las retenciones se configuran como grupos separados',
+        ],
+      },
+      {
+        titulo: '3. Asientos Contables',
+        descripcion: 'Registro de transacciones contables (manuales y automáticos)',
+        pasos: [
+          'Ir a **Asientos** en FINANZAS',
+          'Click **"+ Nuevo"** para crear un asiento manual',
+          'Completar: número, fecha, descripción, líneas (cuenta + debe + haber)',
+          'Verificar que el total del Debe sea igual al total del Haber',
+          'Click **"Guardar"** — el asiento queda en estado "contabilizado"',
+        ],
+        tips: [
+          'Los asientos automáticos se generan al: facturar, pagar, conciliar, ajustar inventario',
+          'Un asiento desbalanceado (debe ≠ haber) no se puede guardar',
+          'Los asientos se pueden consultar por rango de fechas o tipo',
+          'El asiento de nómina se genera automáticamente al pagar un período',
+        ],
+        estados: [
+          { nombre: 'borrador', desc: 'En edición, sin efecto contable' },
+          { nombre: 'contabilizado', desc: 'Aprobado y con efecto en los saldos' },
+          { nombre: 'anulado', desc: 'Cancelado, se revierten los efectos' },
+        ],
+      },
+      {
+        titulo: '4. Reportes Contables',
+        descripcion: 'Balance General, Estado de Resultados, IVA, Mayor y Flujo de Efectivo',
+        pasos: [
+          'Ir a **Reportes Contables** en FINANZAS',
+          'Seleccionar el tipo de reporte: Balance, Resultados, IVA, Mayor, Flujo',
+          'Elegir el período (mes/año) y la empresa (para consolidado)',
+          'El reporte se genera automáticamente con los saldos de las cuentas',
+          'Opcional: exportar a PDF o imprimir',
+        ],
+        tips: [
+          'Los reportes reflejan los asientos contabilizados hasta la fecha',
+          'El Balance General muestra Activo = Pasivo + Patrimonio',
+          'El Estado de Resultados muestra Ingresos - Gastos = Resultado',
+          'El reporte de IVA agrupa débitos y créditos fiscales',
+        ],
+      },
+      {
+        titulo: '5. Antigüedad de Saldos (Aging)',
+        descripcion: 'Análisis de cuentas por cobrar y por pagar por rango de vencimiento',
+        pasos: [
+          'Ir a **Aging** en FINANZAS',
+          'Ver la distribución de saldos por rangos: al día, 1-30 días, 31-60, 61-90, +90',
+          'Los montos se muestran en la moneda base de la empresa',
+          'Click en un rango para ver el detalle de las facturas incluidas',
+        ],
+        tips: [
+          'El aging ayuda a identificar clientes morosos',
+          'También muestra las cuentas por pagar con sus vencimientos',
+          'Útil para la gestión de cobranza y tesorería',
+        ],
+      },
+      {
+        titulo: '6. Conciliación Bancaria',
+        descripcion: 'Conciliación de movimientos contables contra extractos bancarios',
+        pasos: [
+          'Ir a **Conciliación** en FINANZAS',
+          'Click **"+ Nueva"** para iniciar una conciliación',
+          'Seleccionar cuenta bancaria y período',
+          'El sistema muestra los movimientos pendientes de conciliar',
+          'Marcar los movimientos que coinciden con el extracto bancario',
+          'Click **"Confirmar"** — la conciliación queda registrada',
+        ],
+        tips: [
+          'La conciliación asegura que los saldos contables coincidan con el banco',
+          'Las diferencias se registran como ajustes',
+          'Se puede descargar un reporte de la conciliación',
+        ],
+      },
+    ],
+  },
 }
