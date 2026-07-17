@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { getSupabase } from '../lib/supabase'
 import { FEATURES } from '../data/planConfig'
 
 const PATH_FEATURES = [
@@ -89,15 +91,29 @@ function UpgradeBannerMin({ featureKey }) {
 }
 
 export function PlanOutlet() {
-  const { activeCompanyId, companies } = useAuth()
+  const { activeCompanyId } = useAuth()
   const location = useLocation()
+  const [plan, setPlan] = useState('free')
+
+  useEffect(() => {
+    if (!activeCompanyId) return
+    const supabase = getSupabase()
+    supabase
+      .from('companies')
+      .select('plan')
+      .eq('id', activeCompanyId)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data?.plan) setPlan(data.plan)
+      })
+      .catch(() => {})
+  }, [activeCompanyId])
 
   if (!activeCompanyId) return <Outlet />
 
-  const company = companies.find((c) => c.id === activeCompanyId)
-  const plan = company?.plan || 'free'
-
-  const match = PATH_FEATURES.find(({ prefix }) => location.pathname === prefix || location.pathname.startsWith(prefix + '/'))
+  const match = PATH_FEATURES.find(({ prefix }) =>
+    location.pathname === prefix || location.pathname.startsWith(prefix + '/')
+  )
 
   if (match) {
     const enabled = FEATURES[match.key]?.[plan] === true
