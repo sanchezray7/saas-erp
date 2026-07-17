@@ -4,8 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import {
   ThemeProvider, AuthProvider, ProtectedRoute, RequireCompany,
   RequirePermission, AppLayout, PERMISSIONS, ErrorBoundary, useAuth,
-  PushPrompt, InstallPrompt, getSupabase,
-  NAV_SECTION_FINANZAS, NAV_SECTION_CONSOLIDACION,
+  PushPrompt, InstallPrompt, getSupabase, HelpPage,
 } from '@saas/core'
 import { NAV_SECTION_CRM, LoginPage, RegisterPage,
   CompanySelectPage, CreateCompanyPage, ForbiddenPage,
@@ -210,6 +209,7 @@ export default function App() {
                 <Route path="activities" element={<RequirePermission perm={PERMISSIONS.ACTIVITY_VER}><ActivitiesPage /></RequirePermission>} />
                 <Route path="calendar" element={<RequirePermission perm={PERMISSIONS.EVENTO_VER}><CalendarPage /></RequirePermission>} />
                 <Route path="reports" element={<RequirePermission perm={PERMISSIONS.REPORTE_VER}><ReportsPage /></RequirePermission>} />
+                <Route path="ayuda" element={<HelpPage />} />
                 <Route path="pos" element={<PosPage />} />
                 <Route path="pos/cajas" element={<CajasPage />} />
                 <Route path="pos/cierres" element={<CierresPage />} />

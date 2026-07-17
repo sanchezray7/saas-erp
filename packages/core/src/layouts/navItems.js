@@ -29,6 +29,7 @@ export const NAV_SECTIONS_BASE = [
     icon: '⚙️',
     items: [
       { to: '/settings', labelKey: 'nav.settings', icon: '⚙️', permission: PERMISSIONS.CONFIG_VER },
+      { to: '/ayuda', labelKey: 'nav.help', icon: '📖', permission: null },
     ],
   },
 ]

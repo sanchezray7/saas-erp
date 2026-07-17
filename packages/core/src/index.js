@@ -32,6 +32,9 @@ export { resolveTemplate, CONTEXT_VARIABLES, CONTEXT_OPTIONS } from './lib/resol
 export { validarTaxId } from './lib/taxId'
 export { setLocaleFromPais } from './i18n/index'
 
+export { HelpPage } from './pages/HelpPage'
+export { HELP } from './data/helpContent'
+
 export { ProtectedRoute } from './routes/ProtectedRoute'
 export { RequireCompany } from './routes/RequireCompany'
 export { RequirePermission } from './routes/RequirePermission'
