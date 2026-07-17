@@ -83,8 +83,16 @@ export function CajasPage() {
 
       {/* Modal editar/crear */}
       {editando && (
-        <div className="modal-overlay" onClick={() => setEditando(null)}>
-          <div className="modal" style={{ maxWidth: 360 }} onClick={(e) => e.stopPropagation()}>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.4)',
+        }} onClick={() => setEditando(null)}>
+          <div style={{
+            background: 'var(--color-surface)', borderRadius: 12,
+            padding: 24, width: '90%', maxWidth: 360,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          }} onClick={(e) => e.stopPropagation()}>
             <h3>{editando.id ? 'Editar caja' : 'Nueva caja'}</h3>
             <form onSubmit={handleGuardar}>
               <div className="form-field">
@@ -102,8 +110,16 @@ export function CajasPage() {
 
       {/* Modal cerrar caja */}
       {cerrando && (
-        <div className="modal-overlay" onClick={() => setCerrando(null)}>
-          <div className="modal" style={{ maxWidth: 360 }} onClick={(e) => e.stopPropagation()}>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.4)',
+        }} onClick={() => setCerrando(null)}>
+          <div style={{
+            background: 'var(--color-surface)', borderRadius: 12,
+            padding: 24, width: '90%', maxWidth: 360,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          }} onClick={(e) => e.stopPropagation()}>
             <h3>Cerrar caja: {cerrando.nombre}</h3>
             <p className="meta" style={{ marginBottom: 12 }}>Saldo actual: {Number(cerrando.saldo_actual).toLocaleString()} Gs.</p>
             <div className="form-field">
@@ -118,7 +134,7 @@ export function CajasPage() {
         </div>
       )}
 
-      <ConfirmModal open={!!eliminando} onConfirm={async () => { await eliminarCaja(eliminando); setEliminando(null); load() }} onCancel={() => setEliminando(null)} title="¿Eliminar caja?" />
+      {eliminando && <ConfirmModal onConfirm={async () => { await eliminarCaja(eliminando); setEliminando(null); load() }} onCancel={() => setEliminando(null)} title="¿Eliminar caja?" />}
     </div>
   )
 }
