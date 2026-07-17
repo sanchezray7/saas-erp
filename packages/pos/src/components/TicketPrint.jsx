@@ -37,6 +37,8 @@ ${venta.monto_efectivo > 0 ? `<p>Efectivo: ${venta.monto_efectivo.toLocaleString
 ${venta.monto_tarjeta > 0 ? `<p>Tarjeta: ${venta.monto_tarjeta.toLocaleString()}</p>` : ''}
 ${venta.monto_transferencia > 0 ? `<p>Transferencia: ${venta.monto_transferencia.toLocaleString()}</p>` : ''}
 ${venta.monto_cambio > 0 ? `<p>Vuelto: ${venta.monto_cambio.toLocaleString()}</p>` : ''}
+${venta.banco ? `<p>Banco: ${venta.banco}</p>` : ''}
+${venta.referencia ? `<p>Ref: ${venta.referencia}</p>` : ''}
 <br/>
 <p class="footer">Gracias por su compra</p>
 <p class="footer">${new Date().toLocaleString('es-PY')}</p>

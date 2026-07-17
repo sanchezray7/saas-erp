@@ -55,6 +55,8 @@ export async function registrarVentaPos(companyId, venta) {
     p_monto_transferencia: venta.montoTransferencia || 0,
     p_monto_recibido: venta.montoRecibido || 0,
     p_monto_cambio: venta.montoCambio || 0,
+    p_banco: venta.banco || null,
+    p_referencia: venta.referencia || null,
   })
   if (error) throw error
   if (data?.error) throw new Error(data.error)

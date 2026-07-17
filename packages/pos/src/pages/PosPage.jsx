@@ -124,6 +124,7 @@ export function PosPage() {
         formaPago: datos.formaPago, montoEfectivo: datos.montoEfectivo || 0,
         montoTarjeta: datos.montoTarjeta || 0, montoTransferencia: datos.montoTransferencia || 0,
         montoRecibido: datos.montoRecibido || 0, montoCambio: datos.montoCambio || 0,
+        banco: datos.banco, referencia: datos.referencia,
       })
       notify(`Venta #${res.numero} registrada`)
       setShowPayment(false)

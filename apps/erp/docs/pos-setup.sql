@@ -172,7 +172,8 @@ create or replace function registrar_venta_pos(
   p_items jsonb, p_subtotal numeric, p_descuento numeric, p_total numeric,
   p_forma_pago text,
   p_monto_efectivo numeric, p_monto_tarjeta numeric, p_monto_transferencia numeric,
-  p_monto_recibido numeric, p_monto_cambio numeric
+  p_monto_recibido numeric, p_monto_cambio numeric,
+  p_banco text default null, p_referencia text default null
 )
 returns jsonb
 language plpgsql
@@ -213,11 +214,11 @@ begin
   insert into ventas_pos (company_id, caja_id, cliente_id, numero,
     items, subtotal, descuento, total,
     forma_pago, monto_efectivo, monto_tarjeta, monto_transferencia,
-    monto_recibido, monto_cambio, usuario_id)
+    monto_recibido, monto_cambio, usuario_id, banco, referencia)
   values (p_company_id, p_caja_id, p_cliente_id, v_numero,
     p_items, p_subtotal, p_descuento, p_total,
     p_forma_pago, p_monto_efectivo, p_monto_tarjeta, p_monto_transferencia,
-    p_monto_recibido, p_monto_cambio, auth.uid())
+    p_monto_recibido, p_monto_cambio, auth.uid(), p_banco, p_referencia)
   returning id into v_venta_id;
 
   -- Descontar stock
@@ -238,5 +239,12 @@ begin
 end;
 $$;
 
--- 8. Trigger: descontar stock en ventas POS (respaldo)
+-- 9. Agregar QR como forma de pago + banco + referencia
+alter table ventas_pos drop constraint if exists ventas_pos_forma_pago_check;
+alter table ventas_pos add constraint ventas_pos_forma_pago_check
+  check (forma_pago in ('efectivo', 'tarjeta', 'transferencia', 'mixto', 'qr'));
+alter table ventas_pos add column if not exists banco text;
+alter table ventas_pos add column if not exists referencia text;
+
+-- 10. Trigger: descontar stock en ventas POS (respaldo)
 drop trigger if exists trg_venta_pos_descuenta_stock on ventas_pos;
