@@ -27,7 +27,28 @@ export const HELP = {
         ],
       },
       {
-        titulo: '2. Leads',
+        titulo: '2. Empresas / Organizaciones',
+        descripcion: 'Agrupación de contactos bajo una misma organización (empresa, institución)',
+        pasos: [
+          'Ir a **Empresas** en el menú VENTAS',
+          'Click **"+ Nueva"**',
+          'Completar: Nombre de la empresa (obligatorio)',
+          'Opcional: Teléfono, Email, Dirección, Sitio web, Industria',
+          'Click **"Guardar"**',
+        ],
+        tips: [
+          'Una empresa puede tener múltiples contactos asociados',
+          'Al asignar un contacto a una empresa, se pueden ver todos los contactos de esa empresa',
+          'Las empresas ayudan a organizar clientes institucionales',
+          'Se puede asignar una industria para segmentar por rubro',
+        ],
+        acciones: [
+          { label: 'Ver contactos', desc: 'Desde el detalle de la empresa, se listan todos los contactos vinculados' },
+          { label: 'Editar', desc: 'Click en "Editar" para modificar los datos de la empresa' },
+        ],
+      },
+      {
+        titulo: '3. Leads',
         descripcion: 'Captura de prospectos desde formularios web públicos',
         pasos: [
           'Los leads llegan automáticamente desde el formulario del sitio web o landing page',
@@ -49,7 +70,7 @@ export const HELP = {
         ],
       },
       {
-        titulo: '3. Oportunidades (Deals)',
+        titulo: '4. Oportunidades (Deals)',
         descripcion: 'Pipeline de ventas con tablero Kanban por etapas',
         pasos: [
           'Ir a **Oportunidades** en VENTAS',
@@ -66,7 +87,7 @@ export const HELP = {
         ],
       },
       {
-        titulo: '4. Cotizaciones',
+        titulo: '5. Cotizaciones',
         descripcion: 'Presupuestos detallados para enviar a clientes',
         pasos: [
           'Ir a **Cotizaciones** o desde una Oportunidad click **"Cotizar"**',
@@ -91,7 +112,7 @@ export const HELP = {
         ],
       },
       {
-        titulo: '5. Facturación Electrónica',
+        titulo: '6. Facturación Electrónica',
         descripcion: 'Emisión de facturas electrónicas SIFEN/e-kuatia (Paraguay)',
         pasos: [
           '**Configurar antes**: Settings → Facturación → completar RUC, DV, Timbrado, Establecimiento, Punto de expedición, Actividad económica',
@@ -115,7 +136,7 @@ export const HELP = {
         ],
       },
       {
-        titulo: '6. Cuentas por Cobrar',
+        titulo: '7. Cuentas por Cobrar',
         descripcion: 'Gestión de cobranza y seguimiento de pagos',
         pasos: [
           'Ir a **Cuentas por Cobrar**',
@@ -131,7 +152,7 @@ export const HELP = {
         ],
       },
       {
-        titulo: '7. Calendario',
+        titulo: '8. Calendario',
         descripcion: 'Agenda de actividades, eventos y recordatorios vinculados a contactos y oportunidades',
         pasos: [
           'Ir a **Calendario** en el menú VENTAS',
@@ -154,7 +175,7 @@ export const HELP = {
         ],
       },
       {
-        titulo: '8. Actividades',
+        titulo: '9. Actividades',
         descripcion: 'Registro de interacciones con contactos: llamadas, emails, reuniones y notas',
         pasos: [
           'Ir a **Actividades** en el menú VENTAS',
