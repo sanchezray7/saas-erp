@@ -5,6 +5,7 @@ import {
   ThemeProvider, AuthProvider, ProtectedRoute, RequireCompany,
   RequirePermission, AppLayout, PERMISSIONS, ErrorBoundary, useAuth,
   PushPrompt, InstallPrompt, getSupabase, HelpPage,
+  NAV_SECTION_FINANZAS, NAV_SECTION_CONSOLIDACION,
 } from '@saas/core'
 import { NAV_SECTION_CRM, LoginPage, RegisterPage,
   CompanySelectPage, CreateCompanyPage, ForbiddenPage,
