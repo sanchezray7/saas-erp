@@ -95,6 +95,7 @@ export async function listarProductosPos(companyId) {
     .select('id, nombre, codigo, precio_venta, precio_compra, codigo_barras, tipo, moneda, unidad_medida')
     .eq('company_id', companyId)
     .eq('activo', true)
+    .eq('tipo', 'producto')
     .order('nombre')
   if (error) throw error
   return data || []

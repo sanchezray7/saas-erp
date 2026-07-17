@@ -84,6 +84,10 @@ export async function listarStockGeneral(companyId) {
 export async function registrarMovimientoStock(companyId, userId, mov) {
   const supabase = getSupabase()
 
+  // Omitir servicios (no tienen stock)
+  const { data: prod } = await supabase.from('catalogo_productos').select('tipo').eq('id', mov.producto_id).single()
+  if (prod?.tipo === 'servicio') return null
+
   // Insertar movimiento
   const { data, error } = await supabase.from('movimientos_stock').insert({
     company_id: companyId, producto_id: mov.producto_id, almacen_id: mov.almacen_id,

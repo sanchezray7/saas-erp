@@ -146,7 +146,7 @@ begin
   if p_quota_key = 'usuarios' then
     select count(*) into v_current from company_members where company_id = p_company_id;
   elsif p_quota_key = 'productos' then
-    select count(*) into v_current from catalogo_productos where company_id = p_company_id;
+    select count(*) into v_current from catalogo_productos where company_id = p_company_id and (tipo is null or tipo != 'servicio');
   elsif p_quota_key = 'contactos' then
     select count(*) into v_current from contacts where company_id = p_company_id;
   elsif p_quota_key = 'oportunidades' then

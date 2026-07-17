@@ -44,13 +44,16 @@ declare
   v_max integer;
   v_current integer;
 begin
+  -- Servicios no cuentan para la cuota de productos
+  if new.tipo = 'servicio' then return new; end if;
+
   select plan into v_plan from companies where id = new.company_id;
   if v_plan is null then return new; end if;
 
   select max_value into v_max from plan_quotas where plan = v_plan and quota_key = 'productos';
   if v_max is null or v_max = -1 then return new; end if;
 
-  select count(*) into v_current from catalogo_productos where company_id = new.company_id;
+  select count(*) into v_current from catalogo_productos where company_id = new.company_id and (tipo is null or tipo != 'servicio');
   if v_current >= v_max then
     raise exception 'Límite de productos alcanzado (%) para tu plan actual. Actualizá tu plan para ampliarlo.', v_max;
   end if;
