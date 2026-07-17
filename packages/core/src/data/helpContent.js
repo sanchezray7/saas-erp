@@ -534,4 +534,184 @@ export const HELP = {
       },
     ],
   },
+  inventario: {
+    titulo: 'Inventario',
+    icon: '📦',
+    descripcion: 'Control de stock, movimientos, transferencias, conteos cíclicos y más',
+    modulos: [
+      {
+        titulo: '1. Centros Logísticos',
+        descripcion: 'Ubicaciones físicas donde se almacenan los productos (sucursales, depósitos)',
+        pasos: [
+          'Ir a **Centros** en INVENTARIO',
+          'Click **"+ Nuevo"**',
+          'Completar: nombre del centro (ej: Centro de Distribución Principal)',
+          'Opcional: dirección, teléfono, encargado',
+          'Click **"Guardar"**',
+        ],
+        tips: [
+          'Los centros agrupan almacenes de una misma ubicación',
+          'Se pueden tener múltiples centros (ej: Sucursal Centro, Depósito Norte)',
+          'Cada centro debe tener al menos un almacén para operar',
+        ],
+      },
+      {
+        titulo: '2. Almacenes',
+        descripcion: 'Espacios dentro de un centro donde se almacena físicamente el stock',
+        pasos: [
+          'Ir a **Almacenes** en INVENTARIO',
+          'Click **"+ Nuevo"**',
+          'Seleccionar el **Centro** al que pertenece',
+          'Completar: nombre, tipo (general, refrigerado, congelado, peligroso, cuarentena)',
+          'Click **"Guardar"**',
+        ],
+        tips: [
+          'Cada almacén tiene un tipo que define su uso',
+          'El stock se controla por producto + almacén',
+          'Se pueden tener almacenes generales, refrigerados, de peligrosos, etc.',
+        ],
+      },
+      {
+        titulo: '3. Stock Actual',
+        descripcion: 'Visión general del inventario disponible por producto y almacén',
+        pasos: [
+          'Ir a **Stock Actual** en INVENTARIO',
+          'Ver el listado de productos con su cantidad actual por almacén',
+          'La tabla muestra: producto, código, almacén, cantidad, costo promedio',
+          'Los productos con stock por debajo del mínimo se resaltan',
+        ],
+        tips: [
+          'El stock se actualiza automáticamente al recibir OC y al facturar',
+          'El costo promedio se recalcula con cada entrada de mercadería',
+          'Los productos sin stock se marcan con cantidad 0',
+        ],
+      },
+      {
+        titulo: '4. Movimientos de Stock',
+        descripcion: 'Historial de todas las entradas y salidas de productos',
+        pasos: [
+          'Ir a **Movimientos** en INVENTARIO',
+          'Ver el listado cronológico de movimientos',
+          'Cada movimiento muestra: fecha, tipo (entrada/salida/ajuste), producto, cantidad, costo',
+          'Filtrar por producto, almacén, rango de fechas o tipo',
+        ],
+        tips: [
+          'Las entradas se generan al recibir OC de proveedores',
+          'Las salidas se generan al facturar ventas',
+          'Los ajustes se generan por conteos cíclicos o correcciones manuales',
+        ],
+      },
+      {
+        titulo: '5. Transferencias',
+        descripcion: 'Traslado de stock entre almacenes de la misma empresa',
+        pasos: [
+          'Ir a **Transferencias** en INVENTARIO',
+          'Click **"+ Nueva"**',
+          'Seleccionar: almacén origen, almacén destino, producto, cantidad',
+          'Opcional: motivo del traslado',
+          'Click **"Guardar"** — la transferencia se registra y actualiza el stock',
+        ],
+        tips: [
+          'La transferencia descuenta stock del origen y agrega al destino',
+          'Se pueden transferir múltiples productos en una misma operación',
+          'El costo promedio se mantiene (no se recalcula en transferencias)',
+        ],
+      },
+      {
+        titulo: '6. Kardex',
+        descripcion: 'Registro detallado por lote de cada producto',
+        pasos: [
+          'Ir a **Kardex** en INVENTARIO',
+          'Seleccionar un producto para ver su historial',
+          'El kardex muestra: fecha, tipo, cantidad, costo unitario, saldo acumulado',
+          'Filtrar por almacén o rango de fechas',
+        ],
+        tips: [
+          'El kardex es útil para productos con control de lotes',
+          'Permite trazabilidad completa de cada lote',
+          'Se pueden registrar fechas de vencimiento por lote',
+        ],
+      },
+      {
+        titulo: '7. Conteos Cíclicos',
+        descripcion: 'Conteo físico de productos para ajustar diferencias de stock',
+        pasos: [
+          'Ir a **Conteos** en INVENTARIO',
+          'Click **"+ Nuevo conteo"**',
+          'Seleccionar productos a contar y almacén',
+          'Registrar la cantidad física contada',
+          'Click **"Finalizar"** — el sistema calcula las diferencias',
+          'Si hay diferencias, se genera un ajuste de inventario y un asiento contable',
+        ],
+        tips: [
+          'Los conteos ayudan a mantener el stock real vs el sistema',
+          'Las diferencias se ajustan automáticamente',
+          'Se necesita tener configuradas las cuentas contables 1.1.5 (Inventario) y 6.4 (Ajuste)',
+          'Se pueden programar conteos periódicos por categoría de producto',
+        ],
+      },
+      {
+        titulo: '8. Picking y Remitos',
+        descripcion: 'Preparación de pedidos y despacho con documentación',
+        pasos: [
+          'Ir a **Picking** en INVENTARIO',
+          'Ver los pedidos pendientes de preparar',
+          'Seleccionar un pedido y confirmar los items picking',
+          'Generar el **Remito** asociado al despacho',
+          'El remito se puede imprimir como PDF',
+        ],
+        tips: [
+          'El picking organiza la preparación de pedidos',
+          'Los remitos son documentos de despacho no fiscales',
+          'Se puede hacer picking parcial si faltan productos',
+        ],
+      },
+      {
+        titulo: '9. Valuación de Inventario',
+        descripcion: 'Valorización del stock actual a costo promedio',
+        pasos: [
+          'Ir a **Valuación** en INVENTARIO',
+          'Ver el valor total del inventario por producto y almacén',
+          'La valuación se calcula como: cantidad × costo promedio',
+          'El total general muestra el valor del inventario de la empresa',
+        ],
+        tips: [
+          'La valuación es importante para los estados contables',
+          'El costo promedio se actualiza con cada entrada de mercadería',
+          'El valor del inventario debe coincidir con la cuenta contable 1.1.5',
+        ],
+      },
+      {
+        titulo: '10. Ubicaciones',
+        descripcion: 'Posiciones físicas dentro del almacén (pasillo, estante, posición)',
+        pasos: [
+          'Ir a **Ubicaciones** en INVENTARIO',
+          'Click **"+ Nueva"**',
+          'Seleccionar el almacén y completar: pasillo, estante, posición',
+          'Asignar productos a la ubicación (opcional)',
+          'Click **"Guardar"**',
+        ],
+        tips: [
+          'Las ubicaciones facilitan encontrar productos rápidamente',
+          'Un producto puede estar en múltiples ubicaciones',
+          'Las ubicaciones son opcionales — el sistema funciona sin ellas',
+        ],
+      },
+      {
+        titulo: '11. Transportistas',
+        descripcion: 'Registro de empresas de logística para envíos y despachos',
+        pasos: [
+          'Ir a **Transportistas** en INVENTARIO',
+          'Click **"+ Nuevo"**',
+          'Completar: nombre, RUC, teléfono, contacto',
+          'Click **"Guardar"**',
+        ],
+        tips: [
+          'Los transportistas se asignan a los remitos',
+          'Ayuda a hacer seguimiento de los envíos',
+          'Se puede registrar el costo del flete por transportista',
+        ],
+      },
+    ],
+  },
 }
