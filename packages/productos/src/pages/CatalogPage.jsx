@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAuth, Button, Skeleton, ConfirmModal, alertError, notify, MONEDA_POR_PAIS, getSupabase } from '@saas/core'
+import { useAuth, Button, Skeleton, ConfirmModal, alertError, notify, MONEDA_POR_PAIS, getSupabase, useCompanyConfig } from '@saas/core'
 import { listarProductos, eliminarProducto, importarProductos } from '../data/productos'
 import { ProductoFormModal } from '../components/ProductoFormModal'
 import { generarStickers, TAMANOS } from '../components/StickerPrint'
@@ -9,6 +9,7 @@ import { listarStockGeneral } from '@saas/inventario'
 export function CatalogPage() {
   const { t } = useTranslation()
   const { activeCompanyId } = useAuth()
+  const { config } = useCompanyConfig()
   const [productos, setProductos] = useState([])
   const [stockMap, setStockMap] = useState({})
   const [ultCompraMap, setUltCompraMap] = useState({})
@@ -190,7 +191,7 @@ export function CatalogPage() {
               <td>
                 <div style={{ display: 'flex', gap: 4 }}>
                   <Button size="xs" variant="ghost" onClick={() => setModal(p)}>{t('common.editar')}</Button>
-                  <Button size="xs" variant="ghost" onClick={() => { setStickerProd(p); setStickerCant(1); setStickerTam('mediano') }}>🏷️</Button>
+                  {p.tipo !== 'servicio' && <Button size="xs" variant="ghost" onClick={() => { setStickerProd(p); setStickerCant(1); setStickerTam('mediano') }}>🏷️</Button>}
                   {p.activo && <Button size="xs" danger onClick={() => setDeleting(p.id)}>{t('common.eliminar')}</Button>}
                 </div>
               </td>
@@ -235,7 +236,7 @@ export function CatalogPage() {
             </div>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
               <Button variant="ghost" size="sm" onClick={() => setStickerProd(null)}>Cancelar</Button>
-              <Button size="sm" onClick={() => { generarStickers(stickerProd, stickerCant, stickerTam); setStickerProd(null) }}>
+              <Button size="sm" onClick={() => { generarStickers(stickerProd, stickerCant, stickerTam, config?.appName || ''); setStickerProd(null) }}>
                 🖨️ Imprimir
               </Button>
             </div>

@@ -24,7 +24,7 @@ function generarBarrasDataUrl(code) {
   return canvas.toDataURL('image/png')
 }
 
-export function generarStickers(producto, cantidad = 1, tamano = 'mediano') {
+export function generarStickers(producto, cantidad = 1, tamano = 'mediano', nombreEmpresa = '') {
   const cfg = TAMANOS[tamano] || TAMANOS.mediano
   const mmAPt = (mm) => mm * 2.8346 // 1mm ≈ 2.83pt
   const anchoPt = mmAPt(cfg.ancho)
@@ -62,24 +62,34 @@ export function generarStickers(producto, cantidad = 1, tamano = 'mediano') {
         doc.setLineWidth(0.5)
         doc.rect(x, y, anchoPt, altoPt)
 
-        // Código de barras
-        doc.addImage(barcodeDataUrl, 'PNG', x + 4, y + 4, anchoPt - 8, 32)
+        // Nombre de empresa (opcional)
+        let yCursor = y + 6
+        if (nombreEmpresa) {
+          doc.setFontSize(6)
+          doc.setFont('helvetica', 'normal')
+          doc.setTextColor(100)
+          doc.text(nombreEmpresa, x + 4, yCursor)
+          yCursor += 8
+        }
 
-        // Nombre
+        // Código de barras
+        doc.addImage(barcodeDataUrl, 'PNG', x + 4, yCursor, anchoPt - 8, 32)
+        yCursor += 34
+
+        // Nombre del producto
         doc.setFontSize(8)
         doc.setFont('helvetica', 'bold')
+        doc.setTextColor(0)
         const nombreLines = doc.splitTextToSize(nombre, anchoPt - 8)
-        let textY = y + 40
         for (const line of nombreLines) {
-          if (textY + 10 > y + altoPt - 16) break
-          doc.text(line, x + 4, textY)
-          textY += 9
+          if (yCursor + 10 > y + altoPt - 16) break
+          doc.text(line, x + 4, yCursor)
+          yCursor += 9
         }
 
         // Precio
         doc.setFontSize(11)
         doc.setFont('helvetica', 'bold')
-        doc.setTextColor(0, 0, 0)
         doc.text(precio, x + 4, y + altoPt - 6)
 
         stickerCount++
