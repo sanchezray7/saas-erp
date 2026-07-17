@@ -116,6 +116,7 @@ export function CatalogPage() {
         <input type="search" placeholder={t('productos.buscar')} className="form-input" style={{ width: '100%', maxWidth: 320 }} value={search} onChange={(e) => setSearch(e.target.value)} />
       </div>
 
+      <div style={{ overflowX: 'auto' }}>
       <table className="table">
         <thead>
           <tr>
@@ -123,7 +124,8 @@ export function CatalogPage() {
             <th>{t('productos.tipo')}</th>
             <th>{t('productos.nombre')}</th>
             <th>{t('productos.descripcion')}</th>
-            <th style={{ textAlign: 'right' }}>{t('productos.precioUnitario')}</th>
+            <th style={{ textAlign: 'right' }}>Precio Venta</th>
+            <th style={{ textAlign: 'right' }}>Precio Compra</th>
             <th>Cód. Barras</th>
             <th>{t('productos.unidad')}</th>
             <th style={{ width: 80, textAlign: 'right' }}>Stock</th>
@@ -134,7 +136,7 @@ export function CatalogPage() {
         <tbody>
           {filtered.length === 0 ? (
             <tr>
-              <td colSpan={10} className="meta" style={{ textAlign: 'center', padding: 32 }}>
+              <td colSpan={11} className="meta" style={{ textAlign: 'center', padding: 32 }}>
                 {t('common.sinDatos')}
               </td>
             </tr>
@@ -168,6 +170,7 @@ export function CatalogPage() {
           ))}
         </tbody>
       </table>
+      </div>
 
       {modal && (
         <ProductoFormModal
