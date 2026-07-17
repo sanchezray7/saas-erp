@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { alertError } from '@saas/core'
 import { listarCategorias, guardarCategoria, eliminarCategoria, COLORES_CATEGORIA, ICONOS_CATEGORIA } from '@saas/productos'
 
 export default function CategoriasSection({ companyId }) {
@@ -33,7 +34,7 @@ export default function CategoriasSection({ companyId }) {
         <button className={`btn ${tipoFiltro === 'producto' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTipoFiltro('producto')} size="sm">📦 Productos</button>
         <button className={`btn ${tipoFiltro === 'servicio' ? 'btn-primary' : 'btn-outline'}`} onClick={() => setTipoFiltro('servicio')} size="sm">🔧 Servicios</button>
         <div style={{ flex: 1 }} />
-        <button className="btn btn-sm" onClick={() => setEditando({ nombre: '', tipo: tipoFiltro, icono: '📦', color: '#6366f1' })}>+ Nueva categoría</button>
+        <button className="btn btn-primary btn-sm" onClick={() => setEditando({ nombre: '', tipo: tipoFiltro, icono: '📦', color: '#6366f1' })}>+ Nueva categoría</button>
       </div>
 
       <table className="table">
@@ -72,7 +73,11 @@ export default function CategoriasSection({ companyId }) {
       </table>
 
       {editando && (
-        <div className="modal-overlay" onClick={() => setEditando(null)}>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.4)',
+        }} onClick={() => setEditando(null)}>
           <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
             <h3>{editando.id ? 'Editar categoría' : 'Nueva categoría'}</h3>
             <form onSubmit={handleGuardar} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
