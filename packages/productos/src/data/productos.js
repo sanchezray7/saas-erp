@@ -4,7 +4,7 @@ export async function listarProductos(companyId, soloActivos = true) {
   const supabase = getSupabase()
   let query = supabase
     .from('catalogo_productos')
-    .select('*, categoria:categoria_id(nombre, icono, color)')
+    .select('*, categoria:categoria_id(id, nombre, icono, color)')
     .eq('company_id', companyId)
     .order('nombre')
 
