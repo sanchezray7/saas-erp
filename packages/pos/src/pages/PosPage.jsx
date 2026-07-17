@@ -197,8 +197,16 @@ export function PosPage() {
       </div>
 
       {showApertura && (
-        <div className="modal-overlay" onClick={() => setShowApertura(false)}>
-          <div className="modal" style={{ maxWidth: 360 }} onClick={(e) => e.stopPropagation()}>
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 1000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(0,0,0,0.4)',
+        }} onClick={() => setShowApertura(false)}>
+          <div style={{
+            background: 'var(--color-surface)', borderRadius: 12,
+            padding: 24, width: '90%', maxWidth: 360,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+          }} onClick={(e) => e.stopPropagation()}>
             <h3>Abrir caja</h3>
             <p className="meta" style={{ marginBottom: 12 }}>Caja: {cajas[0]?.nombre || 'Principal'}</p>
             <div className="form-field">
