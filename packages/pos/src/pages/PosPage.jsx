@@ -140,7 +140,8 @@ export function PosPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-alt)' }}>
         <h2 style={{ margin: 0, fontSize: '1rem' }}>🛒 POS</h2>
         <input ref={searchRef} type="search" placeholder="🔍 Buscar por nombre, código o barras..." className="form-input"
-          style={{ flex: 1, maxWidth: 400 }} value={search} onChange={(e) => setSearch(e.target.value)} autoFocus />
+          style={{ flex: 1, maxWidth: 400 }} value={search} onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter' && filtered.length === 1) { agregarProducto(filtered[0]); setSearch('') } }} autoFocus />
         <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
           Caja: <strong>{cajaActiva?.nombre || 'Sin caja abierta'}</strong>
         </span>
