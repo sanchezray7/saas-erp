@@ -111,12 +111,22 @@ export async function registrarMovimientoStock(companyId, userId, mov) {
       costoNuevo = (existing.cantidad * existing.costo_promedio + mov.cantidad * mov.costo_unitario) / (existing.cantidad + mov.cantidad)
     }
     await supabase.from('producto_stock').update({ cantidad: cantidadNueva, costo_promedio: costoNuevo }).eq('id', existing.id)
+
+    // Sincronizar precio_compra del catálogo con el costo promedio
+    if (mov.tipo === 'entrada' && mov.costo_unitario) {
+      await supabase.from('catalogo_productos').update({ precio_compra: Math.round(costoNuevo) }).eq('id', mov.producto_id)
+    }
   } else if (mov.tipo === 'entrada') {
     await supabase.from('producto_stock').insert({
       company_id: companyId, producto_id: mov.producto_id, almacen_id: mov.almacen_id,
       cantidad: mov.cantidad,
       costo_promedio: mov.costo_unitario || 0,
     })
+
+    // Sincronizar precio_compra del catálogo (primera entrada)
+    if (mov.costo_unitario) {
+      await supabase.from('catalogo_productos').update({ precio_compra: Math.round(mov.costo_unitario) }).eq('id', mov.producto_id)
+    }
   } else {
     throw new Error('No hay stock disponible para realizar la salida')
   }

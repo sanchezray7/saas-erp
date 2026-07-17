@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useAuth, Button, Skeleton, ConfirmModal, alertError, notify, MONEDA_POR_PAIS } from '@saas/core'
+import { useAuth, Button, Skeleton, ConfirmModal, alertError, notify, MONEDA_POR_PAIS, getSupabase } from '@saas/core'
 import { listarProductos, eliminarProducto, importarProductos } from '../data/productos'
 import { ProductoFormModal } from '../components/ProductoFormModal'
 import { listarStockGeneral } from '@saas/inventario'
@@ -10,6 +10,7 @@ export function CatalogPage() {
   const { activeCompanyId } = useAuth()
   const [productos, setProductos] = useState([])
   const [stockMap, setStockMap] = useState({})
+  const [ultCompraMap, setUltCompraMap] = useState({})
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [modal, setModal] = useState(null)
@@ -24,6 +25,8 @@ export function CatalogPage() {
         listarStockGeneral(activeCompanyId).catch(() => []),
       ])
       setProductos(data)
+
+      // Mapa de stock
       const map = {}
       stock.forEach((s) => {
         const pid = s.producto_id
@@ -31,6 +34,22 @@ export function CatalogPage() {
         map[pid].total += Number(s.cantidad)
       })
       setStockMap(map)
+
+      // Último precio de compra desde OCs recibidas
+      const supabase = getSupabase()
+      const { data: ultOcs } = await supabase
+        .from('orden_compra_items')
+        .select('producto_id, precio_unitario, orden:orden_id!inner(fecha_emision, estado)')
+        .in('orden.estado', ['recibida', 'confirmada'])
+        .order('orden.fecha_emision', { ascending: false })
+      if (ultOcs) {
+        const uMap = {}
+        for (const item of ultOcs) {
+          const pid = item.producto_id
+          if (!uMap[pid]) uMap[pid] = Number(item.precio_unitario)
+        }
+        setUltCompraMap(uMap)
+      }
     } catch (err) {
       alertError('Error', err.message)
     } finally {
@@ -126,6 +145,7 @@ export function CatalogPage() {
             <th>{t('productos.descripcion')}</th>
             <th style={{ textAlign: 'right' }}>Precio Venta</th>
             <th style={{ textAlign: 'right' }}>Precio Compra</th>
+            <th style={{ textAlign: 'right' }}>Últ. Compra</th>
             <th>Cód. Barras</th>
             <th>{t('productos.unidad')}</th>
             <th style={{ width: 80, textAlign: 'right' }}>Stock</th>
@@ -136,7 +156,7 @@ export function CatalogPage() {
         <tbody>
           {filtered.length === 0 ? (
             <tr>
-              <td colSpan={11} className="meta" style={{ textAlign: 'center', padding: 32 }}>
+              <td colSpan={12} className="meta" style={{ textAlign: 'center', padding: 32 }}>
                 {t('common.sinDatos')}
               </td>
             </tr>
@@ -148,6 +168,7 @@ export function CatalogPage() {
               <td className="meta">{p.descripcion || '—'}</td>
                     <td style={{ textAlign: 'right', fontWeight: 600 }}>{Number(p.precio_venta).toLocaleString()} {p.moneda || 'PYG'}</td>
                     <td style={{ textAlign: 'right' }}>{Number(p.precio_compra).toLocaleString()} {p.moneda || 'PYG'}</td>
+                    <td style={{ textAlign: 'right' }}>{ultCompraMap[p.id] ? `${Number(ultCompraMap[p.id]).toLocaleString()} ${p.moneda || 'PYG'}` : <span className="meta">—</span>}</td>
                     <td style={{ fontFamily: 'monospace', fontSize: '0.78rem' }}>{p.codigo_barras || '—'}</td>
                     <td>{p.unidad_medida || 'UNI'}</td>
               <td style={{ textAlign: 'right', fontWeight: 700 }}>
