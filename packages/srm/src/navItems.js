@@ -12,5 +12,7 @@ export const NAV_SECTION_SRM = {
     { to: '/alertas-vencimiento', labelKey: 'nav.alertasVencimiento', icon: '🚨', permission: PERMISSIONS.DEAL_VER, feature: 'srm' },
     { to: '/historial-precios', labelKey: 'nav.historialPrecios', icon: '📈', permission: PERMISSIONS.DEAL_VER, feature: 'srm' },
     { to: '/sugerencias-oc', labelKey: 'nav.sugerenciasOC', icon: '🤖', permission: PERMISSIONS.DEAL_VER, feature: 'srm' },
+    { to: '/calendario-pagos', labelKey: 'nav.calendarioPagos', icon: '📅', permission: PERMISSIONS.DEAL_VER, feature: 'srm' },
+    { to: '/cuentas-pagar', labelKey: 'nav.cuentasPagar', icon: '💰', permission: PERMISSIONS.DEAL_VER, feature: 'srm' },
   ],
 }
