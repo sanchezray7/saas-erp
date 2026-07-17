@@ -171,6 +171,21 @@ export default function App() {
                 <Route path="notas-cd/nueva" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><NotaCDFormPage /></RequirePermission>} />
                 <Route path="notas-cd/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><NotaCDDetailPage /></RequirePermission>} />
                 <Route path="alertas-ar" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><AlertasARPage /></RequirePermission>} />
+                <Route path="organizations" element={<RequirePermission perm={PERMISSIONS.ORGANIZATION_VER}><OrganizationsPage /></RequirePermission>} />
+                <Route path="organizations/new" element={<RequirePermission perm={PERMISSIONS.ORGANIZATION_CREAR}><OrganizationFormPage /></RequirePermission>} />
+                <Route path="organizations/:id/edit" element={<RequirePermission perm={PERMISSIONS.ORGANIZATION_EDITAR}><OrganizationFormPage /></RequirePermission>} />
+                <Route path="deals" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><DealsPage /></RequirePermission>} />
+                <Route path="deals/new" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><DealFormPage /></RequirePermission>} />
+                <Route path="deals/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><DealDetailPage /></RequirePermission>} />
+                <Route path="deals/:id/edit" element={<RequirePermission perm={PERMISSIONS.DEAL_EDITAR}><DealFormPage /></RequirePermission>} />
+                <Route path="cotizaciones" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><CotizacionesPage /></RequirePermission>} />
+                <Route path="cotizaciones/new" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><CotizacionFormPage /></RequirePermission>} />
+                <Route path="cotizaciones/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><CotizacionDetailPage /></RequirePermission>} />
+                <Route path="cotizaciones/:id/edit" element={<RequirePermission perm={PERMISSIONS.DEAL_EDITAR}><CotizacionFormPage /></RequirePermission>} />
+                <Route path="cuentas-cobrar" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><CuentasCobrarPage /></RequirePermission>} />
+                <Route path="activities" element={<RequirePermission perm={PERMISSIONS.ACTIVITY_VER}><ActivitiesPage /></RequirePermission>} />
+                <Route path="calendar" element={<RequirePermission perm={PERMISSIONS.EVENTO_VER}><CalendarPage /></RequirePermission>} />
+                <Route path="reports" element={<RequirePermission perm={PERMISSIONS.REPORTE_VER}><ReportsPage /></RequirePermission>} />
                 <Route path="empleados" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><EmpleadosPage /></RequirePermission>} />
                 <Route path="empleados/nuevo" element={<RequirePermission perm={PERMISSIONS.CONTACT_CREAR}><EmpleadoFormPage /></RequirePermission>} />
                 <Route path="empleados/:id" element={<RequirePermission perm={PERMISSIONS.CONTACT_VER}><EmpleadoDetailPage /></RequirePermission>} />
