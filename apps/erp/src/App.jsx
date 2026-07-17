@@ -29,6 +29,7 @@ import { NAV_SECTION_SRM } from '@saas/srm'
 import { EmpleadosPage, EmpleadoFormPage, EmpleadoDetailPage, OrganigramaPage, AsistenciaPage, AusenciasPage, VacacionesPage, ImportarAsistenciaPage, ReporteAsistenciaPage, TurnosPage, RotacionPatronesPage, PlanificarTurnosPage, ControlHorarioPage, NAV_SECTION_RRHH } from '@saas/rrhh'
 import { ConfigNominaPage, PeriodosNominaPage, PeriodoDetailPage, ReciboPage, NovedadesPage, NominaDashboardPage, LibroSueldosPage, NAV_SECTION_NOMINA } from '@saas/nomina'
 import { ProveedoresPage, ProveedorFormPage, ProveedorDetailPage, OrdenesCompraPage, OrdenCompraFormPage, OrdenCompraDetailPage, CalendarioPagosPage, FacturasProveedorPage, FacturaProveedorFormPage, FacturaProveedorDetailPage, ScorecardsPage, AlertasVencimientoPage, HistorialPreciosPage, SugerenciasOCPage, CuentasPagarPage } from '@saas/srm'
+import { PosPage, CajasPage, CierresPage, NAV_SECTION_POS } from '@saas/pos'
 
 function LS({ children }) {
   return <Suspense fallback={<div className="card"><p className="meta">Loading...</p></div>}>{children}</Suspense>
@@ -75,8 +76,8 @@ function LayoutWithSections() {
   }, [activeCompanyId])
 
   const extras = esMatriz
-    ? [NAV_SECTION_CRM, NAV_SECTION_SRM, NAV_SECTION_RRHH, NAV_SECTION_NOMINA, NAV_SECTION_FINANZAS, NAV_SECTION_CONSOLIDACION]
-    : [NAV_SECTION_CRM, NAV_SECTION_SRM, NAV_SECTION_RRHH, NAV_SECTION_NOMINA, NAV_SECTION_FINANZAS]
+    ? [NAV_SECTION_POS, NAV_SECTION_CRM, NAV_SECTION_SRM, NAV_SECTION_RRHH, NAV_SECTION_NOMINA, NAV_SECTION_FINANZAS, NAV_SECTION_CONSOLIDACION]
+    : [NAV_SECTION_POS, NAV_SECTION_CRM, NAV_SECTION_SRM, NAV_SECTION_RRHH, NAV_SECTION_NOMINA, NAV_SECTION_FINANZAS]
 
   return (
     <WithAgenda>
@@ -194,6 +195,9 @@ export default function App() {
                 <Route path="activities" element={<RequirePermission perm={PERMISSIONS.ACTIVITY_VER}><ActivitiesPage /></RequirePermission>} />
                 <Route path="calendar" element={<RequirePermission perm={PERMISSIONS.EVENTO_VER}><CalendarPage /></RequirePermission>} />
                 <Route path="reports" element={<RequirePermission perm={PERMISSIONS.REPORTE_VER}><ReportsPage /></RequirePermission>} />
+                <Route path="pos" element={<PosPage />} />
+                <Route path="pos/cajas" element={<CajasPage />} />
+                <Route path="pos/cierres" element={<CierresPage />} />
                 <Route path="settings" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><SettingsPage /></RequirePermission>} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>

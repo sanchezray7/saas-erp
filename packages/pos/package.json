@@ -1,0 +1,15 @@
+{
+  "name": "@saas/pos",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.js",
+  "peerDependencies": {
+    "@saas/core": "*",
+    "@saas/productos": "*",
+    "@saas/inventario": "*",
+    "react": "^19.0.0",
+    "react-router-dom": "^7.0.0",
+    "react-i18next": "*"
+  }
+}
