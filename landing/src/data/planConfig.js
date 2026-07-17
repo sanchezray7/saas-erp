@@ -9,7 +9,7 @@ export const FEATURES = {
   notas_cd: { free: false, starter: true, business: true },
   srm: { free: false, starter: true, business: true },
   inventario: { free: false, starter: true, business: true },
-  contabilidad: { free: false, starter: true, business: false },
+  contabilidad: { free: false, starter: true, business: true },
   contabilidad_avanzada: { free: false, starter: false, business: true },
   asientos_automaticos_facturas: { free: false, starter: true, business: true },
   asientos_automaticos_nomina: { free: false, starter: false, business: true },

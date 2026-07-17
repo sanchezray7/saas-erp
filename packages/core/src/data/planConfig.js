@@ -13,7 +13,7 @@ export const FEATURES = {
   notas_cd: { free: false, starter: true, business: true },
   srm: { free: false, starter: true, business: true },
   inventario: { free: false, starter: true, business: true },
-  contabilidad: { free: false, starter: true, business: false },
+  contabilidad: { free: false, starter: true, business: true },
   contabilidad_avanzada: { free: false, starter: false, business: true },
   asientos_automaticos_facturas: { free: false, starter: true, business: true },
   asientos_automaticos_nomina: { free: false, starter: false, business: true },
@@ -27,7 +27,7 @@ export const FEATURES = {
 // Cuotas máximas por plan
 // -1 = ilimitado
 export const QUOTAS = {
-  free: { usuarios: 2, productos: 50, contactos: 100, oportunidades: 50, facturas_mes: 50 },
+  free: { usuarios: 2, productos: 25, contactos: 50, oportunidades: 20, facturas_mes: 20 },
   starter: { usuarios: 10, productos: -1, contactos: -1, oportunidades: -1, facturas_mes: -1 },
   business: { usuarios: -1, productos: -1, contactos: -1, oportunidades: -1, facturas_mes: -1 },
 }
@@ -44,6 +44,6 @@ export const QUOTA_LABELS = {
 // Nombres y precios de los planes
 export const PLAN_LABELS = {
   free: { name: 'Free', price: 'Gratis' },
-  starter: { name: 'Starter', price: '$29/mes' },
-  business: { name: 'Business', price: '$79/mes' },
+  starter: { name: 'Starter', price: '$39/mes' },
+  business: { name: 'Business', price: '$89/mes' },
 }
