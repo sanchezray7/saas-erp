@@ -1,0 +1,7 @@
+---
+const HELP = (await import('../../../packages/core/src/data/helpContent.js')).HELP
+const firstKey = Object.keys(HELP)[0] || 'ventas'
+---
+
+<meta http-equiv="refresh" content={`0;url=/${firstKey}`} />
+<a href={`/${firstKey}`}>Ir a documentación</a>

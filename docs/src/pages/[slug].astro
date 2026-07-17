@@ -1,0 +1,69 @@
+---
+export const prerender = true
+
+import Layout from '../components/Layout.astro'
+const HELP = (await import('../../../packages/core/src/data/helpContent.js')).HELP
+
+export function getStaticPaths() {
+  return Object.keys(HELP).map((key) => ({ params: { slug: key } }))
+}
+
+const { slug } = Astro.params
+const section = HELP[slug]
+if (!section) return Astro.redirect('/')
+const moduloList = section.modulos || []
+---
+
+<Layout title={`${section.titulo} — Saas Empresarial Docs`}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+    <span style={{ fontSize: '2rem' }}>{section.icon}</span>
+    <h1>{section.titulo}</h1>
+  </div>
+  <p class="meta" style={{ marginBottom: 24 }}>{section.descripcion}</p>
+
+  {moduloList.map((modulo) => (
+    <div style={{ marginBottom: 28 }}>
+      <h2>{modulo.titulo}</h2>
+      <p class="meta">{modulo.descripcion}</p>
+
+      {modulo.pasos && (
+        <>
+          <h3>Pasos:</h3>
+          <ol>
+            {modulo.pasos.map((paso) => <li set:html={paso.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')} />)}
+          </ol>
+        </>
+      )}
+
+      {modulo.tips && (
+        <div class="tips">
+          <h3 style="margin:0 0 6px;font-size:0.85rem;color:#92400e">💡 Tips</h3>
+          <ul>{modulo.tips.map((tip) => <li>{tip}</li>)}</ul>
+        </div>
+      )}
+
+      {modulo.estados && (
+        <>
+          <h3>Estados:</h3>
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:12px">
+            {modulo.estados.map((est) => (
+              <div style="display:flex;gap:8px;font-size:0.88rem">
+                <span style="font-weight:600;min-width:120px">{est.nombre}</span>
+                <span style="color:var(--text-muted)">{est.desc}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {modulo.acciones && (
+        <>
+          <h3>Acciones:</h3>
+          {modulo.acciones.map((acc) => (
+            <p><strong>{acc.label}:</strong> {acc.desc}</p>
+          ))}
+        </>
+      )}
+    </div>
+  ))}
+</Layout>

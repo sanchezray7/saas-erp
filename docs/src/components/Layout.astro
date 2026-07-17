@@ -1,0 +1,53 @@
+---
+const { title = 'Saas Empresarial — Docs' } = Astro.props
+const HELP = Object.fromEntries(
+  Object.entries((await import('../../../packages/core/src/data/helpContent.js')).HELP)
+)
+const sections = Object.entries(HELP)
+const currentPath = Astro.url.pathname
+---
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <link rel="icon" type="image/svg+xml" href="https://saas-empresarial.com/favicon.svg" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #6366f1; --bg: #ffffff; --bg-alt: #f8fafc; --text: #1e293b;
+      --text-muted: #64748b; --border: #e2e8f0; --radius: 8px;
+    }
+    body { font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: var(--bg); display: flex; min-height: 100vh; }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .sidebar { width: 240px; border-right: 1px solid var(--border); padding: 20px 0; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+    .sidebar-brand { font-weight: 700; font-size: 1rem; padding: 0 20px; margin-bottom: 16px; }
+    .sidebar-link { display: block; padding: 8px 20px; color: var(--text); font-size: 0.88rem; }
+    .sidebar-link:hover { background: var(--bg-alt); }
+    .sidebar-link.active { font-weight: 600; color: var(--primary); }
+    .content { flex: 1; padding: 28px 32px; max-width: 720px; }
+    h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+    h2 { font-size: 1.05rem; font-weight: 700; margin: 24px 0 4px; }
+    h3 { font-size: 0.92rem; font-weight: 600; margin: 16px 0 4px; }
+    p { font-size: 0.88rem; line-height: 1.6; color: var(--text-muted); margin-bottom: 12px; }
+    .meta { font-size: 0.85rem; color: var(--text-muted); }
+    .tips { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin: 12px 0; font-size: 0.85rem; color: #92400e; }
+    ol, ul { margin: 4px 0 12px; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+    li { font-size: 0.88rem; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <nav class="sidebar">
+    <div class="sidebar-brand">📖 Saas Empresarial</div>
+    {sections.map(([key, s]) => (
+      <a href={`/${key}`} class="sidebar-link" class:list={{ active: currentPath === `/${key}/` || currentPath === `/${key}` }}>{s.icon} {s.titulo}</a>
+    ))}
+  </nav>
+  <main class="content">
+    <slot />
+  </main>
+</body>
+</html>
