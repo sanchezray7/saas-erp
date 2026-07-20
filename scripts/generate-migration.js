@@ -53,6 +53,9 @@ const lines = [
   '-- Desactivar validacion de bodies de funciones (orden circular tablas -> funciones -> RLS)',
   'SET check_function_bodies = false;',
   '',
+  '-- Eliminar vistas que pueden bloquear ALTER TABLE por dependencias',
+  'drop view if exists contactos_view cascade;',
+  '',
 ]
 
 // Extraer funciones helper de crm-setup.sql (deben ir ANTES de las tablas)

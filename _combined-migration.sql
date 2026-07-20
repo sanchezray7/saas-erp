@@ -1,10 +1,13 @@
 -- ============================================================
 -- Migracion combinada: SaaS Empresarial
--- Generado: 2026-07-20T13:11:11.853Z
+-- Generado: 2026-07-20T13:16:06.553Z
 -- ============================================================
 
 -- Desactivar validacion de bodies de funciones (orden circular tablas -> funciones -> RLS)
 SET check_function_bodies = false;
+
+-- Eliminar vistas que pueden bloquear ALTER TABLE por dependencias
+drop view if exists contactos_view cascade;
 
 -- ============================================================
 -- HELPER FUNCTIONS (deben ir antes de las tablas para RLS)
