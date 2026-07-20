@@ -27,7 +27,13 @@ alter table calendario_turnos add column if not exists calendario_id uuid refere
 -- Hacer empleado_id nullable (para excepciones)
 alter table calendario_turnos alter column empleado_id drop not null;
 -- Nuevo unique: (calendario_id, fecha) — un calendario tiene un turno por fecha
-alter table calendario_turnos add constraint cal_turnos_cal_fecha unique (calendario_id, fecha);
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'cal_turnos_cal_fecha') then
+    alter table calendario_turnos add constraint cal_turnos_cal_fecha unique (calendario_id, fecha);
+  end if;
+end;
+$$;
 
 -- 3. Agregar calendario_id a empleado_rotacion
 alter table empleado_rotacion add column if not exists calendario_id uuid references calendarios(id) on delete set null;
