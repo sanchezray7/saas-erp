@@ -1,6 +1,7 @@
 # Guía de Configuración para Beta Testers
 
-**App:** https://staging.saasglobalconsulting.com  
+**App:** https://app.saas-empresarial.com  
+**Landing:** https://saas-empresarial.com  
 **Rama:** `staging` • **Repo:** github.com/sanchezray7/saas-erp
 
 ---
@@ -233,7 +234,7 @@ Fase 9: Nómina (config → conceptos → períodos → liquidar)
 
 | Recurso | URL |
 |---------|-----|
-| App staging | https://staging.saasglobalconsulting.com |
+| App staging | https://app.saas-empresarial.com |
 | Supabase Dashboard | https://supabase.com/dashboard/project/hbvcprxuveagzalyogeu |
 | Repositorio | https://github.com/sanchezray7/saas-erp |
 | Documentación técnica | `docs/` en el repo |
