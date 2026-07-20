@@ -1,6 +1,6 @@
 -- ============================================================
 -- Migracion combinada: SaaS Empresarial
--- Generado: 2026-07-14T17:44:54.927Z
+-- Generado: 2026-07-20T13:11:11.853Z
 -- ============================================================
 
 -- Desactivar validacion de bodies de funciones (orden circular tablas -> funciones -> RLS)
@@ -435,7 +435,7 @@ begin
   uid := (event->>'user_id')::uuid;
 
   select coalesce(
-           jsonb_agg(distinct jsonb_build_object('id', c.id, 'name', c.name)),
+            jsonb_agg(distinct jsonb_build_object('id', c.id, 'name', c.name, 'plan', c.plan)),
            '[]'::jsonb
          )
     into companies_json
@@ -536,7 +536,7 @@ declare
   result jsonb;
 begin
   select coalesce(
-    jsonb_agg(jsonb_build_object('id', cm.company_id, 'name', c.name, 'role', cm.role)),
+    jsonb_agg(    jsonb_build_object('id', cm.company_id, 'name', c.name, 'role', cm.role, 'plan', c.plan)),
     '[]'::jsonb
   )
   into result
@@ -2119,6 +2119,181 @@ $$;
 
 
 -- ============================================================
+-- plan-limites-setup.sql
+-- ============================================================
+-- Plan de límites por suscripción
+-- Ejecutar después de crm-setup.sql
+
+-- 1. Features por plan (módulos habilitados/deshabilitados)
+create table if not exists plan_features (
+  plan text not null,
+  feature_key text not null,
+  enabled boolean not null default false,
+  primary key (plan, feature_key)
+);
+
+-- 2. Cuotas numéricas por plan
+create table if not exists plan_quotas (
+  plan text not null,
+  quota_key text not null,
+  max_value integer not null default 0,
+  primary key (plan, quota_key)
+);
+
+-- RLS
+alter table plan_features enable row level security;
+alter table plan_quotas enable row level security;
+
+drop policy if exists "plan_features_select" on plan_features;
+create policy "plan_features_select" on plan_features for select using (true);
+drop policy if exists "plan_quotas_select" on plan_quotas;
+create policy "plan_quotas_select" on plan_quotas for select using (true);
+
+-- 3. Seed data — Features por plan
+insert into plan_features (plan, feature_key, enabled) values
+  -- Free
+  ('free', 'catalogo', true),
+  ('free', 'crm', true),
+  ('free', 'facturacion', true),
+  ('free', 'notas_cd', false),
+  ('free', 'srm', false),
+  ('free', 'inventario', false),
+  ('free', 'contabilidad', false),
+  ('free', 'contabilidad_avanzada', false),
+  ('free', 'asientos_automaticos_facturas', false),
+  ('free', 'asientos_automaticos_nomina', false),
+  ('free', 'rrhh', false),
+  ('free', 'nomina', false),
+  ('free', 'whatsapp', false),
+  ('free', 'reportes', false),
+  ('free', 'reportes_avanzados', false),
+  -- Starter
+  ('starter', 'catalogo', true),
+  ('starter', 'crm', true),
+  ('starter', 'facturacion', true),
+  ('starter', 'notas_cd', true),
+  ('starter', 'srm', true),
+  ('starter', 'inventario', true),
+  ('starter', 'contabilidad', true),
+  ('starter', 'contabilidad_avanzada', false),
+  ('starter', 'asientos_automaticos_facturas', true),
+  ('starter', 'asientos_automaticos_nomina', false),
+  ('starter', 'rrhh', false),
+  ('starter', 'nomina', false),
+  ('starter', 'whatsapp', false),
+  ('starter', 'reportes', true),
+  ('starter', 'reportes_avanzados', false),
+  -- Business
+  ('business', 'catalogo', true),
+  ('business', 'crm', true),
+  ('business', 'facturacion', true),
+  ('business', 'notas_cd', true),
+  ('business', 'srm', true),
+  ('business', 'inventario', true),
+  ('business', 'contabilidad', false),
+  ('business', 'contabilidad_avanzada', true),
+  ('business', 'asientos_automaticos_facturas', true),
+  ('business', 'asientos_automaticos_nomina', true),
+  ('business', 'rrhh', true),
+  ('business', 'nomina', true),
+  ('business', 'whatsapp', true),
+  ('business', 'reportes', false),
+  ('business', 'reportes_avanzados', true)
+on conflict (plan, feature_key) do nothing;
+
+-- 4. Seed data — Cuotas por plan
+insert into plan_quotas (plan, quota_key, max_value) values
+  ('free', 'usuarios', 2),
+  ('free', 'productos', 50),
+  ('free', 'contactos', 100),
+  ('free', 'oportunidades', 50),
+  ('free', 'facturas_mes', 50),
+  ('starter', 'usuarios', 10),
+  ('starter', 'productos', -1),
+  ('starter', 'contactos', -1),
+  ('starter', 'oportunidades', -1),
+  ('starter', 'facturas_mes', -1),
+  ('business', 'usuarios', -1),
+  ('business', 'productos', -1),
+  ('business', 'contactos', -1),
+  ('business', 'oportunidades', -1),
+  ('business', 'facturas_mes', -1)
+on conflict (plan, quota_key) do nothing;
+
+-- 5. Función helper: verificar si una feature está habilitada para una empresa
+create or replace function check_feature_enabled(p_company_id uuid, p_feature_key text)
+returns boolean
+language plpgsql
+security definer
+stable
+as $$
+declare
+  v_plan text;
+  v_enabled boolean;
+begin
+  select plan into v_plan from companies where id = p_company_id;
+  if v_plan is null then return false; end if;
+  select enabled into v_enabled from plan_features where plan = v_plan and feature_key = p_feature_key;
+  return coalesce(v_enabled, false);
+end;
+$$;
+
+-- 6. Función helper: verificar cuota disponible para una empresa
+create or replace function check_quota(p_company_id uuid, p_quota_key text)
+returns jsonb
+language plpgsql
+security definer
+stable
+as $$
+declare
+  v_plan text;
+  v_max integer;
+  v_current integer := 0;
+begin
+  select plan into v_plan from companies where id = p_company_id;
+  if v_plan is null then
+    return jsonb_build_object('current', 0, 'max', 0, 'remaining', 0);
+  end if;
+
+  select max_value into v_max from plan_quotas where plan = v_plan and quota_key = p_quota_key;
+  if v_max is null then
+    return jsonb_build_object('current', 0, 'max', 0, 'remaining', 0);
+  end if;
+
+  -- -1 significa ilimitado
+  if v_max = -1 then
+    return jsonb_build_object('current', 0, 'max', -1, 'remaining', -1);
+  end if;
+
+  -- Contar registros actuales según la cuota
+  if p_quota_key = 'usuarios' then
+    select count(*) into v_current from company_members where company_id = p_company_id;
+  elsif p_quota_key = 'productos' then
+    select count(*) into v_current from catalogo_productos where company_id = p_company_id;
+  elsif p_quota_key = 'contactos' then
+    select count(*) into v_current from contacts where company_id = p_company_id;
+  elsif p_quota_key = 'oportunidades' then
+    select count(*) into v_current from deals where company_id = p_company_id;
+  elsif p_quota_key = 'facturas_mes' then
+    select count(*) into v_current
+    from facturas
+    where company_id = p_company_id
+      and date_trunc('month', created_at) = date_trunc('month', now());
+  end if;
+
+  return jsonb_build_object('current', v_current, 'max', v_max, 'remaining', greatest(v_max - v_current, 0));
+end;
+$$;
+
+-- 7. Dar permisos
+grant usage on schema public to supabase_auth_admin;
+grant execute on function check_feature_enabled(uuid, text) to supabase_auth_admin;
+grant execute on function check_quota(uuid, text) to supabase_auth_admin;
+grant select on plan_features to supabase_auth_admin;
+grant select on plan_quotas to supabase_auth_admin;
+
+
+-- ============================================================
 -- catalogo-setup.sql
 -- ============================================================
 -- Catálogo de productos/servicios
@@ -2130,7 +2305,8 @@ create table if not exists catalogo_productos (
   codigo text,
   nombre text not null,
   descripcion text,
-  precio_unitario numeric(12,2) not null default 0,
+  precio_venta numeric(12,2) not null default 0,
+  precio_compra numeric(12,2) not null default 0,
   moneda text not null default 'PYG',
   unidad_medida text default 'UNI',
   cod_unidad int default 77,
@@ -2222,6 +2398,53 @@ as $$
   from unidades_medida u
   where u.activo = true;
 $$;
+
+
+-- ============================================================
+-- categorias-setup.sql
+-- ============================================================
+-- Categorías de productos/servicios
+-- Ejecutar después de catalogo-setup.sql
+
+create table if not exists categorias (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references companies(id) on delete cascade,
+  nombre text not null,
+  tipo text not null check (tipo in ('producto', 'servicio')),
+  parent_id uuid references categorias(id) on delete cascade,
+  color text not null default '#6366f1',
+  icono text not null default '📦',
+  unique(company_id, tipo, nombre)
+);
+
+alter table catalogo_productos add column if not exists categoria_id uuid references categorias(id) on delete set null;
+alter table catalogo_productos alter column tipo set default 'producto';
+
+alter table categorias enable row level security;
+drop policy if exists "categorias_select" on categorias;
+create policy "categorias_select" on categorias for select using (public.is_member_of(company_id));
+drop policy if exists "categorias_insert" on categorias;
+create policy "categorias_insert" on categorias for insert with check (public.is_member_of(company_id));
+drop policy if exists "categorias_update" on categorias;
+create policy "categorias_update" on categorias for update using (public.is_member_of(company_id));
+drop policy if exists "categorias_delete" on categorias;
+create policy "categorias_delete" on categorias for delete using (public.is_member_of(company_id));
+
+
+-- ============================================================
+-- precio-compra-venta-setup.sql
+-- ============================================================
+-- Migración: precio de compra y venta en catálogo
+-- Ejecutar después de catalogo-setup.sql
+
+-- 1. Renombrar precio_unitario a precio_venta
+alter table catalogo_productos rename column precio_unitario to precio_venta;
+
+-- 2. Agregar precio_compra
+alter table catalogo_productos add column if not exists precio_compra numeric(12,2) not null default 0;
+
+-- 3. Inicializar precio_compra con el mismo valor que precio_venta (para no romper datos existentes)
+update catalogo_productos set precio_compra = precio_venta where precio_compra = 0;
 
 
 -- ============================================================
@@ -4510,7 +4733,8 @@ as $$
       'producto_id', cp.id,
       'producto_nombre', cp.nombre,
       'producto_codigo', cp.codigo,
-      'precio_actual', cp.precio_unitario,
+      'precio_venta', cp.precio_venta,
+      'precio_compra', cp.precio_compra,
       'moneda', cp.moneda,
       'unidad_medida', cp.unidad_medida,
       'total_ocs', (select count(*) from orden_compra_items oi join ordenes_compra o on o.id = oi.orden_id where o.company_id = p_company_id and oi.producto_id = cp.id and o.estado in ('confirmada', 'recibida')),
@@ -7539,3 +7763,424 @@ $$;
 
 -- Número Patronal IPS para exportación
 alter table nomina_config add column if not exists numero_patronal text not null default '';
+
+
+-- ============================================================
+-- plan-triggers-setup.sql
+-- ============================================================
+-- Triggers de cuotas por plan
+-- Rechazan INSERTS si se supera el límite del plan
+-- Cubre todos los puntos de entrada (frontend, API, SQL directo)
+
+-- 1. company_members → cuota: usuarios
+create or replace function check_quota_usuarios()
+returns trigger
+language plpgsql
+security definer
+as $$
+declare
+  v_plan text;
+  v_max integer;
+  v_current integer;
+begin
+  select plan into v_plan from companies where id = new.company_id;
+  if v_plan is null then return new; end if;
+
+  select max_value into v_max from plan_quotas where plan = v_plan and quota_key = 'usuarios';
+  if v_max is null or v_max = -1 then return new; end if;
+
+  select count(*) into v_current from company_members where company_id = new.company_id;
+  if v_current >= v_max then
+    raise exception 'Límite de usuarios alcanzado (%) para tu plan actual. Actualizá tu plan para agregar más.', v_max;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_check_quota_usuarios on company_members;
+create trigger trg_check_quota_usuarios
+  before insert on company_members
+  for each row execute function check_quota_usuarios();
+
+-- 2. catalogo_productos → cuota: productos
+create or replace function check_quota_productos()
+returns trigger
+language plpgsql
+security definer
+as $$
+declare
+  v_plan text;
+  v_max integer;
+  v_current integer;
+begin
+  select plan into v_plan from companies where id = new.company_id;
+  if v_plan is null then return new; end if;
+
+  select max_value into v_max from plan_quotas where plan = v_plan and quota_key = 'productos';
+  if v_max is null or v_max = -1 then return new; end if;
+
+  select count(*) into v_current from catalogo_productos where company_id = new.company_id;
+  if v_current >= v_max then
+    raise exception 'Límite de productos alcanzado (%) para tu plan actual. Actualizá tu plan para ampliarlo.', v_max;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_check_quota_productos on catalogo_productos;
+create trigger trg_check_quota_productos
+  before insert on catalogo_productos
+  for each row execute function check_quota_productos();
+
+-- 3. contacts → cuota: contactos
+create or replace function check_quota_contactos()
+returns trigger
+language plpgsql
+security definer
+as $$
+declare
+  v_plan text;
+  v_max integer;
+  v_current integer;
+begin
+  select plan into v_plan from companies where id = new.company_id;
+  if v_plan is null then return new; end if;
+
+  select max_value into v_max from plan_quotas where plan = v_plan and quota_key = 'contactos';
+  if v_max is null or v_max = -1 then return new; end if;
+
+  select count(*) into v_current from contacts where company_id = new.company_id;
+  if v_current >= v_max then
+    raise exception 'Límite de contactos alcanzado (%) para tu plan actual. Actualizá tu plan para ampliarlo.', v_max;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_check_quota_contactos on contacts;
+create trigger trg_check_quota_contactos
+  before insert on contacts
+  for each row execute function check_quota_contactos();
+
+-- 4. deals → cuota: oportunidades
+create or replace function check_quota_oportunidades()
+returns trigger
+language plpgsql
+security definer
+as $$
+declare
+  v_plan text;
+  v_max integer;
+  v_current integer;
+begin
+  select plan into v_plan from companies where id = new.company_id;
+  if v_plan is null then return new; end if;
+
+  select max_value into v_max from plan_quotas where plan = v_plan and quota_key = 'oportunidades';
+  if v_max is null or v_max = -1 then return new; end if;
+
+  select count(*) into v_current from deals where company_id = new.company_id;
+  if v_current >= v_max then
+    raise exception 'Límite de oportunidades alcanzado (%) para tu plan actual. Actualizá tu plan para ampliarlo.', v_max;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_check_quota_oportunidades on deals;
+create trigger trg_check_quota_oportunidades
+  before insert on deals
+  for each row execute function check_quota_oportunidades();
+
+-- 5. facturas → cuota: facturas_mes
+create or replace function check_quota_facturas_mes()
+returns trigger
+language plpgsql
+security definer
+as $$
+declare
+  v_plan text;
+  v_max integer;
+  v_current integer;
+begin
+  select plan into v_plan from companies where id = new.company_id;
+  if v_plan is null then return new; end if;
+
+  select max_value into v_max from plan_quotas where plan = v_plan and quota_key = 'facturas_mes';
+  if v_max is null or v_max = -1 then return new; end if;
+
+  select count(*) into v_current
+  from facturas
+  where company_id = new.company_id
+    and date_trunc('month', created_at) = date_trunc('month', now());
+  if v_current >= v_max then
+    raise exception 'Límite de facturas mensuales alcanzado (%) para tu plan actual. Actualizá tu plan para ampliarlo.', v_max;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_check_quota_facturas_mes on facturas;
+create trigger trg_check_quota_facturas_mes
+  before insert on facturas
+  for each row execute function check_quota_facturas_mes();
+
+
+-- ============================================================
+-- pos-setup.sql
+-- ============================================================
+-- Módulo POS (Punto de Venta)
+-- Ejecutar después de inventario-setup.sql
+
+-- 1. Cajas registradoras
+create table if not exists cajas (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references companies(id) on delete cascade,
+  nombre text not null,
+  estado text not null default 'cerrada' check (estado in ('abierta', 'cerrada')),
+  saldo_inicial numeric(12,2) not null default 0,
+  saldo_actual numeric(12,2) not null default 0,
+  almacen_id uuid references almacenes(id) on delete set null,
+  usuario_apertura_id uuid references auth.users(id),
+  apertura_en timestamptz,
+  cierre_en timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists idx_cajas_company on cajas(company_id);
+
+-- 2. Ventas POS (no electrónicas)
+create table if not exists ventas_pos (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references companies(id) on delete cascade,
+  caja_id uuid not null references cajas(id),
+  cliente_id uuid references contacts(id) on delete set null,
+  numero integer not null,
+  items jsonb not null default '[]'::jsonb,
+  subtotal numeric(12,2) not null default 0,
+  descuento numeric(12,2) not null default 0,
+  total numeric(12,2) not null default 0,
+  forma_pago text not null check (forma_pago in ('efectivo', 'tarjeta', 'transferencia', 'mixto')),
+  monto_efectivo numeric(12,2) not null default 0,
+  monto_tarjeta numeric(12,2) not null default 0,
+  monto_transferencia numeric(12,2) not null default 0,
+  monto_recibido numeric(12,2) not null default 0,
+  monto_cambio numeric(12,2) not null default 0,
+  factura_id uuid references facturas(id) on delete set null,
+  created_at timestamptz not null default now(),
+  usuario_id uuid references auth.users(id)
+);
+
+create index if not exists idx_ventas_pos_company on ventas_pos(company_id);
+create index if not exists idx_ventas_pos_caja on ventas_pos(caja_id);
+create index if not exists idx_ventas_pos_fecha on ventas_pos(created_at desc);
+
+-- 3. Cierres de caja (corte Z)
+create table if not exists cierres_caja (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references companies(id) on delete cascade,
+  caja_id uuid not null references cajas(id),
+  apertura_en timestamptz not null,
+  cierre_en timestamptz not null default now(),
+  saldo_inicial numeric(12,2) not null default 0,
+  saldo_esperado numeric(12,2) not null default 0,
+  saldo_real numeric(12,2) not null default 0,
+  ventas_count integer not null default 0,
+  ventas_total numeric(12,2) not null default 0,
+  dif_esperada numeric(12,2) not null default 0,
+  observaciones text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_cierres_caja_company on cierres_caja(company_id);
+
+-- RLS
+alter table cajas enable row level security;
+alter table ventas_pos enable row level security;
+alter table cierres_caja enable row level security;
+
+drop policy if exists "cajas_select" on cajas;
+create policy "cajas_select" on cajas for select using (public.is_member_of(company_id));
+drop policy if exists "cajas_insert" on cajas;
+create policy "cajas_insert" on cajas for insert with check (public.is_member_of(company_id));
+drop policy if exists "cajas_update" on cajas;
+create policy "cajas_update" on cajas for update using (public.is_member_of(company_id));
+drop policy if exists "cajas_delete" on cajas;
+create policy "cajas_delete" on cajas for delete using (public.is_member_of(company_id));
+
+drop policy if exists "ventas_pos_select" on ventas_pos;
+create policy "ventas_pos_select" on ventas_pos for select using (public.is_member_of(company_id));
+drop policy if exists "ventas_pos_insert" on ventas_pos;
+create policy "ventas_pos_insert" on ventas_pos for insert with check (public.is_member_of(company_id));
+
+drop policy if exists "cierres_caja_select" on cierres_caja;
+create policy "cierres_caja_select" on cierres_caja for select using (public.is_member_of(company_id));
+drop policy if exists "cierres_caja_insert" on cierres_caja;
+create policy "cierres_caja_insert" on cierres_caja for insert with check (public.is_member_of(company_id));
+
+-- 4. RPC: Seed consumidor final
+create or replace function seed_consumidor_final(p_company_id uuid)
+returns uuid
+language plpgsql
+security definer
+as $$
+declare
+  v_id uuid;
+begin
+  select id into v_id from contacts
+  where company_id = p_company_id and name = 'Consumidor Final' and tipo_documento is null;
+  if v_id is null then
+    insert into contacts (company_id, name, notes)
+    values (p_company_id, 'Consumidor Final', 'Cliente por defecto para ventas POS')
+    returning id into v_id;
+  end if;
+  return v_id;
+end;
+$$;
+
+-- 5. RPC: Abrir caja
+create or replace function abrir_caja(p_caja_id uuid, p_saldo_inicial numeric)
+returns jsonb
+language plpgsql
+security definer
+as $$
+declare
+  v_caja record;
+begin
+  select * into v_caja from cajas where id = p_caja_id for update;
+  if v_caja.estado = 'abierta' then
+    return jsonb_build_object('error', 'La caja ya está abierta');
+  end if;
+  update cajas set
+    estado = 'abierta',
+    saldo_inicial = p_saldo_inicial,
+    saldo_actual = p_saldo_inicial,
+    usuario_apertura_id = auth.uid(),
+    apertura_en = now(),
+    cierre_en = null
+  where id = p_caja_id;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+
+-- 6. RPC: Cerrar caja (corte Z)
+create or replace function cerrar_caja(p_caja_id uuid, p_saldo_real numeric, p_observaciones text default '')
+returns jsonb
+language plpgsql
+security definer
+as $$
+declare
+  v_caja record;
+  v_ventas record;
+  v_cierre_id uuid;
+begin
+  select * into v_caja from cajas where id = p_caja_id for update;
+  if v_caja.estado = 'cerrada' then
+    return jsonb_build_object('error', 'La caja ya está cerrada');
+  end if;
+  select count(*) as count, coalesce(sum(total), 0) as sum into v_ventas
+  from ventas_pos
+  where caja_id = p_caja_id and created_at >= v_caja.apertura_en;
+
+  insert into cierres_caja (company_id, caja_id, apertura_en, cierre_en,
+    saldo_inicial, saldo_esperado, saldo_real, ventas_count, ventas_total, dif_esperada, observaciones)
+  values (v_caja.company_id, p_caja_id, v_caja.apertura_en, now(),
+    v_caja.saldo_inicial, v_caja.saldo_actual, p_saldo_real, v_ventas.count, v_ventas.sum,
+    p_saldo_real - v_caja.saldo_actual, p_observaciones)
+  returning id into v_cierre_id;
+
+  update cajas set estado = 'cerrada', saldo_actual = p_saldo_real, cierre_en = now()
+  where id = p_caja_id;
+
+  return jsonb_build_object('ok', true, 'cierre_id', v_cierre_id);
+end;
+$$;
+
+-- 7. RPC: Registrar venta POS
+create or replace function registrar_venta_pos(
+  p_company_id uuid, p_caja_id uuid, p_cliente_id uuid,
+  p_items jsonb, p_subtotal numeric, p_descuento numeric, p_total numeric,
+  p_forma_pago text,
+  p_monto_efectivo numeric, p_monto_tarjeta numeric, p_monto_transferencia numeric,
+  p_monto_recibido numeric, p_monto_cambio numeric,
+  p_banco text default null, p_referencia text default null
+)
+returns jsonb
+language plpgsql
+security definer
+as $$
+declare
+  v_caja record;
+  v_numero integer;
+  v_venta_id uuid;
+  v_item jsonb;
+  v_stock record;
+begin
+  -- Validar caja abierta
+  select * into v_caja from cajas where id = p_caja_id for update;
+  if v_caja.estado != 'abierta' then
+    return jsonb_build_object('error', 'La caja no está abierta');
+  end if;
+
+  -- Validar y descontar stock
+  for v_item in select * from jsonb_array_elements(p_items)
+  loop
+    select cantidad into v_stock
+    from producto_stock
+    where producto_id = (v_item->>'producto_id')::uuid
+      and almacen_id = (v_item->>'almacen_id')::uuid
+      and company_id = p_company_id;
+
+    if v_stock is null or v_stock.cantidad < (v_item->>'cantidad')::numeric then
+      return jsonb_build_object('error', 'Stock insuficiente para ' || coalesce(v_item->>'nombre', 'producto'));
+    end if;
+  end loop;
+
+  -- Número correlativo
+  select coalesce(max(numero), 0) + 1 into v_numero
+  from ventas_pos where company_id = p_company_id;
+
+  -- Insertar venta
+  insert into ventas_pos (company_id, caja_id, cliente_id, numero,
+    items, subtotal, descuento, total,
+    forma_pago, monto_efectivo, monto_tarjeta, monto_transferencia,
+    monto_recibido, monto_cambio, usuario_id, banco, referencia)
+  values (p_company_id, p_caja_id, p_cliente_id, v_numero,
+    p_items, p_subtotal, p_descuento, p_total,
+    p_forma_pago, p_monto_efectivo, p_monto_tarjeta, p_monto_transferencia,
+    p_monto_recibido, p_monto_cambio, auth.uid(), p_banco, p_referencia)
+  returning id into v_venta_id;
+
+  -- Descontar stock
+  for v_item in select * from jsonb_array_elements(p_items)
+  loop
+    update producto_stock
+    set cantidad = cantidad - (v_item->>'cantidad')::numeric
+    where producto_id = (v_item->>'producto_id')::uuid
+      and almacen_id = (v_item->>'almacen_id')::uuid
+      and company_id = p_company_id;
+  end loop;
+
+  -- Actualizar saldo de caja
+  update cajas set saldo_actual = saldo_actual + p_total
+  where id = p_caja_id;
+
+  return jsonb_build_object('ok', true, 'venta_id', v_venta_id, 'numero', v_numero);
+end;
+$$;
+
+-- 9. Agregar QR como forma de pago + banco + referencia
+alter table ventas_pos drop constraint if exists ventas_pos_forma_pago_check;
+alter table ventas_pos add constraint ventas_pos_forma_pago_check
+  check (forma_pago in ('efectivo', 'tarjeta', 'transferencia', 'mixto', 'qr'));
+alter table ventas_pos add column if not exists banco text;
+alter table ventas_pos add column if not exists referencia text;
+
+-- 10. Trigger: descontar stock en ventas POS (respaldo)
+drop trigger if exists trg_venta_pos_descuenta_stock on ventas_pos;

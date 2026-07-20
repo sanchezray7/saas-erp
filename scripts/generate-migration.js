@@ -15,6 +15,7 @@ const orden = [
   'perfil-empresa-setup.sql', 'empresa-rpc-setup.sql', 'actividades-setup.sql',
   'plan-limites-setup.sql',
   'catalogo-setup.sql', 'unidades-setup.sql',
+  'categorias-setup.sql',
   'precio-compra-venta-setup.sql',
   'srm-setup.sql', 'sugerencias-oc-setup.sql', 'pagos-setup.sql',
 
@@ -40,6 +41,7 @@ const orden = [
   'nomina-setup.sql', 'nomina-asientos-setup.sql',
   'nomina-orden-calculo.sql', 'nomina-complementario-fix.sql',
   'plan-triggers-setup.sql',
+  'pos-setup.sql',
 ]
 
 const lines = [
