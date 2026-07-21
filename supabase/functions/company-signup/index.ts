@@ -193,7 +193,79 @@ Deno.serve(async (req: Request) => {
   // 10. Seed industrias por defecto (best-effort)
   await admin.rpc('seed_default_industries', { p_company_id: company.id }).maybeSingle()
 
-  // 11. Webhook token
+  // 11. Seed específico por país
+  if (pais === 'CL') {
+    // Plan de cuentas chileno
+    const CL_ACCOUNTS = [
+      { code: '1', name: 'Activo', type: 'activo' },
+      { code: '11', name: 'Activo Corriente', type: 'activo' },
+      { code: '111', name: 'Caja', type: 'activo' },
+      { code: '112', name: 'Banco', type: 'activo' },
+      { code: '113', name: 'Clientes', type: 'activo' },
+      { code: '114', name: 'IVA Crédito Fiscal', type: 'activo' },
+      { code: '115', name: 'Existencias', type: 'activo' },
+      { code: '12', name: 'Activo No Corriente', type: 'activo' },
+      { code: '121', name: 'Propiedades, Planta y Equipo', type: 'activo' },
+      { code: '2', name: 'Pasivo', type: 'pasivo' },
+      { code: '21', name: 'Pasivo Corriente', type: 'pasivo' },
+      { code: '211', name: 'Proveedores', type: 'pasivo' },
+      { code: '212', name: 'IVA Débito Fiscal', type: 'pasivo' },
+      { code: '213', name: 'Remuneraciones por Pagar', type: 'pasivo' },
+      { code: '214', name: 'AFP por Pagar', type: 'pasivo' },
+      { code: '215', name: 'ISAPRE por Pagar', type: 'pasivo' },
+      { code: '216', name: 'Impuesto a la Renta por Pagar', type: 'pasivo' },
+      { code: '22', name: 'Pasivo No Corriente', type: 'pasivo' },
+      { code: '221', name: 'Préstamos Bancarios', type: 'pasivo' },
+      { code: '3', name: 'Patrimonio', type: 'patrimonio' },
+      { code: '31', name: 'Capital', type: 'patrimonio' },
+      { code: '32', name: 'Utilidades Retenidas', type: 'patrimonio' },
+      { code: '4', name: 'Ingresos', type: 'ingreso' },
+      { code: '41', name: 'Ingresos por Ventas', type: 'ingreso' },
+      { code: '42', name: 'Otros Ingresos', type: 'ingreso' },
+      { code: '5', name: 'Costos', type: 'costo' },
+      { code: '51', name: 'Costo de Ventas', type: 'costo' },
+      { code: '6', name: 'Gastos', type: 'gasto' },
+      { code: '61', name: 'Gastos de Administración', type: 'gasto' },
+      { code: '62', name: 'Gastos de Ventas', type: 'gasto' },
+      { code: '63', name: 'Gastos Financieros', type: 'gasto' },
+    ]
+    const codeMap: Record<string, string> = {}
+    for (const a of CL_ACCOUNTS) {
+      const parentId = a.code.length > 1 ? codeMap[a.code.slice(0, -1)] : null
+      const { data: acc } = await admin.from('accounts').upsert({
+        company_id: company.id, parent_id: parentId || null,
+        code: a.code, name: a.name, type: a.type,
+      }, { onConflict: 'company_id,code' }).select('id').single()
+      if (acc) codeMap[a.code] = acc.id
+    }
+
+    // Grupos de impuestos chilenos
+    const { data: debitoG } = await admin.from('tax_groups').upsert({
+      company_id: company.id, name: 'IVA Débito Fiscal', type: 'debito_fiscal',
+    }, { onConflict: 'company_id,name' }).select('id').single()
+    const { data: creditoG } = await admin.from('tax_groups').upsert({
+      company_id: company.id, name: 'IVA Crédito Fiscal', type: 'credito_fiscal',
+    }, { onConflict: 'company_id,name' }).select('id').single()
+    const { data: retG } = await admin.from('tax_groups').upsert({
+      company_id: company.id, name: 'Retenciones', type: 'retencion_venta',
+    }, { onConflict: 'company_id,name' }).select('id').single()
+
+    // Tasas chilenas
+    const CL_TAXES = [
+      { tax_group_id: debitoG?.id, name: 'IVA 19%', percentage: 19 },
+      { tax_group_id: creditoG?.id, name: 'IVA 19%', percentage: 19 },
+      { tax_group_id: retG?.id, name: 'Retención Renta 10%', percentage: 10, is_withholding: true },
+      { tax_group_id: retG?.id, name: 'Retención Renta 0.5%', percentage: 0.5, is_withholding: true },
+    ]
+    for (const t of CL_TAXES) {
+      await admin.from('taxes').upsert({
+        company_id: company.id, tax_group_id: t.tax_group_id,
+        name: t.name, percentage: t.percentage, is_withholding: t.is_withholding || false,
+      }, { onConflict: 'company_id,name' })
+    }
+  }
+
+  // 12. Webhook token
   await admin.from('webhook_tokens').insert({ company_id: company.id, token: crypto.randomUUID() }).maybeSingle()
 
   return json({
