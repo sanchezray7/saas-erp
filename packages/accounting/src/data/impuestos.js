@@ -161,3 +161,36 @@ export function calcularResumenImpuestos(taxes, baseAmount, ivaIncluido = false)
 
   return { lines, totalImpuestos, totalRetenciones, total, baseSinIva }
 }
+
+// Seed de impuestos para Chile
+export async function seedImpuestosCL(companyId) {
+  const supabase = getSupabase()
+
+  const debitoGroup = await supabase.from('tax_groups').upsert({
+    company_id: companyId, name: 'IVA Débito Fiscal', type: 'debito_fiscal',
+  }, { onConflict: 'company_id,name' }).select('id').single()
+
+  const creditoGroup = await supabase.from('tax_groups').upsert({
+    company_id: companyId, name: 'IVA Crédito Fiscal', type: 'credito_fiscal',
+  }, { onConflict: 'company_id,name' }).select('id').single()
+
+  const retencionGroup = await supabase.from('tax_groups').upsert({
+    company_id: companyId, name: 'Retenciones', type: 'retencion_venta',
+  }, { onConflict: 'company_id,name' }).select('id').single()
+
+  const taxes = [
+    { tax_group_id: debitoGroup.data.id, name: 'IVA 19%', percentage: 19, is_withholding: false },
+    { tax_group_id: creditoGroup.data.id, name: 'IVA 19%', percentage: 19, is_withholding: false },
+    { tax_group_id: retencionGroup.data.id, name: 'Retención Renta 10%', percentage: 10, is_withholding: true },
+    { tax_group_id: retencionGroup.data.id, name: 'Retención Renta 0.5%', percentage: 0.5, is_withholding: true },
+  ]
+
+  for (const t of taxes) {
+    await supabase.from('taxes').upsert({
+      company_id: companyId, tax_group_id: t.tax_group_id,
+      name: t.name, percentage: t.percentage, is_withholding: t.is_withholding,
+    }, { onConflict: 'company_id,name' })
+  }
+
+  return { debitoId: debitoGroup.data.id, creditoId: creditoGroup.data.id }
+}

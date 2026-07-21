@@ -82,10 +82,46 @@ export const SEED_ACCOUNTS_PY = [
   { code: '6.4', name: 'Ajuste de Inventario', type: 'gasto', parent_code: '6' },
 ]
 
-export async function seedAccounts(companyId) {
+// Seed para Chile (Plan de Cuentas basado en normas chilenas)
+export const SEED_ACCOUNTS_CL = [
+  { code: '1', name: 'Activo', type: 'activo', parent_code: null },
+  { code: '11', name: 'Activo Corriente', type: 'activo', parent_code: '1' },
+  { code: '111', name: 'Caja', type: 'activo', parent_code: '11' },
+  { code: '112', name: 'Banco', type: 'activo', parent_code: '11' },
+  { code: '113', name: 'Clientes', type: 'activo', parent_code: '11' },
+  { code: '114', name: 'IVA Crédito Fiscal', type: 'activo', parent_code: '11' },
+  { code: '115', name: 'Existencias', type: 'activo', parent_code: '11' },
+  { code: '12', name: 'Activo No Corriente', type: 'activo', parent_code: '1' },
+  { code: '121', name: 'Propiedades, Planta y Equipo', type: 'activo', parent_code: '12' },
+  { code: '2', name: 'Pasivo', type: 'pasivo', parent_code: null },
+  { code: '21', name: 'Pasivo Corriente', type: 'pasivo', parent_code: '2' },
+  { code: '211', name: 'Proveedores', type: 'pasivo', parent_code: '21' },
+  { code: '212', name: 'IVA Débito Fiscal', type: 'pasivo', parent_code: '21' },
+  { code: '213', name: 'Remuneraciones por Pagar', type: 'pasivo', parent_code: '21' },
+  { code: '214', name: 'AFP por Pagar', type: 'pasivo', parent_code: '21' },
+  { code: '215', name: 'ISAPRE por Pagar', type: 'pasivo', parent_code: '21' },
+  { code: '216', name: 'Impuesto a la Renta por Pagar', type: 'pasivo', parent_code: '21' },
+  { code: '22', name: 'Pasivo No Corriente', type: 'pasivo', parent_code: '2' },
+  { code: '221', name: 'Préstamos Bancarios', type: 'pasivo', parent_code: '22' },
+  { code: '3', name: 'Patrimonio', type: 'patrimonio', parent_code: null },
+  { code: '31', name: 'Capital', type: 'patrimonio', parent_code: '3' },
+  { code: '32', name: 'Utilidades Retenidas', type: 'patrimonio', parent_code: '3' },
+  { code: '4', name: 'Ingresos', type: 'ingreso', parent_code: null },
+  { code: '41', name: 'Ingresos por Ventas', type: 'ingreso', parent_code: '4' },
+  { code: '42', name: 'Otros Ingresos', type: 'ingreso', parent_code: '4' },
+  { code: '5', name: 'Costos', type: 'costo', parent_code: null },
+  { code: '51', name: 'Costo de Ventas', type: 'costo', parent_code: '5' },
+  { code: '6', name: 'Gastos', type: 'gasto', parent_code: null },
+  { code: '61', name: 'Gastos de Administración', type: 'gasto', parent_code: '6' },
+  { code: '62', name: 'Gastos de Ventas', type: 'gasto', parent_code: '6' },
+  { code: '63', name: 'Gastos Financieros', type: 'gasto', parent_code: '6' },
+]
+
+export async function seedAccounts(companyId, pais = 'PY') {
   const supabase = getSupabase()
+  const seed = pais === 'CL' ? SEED_ACCOUNTS_CL : SEED_ACCOUNTS_PY
   const codeMap = {}
-  for (const a of SEED_ACCOUNTS_PY) {
+  for (const a of seed) {
     const parentId = a.parent_code ? codeMap[a.parent_code] : null
     const { data } = await supabase.from('accounts').upsert({
       company_id: companyId, parent_id: parentId || null,

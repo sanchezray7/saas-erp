@@ -43,6 +43,7 @@ export function PlanContablePage() {
   const [tree, setTree] = useState([])
   const [loading, setLoading] = useState(true)
   const [seedLoading, setSeedLoading] = useState(false)
+  const [seedLoadingCL, setSeedLoadingCL] = useState(false)
   const [editForm, setEditForm] = useState(null)
   const [deleting, setDeleting] = useState(null)
 
@@ -57,15 +58,16 @@ export function PlanContablePage() {
 
   useEffect(() => { load() }, [load])
 
-  async function handleSeed() {
-    if (!window.confirm('¿Cargar plan de cuentas por defecto? Las cuentas existentes no se modificarán.')) return
-    setSeedLoading(true)
+  async function handleSeed(pais = 'PY') {
+    const nombre = pais === 'CL' ? 'Chile' : 'Paraguay'
+    if (!window.confirm(`¿Cargar plan de cuentas de ${nombre}? Las cuentas existentes no se modificarán.`)) return
+    if (pais === 'CL') setSeedLoadingCL(true); else setSeedLoading(true)
     try {
-      await seedAccounts(activeCompanyId)
-      notify('Plan de cuentas cargado')
+      await seedAccounts(activeCompanyId, pais)
+      notify(`Plan de cuentas de ${nombre} cargado`)
       load()
     } catch (err) { alertError('Error', err.message) }
-    finally { setSeedLoading(false) }
+    finally { if (pais === 'CL') setSeedLoadingCL(false); else setSeedLoading(false) }
   }
 
   async function handleGuardar(e) {
@@ -106,7 +108,12 @@ export function PlanContablePage() {
         <div className="page-header">
           <h1>📒 Plan de Cuentas</h1>
           <div style={{ display: 'flex', gap: 8 }}>
-            {canEdit && <Button size="sm" variant="ghost" onClick={handleSeed} disabled={seedLoading}>{seedLoading ? 'Cargando...' : '📥 Cargar plantilla PY'}</Button>}
+            {canEdit && (
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <Button size="sm" variant="ghost" onClick={() => handleSeed('PY')} disabled={seedLoading}>{seedLoading ? 'Cargando...' : '📥 Plantilla PY'}</Button>
+                <Button size="sm" variant="ghost" onClick={() => handleSeed('CL')} disabled={seedLoadingCL}>{seedLoadingCL ? 'Cargando...' : '📥 Plantilla CL'}</Button>
+              </div>
+            )}
             {canEdit && <Button size="sm" onClick={startNew}>+ Nueva cuenta</Button>}
           </div>
         </div>
