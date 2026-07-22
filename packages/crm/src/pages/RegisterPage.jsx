@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getSupabase, FormField, Button, Logo, alertError, notify, validarTaxId } from '@saas/core'
 import { listarPaises, getPaisMap } from '../data/paises'
+import { PasswordStrength, MIN_PASSWORD, REQUIREMENTS } from '../components/PasswordStrength'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const MIN_PASSWORD = 6
 const COOLDOWN_SECONDS = 60
 
 export function RegisterPage() {
@@ -76,6 +76,11 @@ export function RegisterPage() {
     }
     if (password !== confirm) {
       alertError(t('register.datosInvalidos'), t('register.errorPasswordNoCoincide'))
+      return
+    }
+    const unmet = REQUIREMENTS.filter((r) => !r.test(password))
+    if (unmet.length > 0) {
+      alertError(t('register.datosInvalidos'), t('register.errorPasswordRequisitos'))
       return
     }
 
@@ -203,6 +208,7 @@ export function RegisterPage() {
             required
             minLength={MIN_PASSWORD}
           />
+          <PasswordStrength password={password} />
           <FormField
             label={t('register.confirmarContrasena')}
             type="password"

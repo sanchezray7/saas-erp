@@ -13,6 +13,7 @@ import { draftEmail } from '../data/ai'
 import { resolveTemplate, CONTEXT_VARIABLES, CONTEXT_OPTIONS } from '@saas/core'
 import { FacturacionConfigSection } from '@saas/facturacion'
 import { CobranzaConfigForm } from '@saas/facturacion'
+import { PasswordStrength, MIN_PASSWORD, REQUIREMENTS } from '../components/PasswordStrength'
 import { listarMetas, guardarMeta, eliminarMeta, obtenerProgreso } from '../data/metas'
 import { TiposCambioSection } from '../components/TiposCambioSection'
 import { VacacionReglasSection, FeriadosSection } from '@saas/rrhh'
@@ -455,6 +456,7 @@ function MiembrosTable({ data, onRefresh, companyId, canEdit }) {
   const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [userPhone, setUserPhone] = useState('')
   const [role, setRole] = useState('vendedor')
@@ -463,13 +465,23 @@ function MiembrosTable({ data, onRefresh, companyId, canEdit }) {
 
   async function handleInvite(e) {
     e.preventDefault()
-    if (!email.trim() || !password) return
+    if (!email.trim()) return
+    if (password !== confirmPassword) {
+      alertError('Error', 'Las contraseñas no coinciden')
+      return
+    }
+    const unmet = REQUIREMENTS.filter((r) => !r.test(password))
+    if (unmet.length > 0) {
+      alertError('Error', 'La contraseña no cumple los requisitos de seguridad')
+      return
+    }
     setSubmitting(true)
     try {
       await crearUsuario(companyId, email.trim(), password, role, fullName.trim(), userPhone.trim())
       notify(t('settings.miembroAgregado'))
       setEmail('')
       setPassword('')
+      setConfirmPassword('')
       setFullName('')
       setUserPhone('')
       onRefresh()
@@ -506,6 +518,8 @@ function MiembrosTable({ data, onRefresh, companyId, canEdit }) {
         <form className="config-form-inline" onSubmit={handleInvite}>
           <FormField label={t('settings.invitarEmail')} required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@ejemplo.com" />
           <FormField label={t('register.contrasena')} required type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••" />
+          <PasswordStrength password={password} />
+          <FormField label="Confirmar contraseña" required type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••" />
           <FormField label="Nombre completo" value={fullName} onChange={(e) => setFullName(e.target.value)} />
           <FormField label="Teléfono" value={userPhone} onChange={(e) => setUserPhone(e.target.value)} placeholder="+595..." />
           <FormField label={t('settings.rol')} as="select" value={role} onChange={(e) => setRole(e.target.value)}>
