@@ -3,14 +3,10 @@
 -- Soporta producción por procesos (recetas/ingredientes)
 -- ============================================================
 
--- Extender catalogo_productos.tipo para incluir tipos de producción
--- Primero dropear la constraint existente y recrearla con los nuevos valores
+-- Extender catalogo_productos.tipo si la tabla existe
 DO $$
 BEGIN
-  IF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'catalogo_productos' AND column_name = 'tipo'
-  ) THEN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'catalogo_productos') THEN
     ALTER TABLE catalogo_productos
       DROP CONSTRAINT IF EXISTS catalogo_productos_tipo_check;
     ALTER TABLE catalogo_productos
@@ -24,10 +20,10 @@ END $$;
 -- ============================================================
 CREATE TABLE IF NOT EXISTS recetas (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL,
   codigo text NOT NULL,
   nombre text NOT NULL,
-  producto_final_id uuid NOT NULL REFERENCES catalogo_productos(id),
+  producto_final_id uuid,
   cantidad_producida numeric(12,2) NOT NULL DEFAULT 1,
   unidad_medida text NOT NULL DEFAULT 'UNI',
   instrucciones text,
@@ -45,7 +41,7 @@ CREATE TABLE IF NOT EXISTS recetas (
 CREATE TABLE IF NOT EXISTS receta_ingredientes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   receta_id uuid NOT NULL REFERENCES recetas(id) ON DELETE CASCADE,
-  producto_id uuid NOT NULL REFERENCES catalogo_productos(id),
+  producto_id uuid,
   cantidad numeric(12,2) NOT NULL,
   unidad_medida text NOT NULL DEFAULT 'UNI',
   es_subproducto boolean NOT NULL DEFAULT false,
@@ -58,7 +54,7 @@ CREATE TABLE IF NOT EXISTS receta_ingredientes (
 -- ============================================================
 CREATE TABLE IF NOT EXISTS ordenes_produccion (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL,
   numero serial,
   receta_id uuid NOT NULL REFERENCES recetas(id),
   lote text,
@@ -71,7 +67,7 @@ CREATE TABLE IF NOT EXISTS ordenes_produccion (
   fecha_fin timestamptz,
   notas text,
   costo_total numeric(12,2) DEFAULT 0,
-  created_by uuid REFERENCES auth.users(id),
+  created_by uuid,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -82,7 +78,7 @@ CREATE TABLE IF NOT EXISTS ordenes_produccion (
 CREATE TABLE IF NOT EXISTS orden_consumos (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   orden_id uuid NOT NULL REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
-  producto_id uuid NOT NULL REFERENCES catalogo_productos(id),
+  producto_id uuid,
   cantidad numeric(12,2) NOT NULL,
   lote text,
   costo_unitario numeric(12,2),
@@ -95,7 +91,7 @@ CREATE TABLE IF NOT EXISTS orden_consumos (
 CREATE TABLE IF NOT EXISTS orden_obtenciones (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   orden_id uuid NOT NULL REFERENCES ordenes_produccion(id) ON DELETE CASCADE,
-  producto_id uuid NOT NULL REFERENCES catalogo_productos(id),
+  producto_id uuid,
   cantidad numeric(12,2) NOT NULL,
   lote text,
   costo_unitario numeric(12,2),
@@ -110,34 +106,69 @@ CREATE INDEX IF NOT EXISTS idx_ordenes_produccion_estado ON ordenes_produccion(e
 CREATE INDEX IF NOT EXISTS idx_orden_consumos_orden ON orden_consumos(orden_id);
 CREATE INDEX IF NOT EXISTS idx_orden_obtenciones_orden ON orden_obtenciones(orden_id);
 
--- RLS
-ALTER TABLE recetas ENABLE ROW LEVEL SECURITY;
-ALTER TABLE receta_ingredientes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE ordenes_produccion ENABLE ROW LEVEL SECURITY;
-ALTER TABLE orden_consumos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE orden_obtenciones ENABLE ROW LEVEL SECURITY;
+-- FKs condicionales si las tablas referenciadas existen
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'companies') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'recetas_company_id_fkey') THEN
+      ALTER TABLE recetas ADD CONSTRAINT recetas_company_id_fkey FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'ordenes_produccion_company_id_fkey') THEN
+      ALTER TABLE ordenes_produccion ADD CONSTRAINT ordenes_produccion_company_id_fkey FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE;
+    END IF;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'catalogo_productos') THEN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'recetas_producto_final_id_fkey') THEN
+      ALTER TABLE recetas ADD CONSTRAINT recetas_producto_final_id_fkey FOREIGN KEY (producto_final_id) REFERENCES catalogo_productos(id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'receta_ingredientes_producto_id_fkey') THEN
+      ALTER TABLE receta_ingredientes ADD CONSTRAINT receta_ingredientes_producto_id_fkey FOREIGN KEY (producto_id) REFERENCES catalogo_productos(id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'orden_consumos_producto_id_fkey') THEN
+      ALTER TABLE orden_consumos ADD CONSTRAINT orden_consumos_producto_id_fkey FOREIGN KEY (producto_id) REFERENCES catalogo_productos(id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'orden_obtenciones_producto_id_fkey') THEN
+      ALTER TABLE orden_obtenciones ADD CONSTRAINT orden_obtenciones_producto_id_fkey FOREIGN KEY (producto_id) REFERENCES catalogo_productos(id);
+    END IF;
+  END IF;
+END $$;
 
-CREATE POLICY "Usuarios autenticados pueden ver recetas de su empresa"
-  ON recetas FOR ALL USING (
-    company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid())
-  );
+-- RLS (solo si company_members existe)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'company_members') THEN
+    ALTER TABLE recetas ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE receta_ingredientes ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE ordenes_produccion ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE orden_consumos ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE orden_obtenciones ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Usuarios autenticados pueden ver ingredientes de su empresa"
-  ON receta_ingredientes FOR ALL USING (
-    receta_id IN (SELECT id FROM recetas WHERE company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()))
-  );
+    DROP POLICY IF EXISTS "recetas_acceso" ON recetas;
+    CREATE POLICY "recetas_acceso" ON recetas FOR ALL USING (
+      auth.uid() IN (SELECT user_id FROM company_members WHERE company_id = recetas.company_id)
+    );
 
-CREATE POLICY "Usuarios autenticados pueden ver órdenes de su empresa"
-  ON ordenes_produccion FOR ALL USING (
-    company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid())
-  );
+    DROP POLICY IF EXISTS "receta_ingredientes_acceso" ON receta_ingredientes;
+    CREATE POLICY "receta_ingredientes_acceso" ON receta_ingredientes FOR ALL USING (
+      auth.uid() IN (SELECT user_id FROM company_members
+        WHERE company_id = (SELECT company_id FROM recetas WHERE id = receta_ingredientes.receta_id))
+    );
 
-CREATE POLICY "Usuarios autenticados pueden ver consumos de su empresa"
-  ON orden_consumos FOR ALL USING (
-    orden_id IN (SELECT id FROM ordenes_produccion WHERE company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()))
-  );
+    DROP POLICY IF EXISTS "ordenes_produccion_acceso" ON ordenes_produccion;
+    CREATE POLICY "ordenes_produccion_acceso" ON ordenes_produccion FOR ALL USING (
+      auth.uid() IN (SELECT user_id FROM company_members WHERE company_id = ordenes_produccion.company_id)
+    );
 
-CREATE POLICY "Usuarios autenticados pueden ver obtenciones de su empresa"
-  ON orden_obtenciones FOR ALL USING (
-    orden_id IN (SELECT id FROM ordenes_produccion WHERE company_id IN (SELECT company_id FROM company_members WHERE user_id = auth.uid()))
-  );
+    DROP POLICY IF EXISTS "orden_consumos_acceso" ON orden_consumos;
+    CREATE POLICY "orden_consumos_acceso" ON orden_consumos FOR ALL USING (
+      auth.uid() IN (SELECT user_id FROM company_members
+        WHERE company_id = (SELECT company_id FROM ordenes_produccion WHERE id = orden_consumos.orden_id))
+    );
+
+    DROP POLICY IF EXISTS "orden_obtenciones_acceso" ON orden_obtenciones;
+    CREATE POLICY "orden_obtenciones_acceso" ON orden_obtenciones FOR ALL USING (
+      auth.uid() IN (SELECT user_id FROM company_members
+        WHERE company_id = (SELECT company_id FROM ordenes_produccion WHERE id = orden_obtenciones.orden_id))
+    );
+  END IF;
+END $$;
