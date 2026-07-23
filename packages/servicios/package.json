@@ -1,0 +1,12 @@
+{
+  "name": "@saas/servicios",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "dependencies": {
+    "@saas/core": "*",
+    "react": "^19.0.0",
+    "react-router-dom": "^7.0.0"
+  }
+}

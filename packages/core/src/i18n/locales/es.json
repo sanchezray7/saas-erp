@@ -79,7 +79,10 @@
     "valuacion": "Valuación",
     "sectionProduccion": "🏭 Producción",
     "recetas": "📋 Recetas",
-    "ordenesProduccion": "⚙️ Órdenes de producción"
+    "ordenesProduccion": "⚙️ Órdenes de producción",
+    "sectionServicios": "🔧 Servicios",
+    "presupuestos": "📋 Presupuestos",
+    "ordenesTrabajo": "⚡ Órdenes de trabajo"
   },
   "calendar": {
     "titulo": "Calendario",
