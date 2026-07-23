@@ -7,7 +7,11 @@ export async function listarRecetas(companyId) {
     .select('*, producto_final:catalogo_productos!producto_final_id(id, nombre, codigo)')
     .eq('company_id', companyId)
     .order('nombre')
-  if (error) throw error
+  if (error) {
+    const { data: d2, error: e2 } = await supabase.from('recetas').select('*').eq('company_id', companyId).order('nombre')
+    if (e2) throw e2
+    return d2 || []
+  }
   return data || []
 }
 
@@ -18,7 +22,11 @@ export async function getReceta(id) {
     .select('*, producto_final:catalogo_productos!producto_final_id(id, nombre, codigo)')
     .eq('id', id)
     .single()
-  if (error) throw error
+  if (error) {
+    const { data: d2, error: e2 } = await supabase.from('recetas').select('*').eq('id', id).single()
+    if (e2) throw e2
+    return d2
+  }
   return data
 }
 
@@ -57,7 +65,11 @@ export async function listarIngredientes(recetaId) {
     .select('*, producto:catalogo_productos(id, nombre, codigo, tipo)')
     .eq('receta_id', recetaId)
     .order('orden')
-  if (error) throw error
+  if (error) {
+    const { data: d2, error: e2 } = await supabase.from('receta_ingredientes').select('*').eq('receta_id', recetaId).order('orden')
+    if (e2) throw e2
+    return d2 || []
+  }
   return data || []
 }
 

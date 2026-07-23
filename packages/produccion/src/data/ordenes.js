@@ -81,7 +81,11 @@ export async function getConsumos(ordenId) {
     .select('*, producto:catalogo_productos(id, nombre, codigo)')
     .eq('orden_id', ordenId)
     .order('created_at')
-  if (error) throw error
+  if (error) {
+    const { data: d2, error: e2 } = await supabase.from('orden_consumos').select('*').eq('orden_id', ordenId).order('created_at')
+    if (e2) throw e2
+    return d2 || []
+  }
   return data || []
 }
 
@@ -92,7 +96,11 @@ export async function getObtenciones(ordenId) {
     .select('*, producto:catalogo_productos(id, nombre, codigo)')
     .eq('orden_id', ordenId)
     .order('created_at')
-  if (error) throw error
+  if (error) {
+    const { data: d2, error: e2 } = await supabase.from('orden_obtenciones').select('*').eq('orden_id', ordenId).order('created_at')
+    if (e2) throw e2
+    return d2 || []
+  }
   return data || []
 }
 
@@ -102,11 +110,18 @@ export async function completarOrden(companyId, userId, ordenId, almacenId, cant
   if (!orden || orden.estado !== 'en_proceso') throw new Error('La orden no está en proceso')
 
   // Obtener ingredientes de la receta para calcular costos
-  const { data: ingredientes } = await supabase
-    .from('receta_ingredientes')
-    .select('*, producto:catalogo_productos(id, nombre, codigo, tipo)')
-    .eq('receta_id', orden.receta_id)
-    .order('orden')
+  let ingredientes = []
+  try {
+    const { data } = await supabase
+      .from('receta_ingredientes')
+      .select('*, producto:catalogo_productos(id, nombre, codigo, tipo)')
+      .eq('receta_id', orden.receta_id)
+      .order('orden')
+    ingredientes = data || []
+  } catch (_) {
+    const { data } = await supabase.from('receta_ingredientes').select('*').eq('receta_id', orden.receta_id).order('orden')
+    ingredientes = data || []
+  }
 
   let costoTotal = 0
 
@@ -114,13 +129,15 @@ export async function completarOrden(companyId, userId, ordenId, almacenId, cant
   for (const ing of (ingredientes || [])) {
     if (ing.es_subproducto) continue
     const cantidadConsumir = (ing.cantidad / orden.receta.cantidad_producida) * cantidadProducida
-    const { data: stock } = await supabase
-      .from('producto_stock')
-      .select('costo_promedio')
-      .match({ company_id: companyId, producto_id: ing.producto_id, almacen_id: almacenId })
-      .maybeSingle()
-
-    const costoUnit = stock?.costo_promedio || 0
+    let costoUnit = 0
+    try { // producto_stock puede no existir en dev
+      const { data: stock } = await supabase
+        .from('producto_stock')
+        .select('costo_promedio')
+        .match({ company_id: companyId, producto_id: ing.producto_id, almacen_id: almacenId })
+        .maybeSingle()
+      costoUnit = stock?.costo_promedio || 0
+    } catch (_) { /* dev mode */ }
 
     await registrarMovimientoStock(companyId, userId, {
       producto_id: ing.producto_id,
@@ -138,13 +155,15 @@ export async function completarOrden(companyId, userId, ordenId, almacenId, cant
   }
 
   // 2. Registrar obtención de producto final (entrada de stock)
-  const { data: prodFinal } = await supabase
-    .from('catalogo_productos')
-    .select('precio_compra')
-    .eq('id', orden.receta.producto_final_id)
-    .single()
-
-  const costoFinal = cantidadProducida > 0 ? costoTotal / cantidadProducida : (prodFinal?.precio_compra || 0)
+  let costoFinal = cantidadProducida > 0 ? costoTotal / cantidadProducida : 0
+  try {
+    const { data: prodFinal } = await supabase
+      .from('catalogo_productos')
+      .select('precio_compra')
+      .eq('id', orden.receta.producto_final_id)
+      .single()
+    if (prodFinal?.precio_compra) costoFinal = prodFinal.precio_compra
+  } catch (_) {}
 
   await registrarMovimientoStock(companyId, userId, {
     producto_id: orden.receta.producto_final_id,
