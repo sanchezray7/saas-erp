@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAuth, Button, Skeleton, notify, alertError, FormField } from '@saas/core'
+import { useAuth, Button, Skeleton, notify, alertError, FormField, getSupabase } from '@saas/core'
 import { listarOrdenes, guardarOrden } from '../data/ordenes'
 import { listarRecetas } from '../data/recetas'
 
@@ -16,6 +16,7 @@ export function OrdenesPage() {
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ receta_id: '', lote: '', cantidad_planeada: 1, fecha_inicio_planeada: '', notas: '' })
+  const [stockBajo, setStockBajo] = useState([])
 
   const load = useCallback(async () => {
     if (!activeCompanyId) return
@@ -24,6 +25,19 @@ export function OrdenesPage() {
       const [ords, recs] = await Promise.all([listarOrdenes(activeCompanyId), listarRecetas(activeCompanyId)])
       setOrdenes(ords)
       setRecetas(recs)
+
+      // Detectar materia prima con stock bajo
+      const { data: stock } = await getSupabase().from('producto_stock').select('*, producto:producto_id(id, nombre, codigo, stock_minimo, tipo)').eq('company_id', activeCompanyId).gt('cantidad', 0)
+      if (stock) {
+        const agrupado = {}
+        stock.forEach((s) => {
+          const key = s.producto_id
+          if (!agrupado[key]) agrupado[key] = { producto: s.producto, total: 0, minimo: Number(s.stock_minimo) || Number(s.producto?.stock_minimo) || 0 }
+          agrupado[key].total += Number(s.cantidad)
+        })
+        const bajos = Object.values(agrupado).filter((p) => p.minimo > 0 && p.total <= p.minimo).sort((a, b) => (a.total / a.minimo) - (b.total / b.minimo))
+        setStockBajo(bajos)
+      }
     } catch (err) { alertError('Error', err.message) }
     finally { setLoading(false) }
   }, [activeCompanyId])
@@ -79,6 +93,27 @@ export function OrdenesPage() {
             <div style={{ color: 'var(--color-text-muted)' }}>📊 Total</div>
           </div>
         </div>
+
+        {/* Alertas de stock bajo */}
+        {stockBajo.length > 0 && (
+          <div style={{ marginBottom: 16, padding: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 'var(--radius)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#dc2626', margin: 0 }}>⚠️ {stockBajo.length} producto(s) con stock bajo</h3>
+              <Link to="/sugerencias-oc" style={{ fontSize: '0.8rem', color: 'var(--color-accent)' }}>Ver sugerencias →</Link>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {stockBajo.slice(0, 8).map((p) => (
+                <div key={p.producto?.id} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'white', padding: '6px 10px', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', border: '1px solid #fecaca' }}>
+                  <span style={{ fontWeight: 600 }}>{p.producto?.nombre}</span>
+                  <span style={{ color: '#dc2626' }}>{Math.round(p.total)}</span>
+                  <span style={{ color: 'var(--color-text-muted)' }}>/</span>
+                  <span>{p.minimo}</span>
+                </div>
+              ))}
+              {stockBajo.length > 8 && <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', alignSelf: 'center' }}>+{stockBajo.length - 8} más</span>}
+            </div>
+          </div>
+        )}
 
         {showForm && (
           <form onSubmit={handleCreate} style={{ marginBottom: 20, padding: 16, background: 'var(--color-surface-alt)', borderRadius: 'var(--radius)', display: 'flex', flexDirection: 'column', gap: 12 }}>
