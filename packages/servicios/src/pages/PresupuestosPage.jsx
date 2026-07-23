@@ -34,7 +34,7 @@ export function PresupuestosPage() {
     <div className="card">
       <div className="page-header">
         <h1>📋 Presupuestos</h1>
-        <Link to="/presupuestos/nuevo" className="btn">+ Nuevo presupuesto</Link>
+        <Link to="/presupuestos/nuevo"><Button size="sm">+ Nuevo presupuesto</Button></Link>
       </div>
       {presupuestos.length === 0 ? (
         <p className="meta" style={{ textAlign: 'center', padding: 32 }}>Sin presupuestos.</p>

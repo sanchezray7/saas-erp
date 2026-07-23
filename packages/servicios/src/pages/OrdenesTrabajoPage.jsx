@@ -37,7 +37,7 @@ export function OrdenesTrabajoPage() {
     <div className="card">
       <div className="page-header">
         <h1>⚡ Órdenes de trabajo</h1>
-        <Link to="/ordenes-trabajo/nueva" className="btn">+ Nueva OT</Link>
+        <Link to="/ordenes-trabajo/nueva"><Button size="sm">+ Nueva OT</Button></Link>
       </div>
       {ordenes.length === 0 ? (
         <p className="meta" style={{ textAlign: 'center', padding: 32 }}>Sin órdenes de trabajo.</p>
