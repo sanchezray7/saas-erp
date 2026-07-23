@@ -134,10 +134,27 @@ BEGIN
 END $$;
 
 -- RLS (solo si company_members existe)
+-- Función helper SECURITY DEFINER que bypass RLS recursivo de company_members
+CREATE OR REPLACE FUNCTION public.user_has_company(target_company_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = 'public'
+AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'company_members') THEN
+    RETURN EXISTS (
+      SELECT 1 FROM company_members WHERE user_id = auth.uid() AND company_id = target_company_id
+    );
+  END IF;
+  RETURN true;
+END;
+$$;
+
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'company_members') THEN
-    ALTER TABLE recetas ENABLE ROW LEVEL SECURITY;
     ALTER TABLE receta_ingredientes ENABLE ROW LEVEL SECURITY;
     ALTER TABLE ordenes_produccion ENABLE ROW LEVEL SECURITY;
     ALTER TABLE orden_consumos ENABLE ROW LEVEL SECURITY;
@@ -145,30 +162,27 @@ BEGIN
 
     DROP POLICY IF EXISTS "recetas_acceso" ON recetas;
     CREATE POLICY "recetas_acceso" ON recetas FOR ALL USING (
-      auth.uid() IN (SELECT user_id FROM company_members WHERE company_id = recetas.company_id)
+      user_has_company(recetas.company_id)
     );
 
     DROP POLICY IF EXISTS "receta_ingredientes_acceso" ON receta_ingredientes;
     CREATE POLICY "receta_ingredientes_acceso" ON receta_ingredientes FOR ALL USING (
-      auth.uid() IN (SELECT user_id FROM company_members
-        WHERE company_id = (SELECT company_id FROM recetas WHERE id = receta_ingredientes.receta_id))
+      user_has_company((SELECT company_id FROM recetas WHERE id = receta_ingredientes.receta_id))
     );
 
     DROP POLICY IF EXISTS "ordenes_produccion_acceso" ON ordenes_produccion;
     CREATE POLICY "ordenes_produccion_acceso" ON ordenes_produccion FOR ALL USING (
-      auth.uid() IN (SELECT user_id FROM company_members WHERE company_id = ordenes_produccion.company_id)
+      user_has_company(ordenes_produccion.company_id)
     );
 
     DROP POLICY IF EXISTS "orden_consumos_acceso" ON orden_consumos;
     CREATE POLICY "orden_consumos_acceso" ON orden_consumos FOR ALL USING (
-      auth.uid() IN (SELECT user_id FROM company_members
-        WHERE company_id = (SELECT company_id FROM ordenes_produccion WHERE id = orden_consumos.orden_id))
+      user_has_company((SELECT company_id FROM ordenes_produccion WHERE id = orden_consumos.orden_id))
     );
 
     DROP POLICY IF EXISTS "orden_obtenciones_acceso" ON orden_obtenciones;
     CREATE POLICY "orden_obtenciones_acceso" ON orden_obtenciones FOR ALL USING (
-      auth.uid() IN (SELECT user_id FROM company_members
-        WHERE company_id = (SELECT company_id FROM ordenes_produccion WHERE id = orden_obtenciones.orden_id))
+      user_has_company((SELECT company_id FROM ordenes_produccion WHERE id = orden_obtenciones.orden_id))
     );
   END IF;
 END $$;
