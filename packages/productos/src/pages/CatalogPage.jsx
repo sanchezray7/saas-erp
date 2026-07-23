@@ -16,6 +16,7 @@ const TIPO_BADGES = {
 }
 
 export function CatalogPage() {
+  const { t } = useTranslation()
   const { activeCompanyId } = useAuth()
   const { config } = useCompanyConfig()
   const [productos, setProductos] = useState([])
