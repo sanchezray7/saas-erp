@@ -22,6 +22,9 @@ export const FEATURES = {
   whatsapp: { free: false, starter: false, business: true },
   reportes: { free: false, starter: true, business: false },
   reportes_avanzados: { free: false, starter: false, business: true },
+  pos: { free: false, starter: true, business: true },
+  produccion: { free: false, starter: false, business: true },
+  servicios: { free: false, starter: false, business: true },
 }
 
 // Cuotas máximas por plan

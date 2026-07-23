@@ -5,7 +5,7 @@ export const NAV_SECTION_SERVICIOS = {
   labelKey: 'nav.sectionServicios',
   icon: '🔧',
   items: [
-    { to: '/presupuestos', labelKey: 'nav.presupuestos', icon: '📋', permission: PERMISSIONS.DEAL_VER },
-    { to: '/ordenes-trabajo', labelKey: 'nav.ordenesTrabajo', icon: '⚡', permission: PERMISSIONS.DEAL_VER },
+    { to: '/presupuestos', labelKey: 'nav.presupuestos', icon: '📋', permission: PERMISSIONS.DEAL_VER, feature: 'servicios' },
+    { to: '/ordenes-trabajo', labelKey: 'nav.ordenesTrabajo', icon: '⚡', permission: PERMISSIONS.DEAL_VER, feature: 'servicios' },
   ],
 }

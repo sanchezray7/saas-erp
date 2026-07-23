@@ -46,6 +46,12 @@ const PATH_FEATURES = [
   { prefix: '/control-horario', key: 'rrhh' },
   { prefix: '/nomina', key: 'nomina' },
   { prefix: '/reports', key: 'reportes' },
+  { prefix: '/pos', key: 'pos' },
+  { prefix: '/produccion', key: 'produccion' },
+  { prefix: '/recetas', key: 'produccion' },
+  { prefix: '/ordenes-produccion', key: 'produccion' },
+  { prefix: '/presupuestos', key: 'servicios' },
+  { prefix: '/ordenes-trabajo', key: 'servicios' },
 ]
 
 const FEATURE_NAMES = {
@@ -57,6 +63,9 @@ const FEATURE_NAMES = {
   rrhh: { name: 'Business', price: '$79/mes' },
   nomina: { name: 'Business', price: '$79/mes' },
   reportes: { name: 'Starter', price: '$29/mes' },
+  pos: { name: 'Starter', price: '$29/mes' },
+  produccion: { name: 'Business', price: '$79/mes' },
+  servicios: { name: 'Business', price: '$79/mes' },
 }
 
 function UpgradeBannerMin({ featureKey }) {
