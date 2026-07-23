@@ -7,7 +7,12 @@ import { listarAccounts } from '@saas/accounting'
 import { listarCategorias } from '../data/categorias'
 
 function generarCodigo(tipo, items) {
-  const prefix = tipo === 'servicio' ? 'SER' : 'PRO'
+  const prefixMap = {
+    producto: 'PRO', servicio: 'SER',
+    materia_prima: 'MP', manufacturado: 'MAN',
+    subproducto: 'SUB', insumo: 'INS',
+  }
+  const prefix = prefixMap[tipo] || 'PRO'
   const existentes = items.filter(p => p.tipo === tipo && p.codigo?.startsWith(prefix))
   const numeros = existentes.map(p => parseInt(p.codigo.replace(prefix + '-', ''), 10)).filter(n => !isNaN(n))
   const next = numeros.length > 0 ? Math.max(...numeros) + 1 : 1
@@ -107,6 +112,10 @@ export function ProductoFormModal({ producto, companyId, productos, onClose, onS
             <FormField label={t('productos.tipo')} as="select" value={form.tipo} onChange={(e) => handleTipoChange(e.target.value)}>
               <option value="producto">📦 {t('productos.producto')}</option>
               <option value="servicio">🔧 {t('productos.servicio')}</option>
+              <option value="materia_prima">🥛 Materia prima</option>
+              <option value="manufacturado">🏭 Manufacturado</option>
+              <option value="subproducto">🔄 Subproducto</option>
+              <option value="insumo">📎 Insumo</option>
             </FormField>
             <FormField label={t('productos.codigo')} value={form.codigo} onChange={(e) => setField('codigo', e.target.value)} />
           </div>

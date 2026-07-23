@@ -6,8 +6,16 @@ import { ProductoFormModal } from '../components/ProductoFormModal'
 import { generarStickers, TAMANOS } from '../components/StickerPrint'
 import { listarStockGeneral } from '@saas/inventario'
 
+const TIPO_BADGES = {
+  producto: { bg: '#dbeafe', color: '#1d4ed8', label: 'PRO' },
+  servicio: { bg: '#ede9fe', color: '#7c3aed', label: 'SER' },
+  materia_prima: { bg: '#dcfce7', color: '#16a34a', label: 'MP' },
+  manufacturado: { bg: '#fef3c7', color: '#d97706', label: 'MAN' },
+  subproducto: { bg: '#fce7f3', color: '#db2777', label: 'SUB' },
+  insumo: { bg: '#f1f5f9', color: '#64748b', label: 'INS' },
+}
+
 export function CatalogPage() {
-  const { t } = useTranslation()
   const { activeCompanyId } = useAuth()
   const { config } = useCompanyConfig()
   const [productos, setProductos] = useState([])
@@ -169,7 +177,7 @@ export function CatalogPage() {
           ) : filtered.map((p) => (
             <tr key={p.id} style={{ opacity: p.activo ? 1 : 0.5 }}>
               <td style={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>{p.codigo || '—'}</td>
-              <td><span className="badge" style={{ fontSize: '0.7rem', background: p.tipo === 'servicio' ? '#ede9fe' : '#dbeafe', color: p.tipo === 'servicio' ? '#7c3aed' : '#1d4ed8' }}>{p.tipo === 'servicio' ? 'SER' : 'PRO'}</span></td>
+              <td><span className="badge" style={{ fontSize: '0.7rem', background: TIPO_BADGES[p.tipo]?.bg || '#dbeafe', color: TIPO_BADGES[p.tipo]?.color || '#1d4ed8' }}>{TIPO_BADGES[p.tipo]?.label || 'PRO'}</span></td>
               <td style={{ fontWeight: 600 }}>{p.nombre}</td>
               <td className="meta">{p.descripcion || '—'}</td>
               <td style={{ fontSize: '0.82rem' }}>{p.categoria?.nombre || '—'}</td>
