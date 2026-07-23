@@ -105,7 +105,7 @@ export function OrdenDetailPage() {
             {orden.estado === 'en_proceso' && (
               <Button onClick={handleCancelar} style={{ background: '#ef4444', color: 'white' }}>Cancelar</Button>
             )}
-            <Link to="/ordenes-produccion" style={{ padding: '8px 16px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '0.85rem' }}>← Volver</Link>
+            <Link to="/ordenes-produccion" style={{ padding: '8px 16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: '0.85rem' }}>← Volver</Link>
           </div>
         </div>
 
@@ -117,7 +117,7 @@ export function OrdenDetailPage() {
           {orden.fecha_fin && <div><strong>Fin:</strong> {new Date(orden.fecha_fin).toLocaleString()}</div>}
           <div><strong>Costo total:</strong> {orden.costo_total ? `$${Number(orden.costo_total).toLocaleString()}` : '—'}</div>
         </div>
-        {orden.notas && <p style={{ marginTop: 12, fontSize: '0.85rem', color: 'var(--text-muted)' }}>📝 {orden.notas}</p>}
+        {orden.notas && <p style={{ marginTop: 12, fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>📝 {orden.notas}</p>}
       </div>
 
       {/* Completar orden */}

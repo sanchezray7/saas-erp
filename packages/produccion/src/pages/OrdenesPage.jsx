@@ -54,7 +54,7 @@ export function OrdenesPage() {
         </div>
 
         {showForm && (
-          <form onSubmit={handleCreate} style={{ marginBottom: 20, padding: 16, background: 'var(--bg-alt)', borderRadius: 'var(--radius)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <form onSubmit={handleCreate} style={{ marginBottom: 20, padding: 16, background: 'var(--color-surface-alt)', borderRadius: 'var(--radius)', display: 'flex', flexDirection: 'column', gap: 12 }}>
             <h3>Nueva orden de producción</h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <FormField label="Receta" as="select" value={form.receta_id} onChange={(e) => {
@@ -71,7 +71,7 @@ export function OrdenesPage() {
             <FormField label="Notas" as="textarea" rows={2} value={form.notas} onChange={(e) => setForm({ ...form, notas: e.target.value })} />
             <div style={{ display: 'flex', gap: 8 }}>
               <Button type="submit" disabled={submitting}>{submitting ? 'Creando...' : 'Crear orden'}</Button>
-              <button type="button" onClick={() => setShowForm(false)} style={{ padding: '8px 16px', border: '1px solid var(--border)', borderRadius: 'var(--radius)', background: 'var(--surface)', cursor: 'pointer' }}>Cancelar</button>
+              <button type="button" onClick={() => setShowForm(false)} style={{ padding: '8px 16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', background: 'var(--color-surface)', cursor: 'pointer' }}>Cancelar</button>
             </div>
           </form>
         )}
