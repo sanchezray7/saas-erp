@@ -78,10 +78,8 @@ function LayoutWithSections() {
   }, [activeCompanyId])
 
   const extras = esMatriz
-    ? [NAV_SECTION_POS, NAV_SECTION_CRM, NAV_SECTION_SRM, NAV_SECTION_RRHH, NAV_SECTION_NOMINA, NAV_SECTION_FINANZAS, NAV_SECTION_CONSOLIDACION]
-    : [NAV_SECTION_POS, NAV_SECTION_CRM, NAV_SECTION_SRM, NAV_SECTION_RRHH, NAV_SECTION_NOMINA, NAV_SECTION_FINANZAS]
-
-  const extraSections = import.meta.env.DEV ? [...extras, NAV_SECTION_PRODUCCION, NAV_SECTION_SERVICIOS] : extras
+    ? [NAV_SECTION_POS, NAV_SECTION_CRM, NAV_SECTION_SRM, NAV_SECTION_RRHH, NAV_SECTION_NOMINA, NAV_SECTION_FINANZAS, NAV_SECTION_CONSOLIDACION, NAV_SECTION_PRODUCCION, NAV_SECTION_SERVICIOS]
+    : [NAV_SECTION_POS, NAV_SECTION_CRM, NAV_SECTION_SRM, NAV_SECTION_RRHH, NAV_SECTION_NOMINA, NAV_SECTION_FINANZAS, NAV_SECTION_PRODUCCION, NAV_SECTION_SERVICIOS]
 
   return (
     <WithAgenda>
@@ -218,24 +216,16 @@ export default function App() {
                 <Route path="pos" element={<PosPage />} />
                 <Route path="pos/cajas" element={<CajasPage />} />
                 <Route path="pos/cierres" element={<CierresPage />} />
-                {import.meta.env.DEV && (
-                  <>
-                    <Route path="produccion" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><DashboardProduccion /></RequirePermission>} />
-                    <Route path="recetas" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><RecetasPage /></RequirePermission>} />
-                    <Route path="ordenes-produccion" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenesPage /></RequirePermission>} />
-                    <Route path="ordenes-produccion/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenDetailPage /></RequirePermission>} />
-                  </>
-                )}
-                {import.meta.env.DEV && (
-                  <>
-                    <Route path="presupuestos" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><PresupuestosPage /></RequirePermission>} />
-                    <Route path="presupuestos/nuevo" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><PresupuestoFormPage /></RequirePermission>} />
-                    <Route path="presupuestos/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><PresupuestoDetailPage /></RequirePermission>} />
-                    <Route path="ordenes-trabajo" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenesTrabajoPage /></RequirePermission>} />
-                    <Route path="ordenes-trabajo/nueva" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><OrdenTrabajoFormPage /></RequirePermission>} />
-                    <Route path="ordenes-trabajo/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenTrabajoDetailPage /></RequirePermission>} />
-                  </>
-                )}
+                <Route path="produccion" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><DashboardProduccion /></RequirePermission>} />
+                <Route path="recetas" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><RecetasPage /></RequirePermission>} />
+                <Route path="ordenes-produccion" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenesPage /></RequirePermission>} />
+                <Route path="ordenes-produccion/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenDetailPage /></RequirePermission>} />
+                <Route path="presupuestos" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><PresupuestosPage /></RequirePermission>} />
+                <Route path="presupuestos/nuevo" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><PresupuestoFormPage /></RequirePermission>} />
+                <Route path="presupuestos/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><PresupuestoDetailPage /></RequirePermission>} />
+                <Route path="ordenes-trabajo" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenesTrabajoPage /></RequirePermission>} />
+                <Route path="ordenes-trabajo/nueva" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><OrdenTrabajoFormPage /></RequirePermission>} />
+                <Route path="ordenes-trabajo/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenTrabajoDetailPage /></RequirePermission>} />
                 <Route path="settings" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><SettingsPage /></RequirePermission>} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
