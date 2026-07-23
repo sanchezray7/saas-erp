@@ -76,7 +76,10 @@
     "picking": "Picking",
     "remitos": "Dispatch notes",
     "transportistas": "Carriers",
-    "valuacion": "Valuation"
+    "valuacion": "Valuation",
+    "sectionProduccion": "🏭 Production",
+    "recetas": "📋 Recipes",
+    "ordenesProduccion": "⚙️ Production orders"
   },
   "calendar": {
     "titulo": "Calendar",

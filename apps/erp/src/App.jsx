@@ -30,6 +30,7 @@ import { EmpleadosPage, EmpleadoFormPage, EmpleadoDetailPage, OrganigramaPage, A
 import { ConfigNominaPage, PeriodosNominaPage, PeriodoDetailPage, ReciboPage, NovedadesPage, NominaDashboardPage, LibroSueldosPage, NAV_SECTION_NOMINA } from '@saas/nomina'
 import { ProveedoresPage, ProveedorFormPage, ProveedorDetailPage, OrdenesCompraPage, OrdenCompraFormPage, OrdenCompraDetailPage, CalendarioPagosPage, FacturasProveedorPage, FacturaProveedorFormPage, FacturaProveedorDetailPage, ScorecardsPage, AlertasVencimientoPage, HistorialPreciosPage, SugerenciasOCPage, CuentasPagarPage } from '@saas/srm'
 import { PosPage, CajasPage, CierresPage, NAV_SECTION_POS } from '@saas/pos'
+import { RecetasPage, OrdenesPage, OrdenDetailPage, NAV_SECTION_PRODUCCION } from '@saas/produccion'
 
 function LS({ children }) {
   return <Suspense fallback={<div className="card"><p className="meta">Loading...</p></div>}>{children}</Suspense>
@@ -79,9 +80,11 @@ function LayoutWithSections() {
     ? [NAV_SECTION_POS, NAV_SECTION_CRM, NAV_SECTION_SRM, NAV_SECTION_RRHH, NAV_SECTION_NOMINA, NAV_SECTION_FINANZAS, NAV_SECTION_CONSOLIDACION]
     : [NAV_SECTION_POS, NAV_SECTION_CRM, NAV_SECTION_SRM, NAV_SECTION_RRHH, NAV_SECTION_NOMINA, NAV_SECTION_FINANZAS]
 
+  const extraSections = import.meta.env.DEV ? [...extras, NAV_SECTION_PRODUCCION] : extras
+
   return (
     <WithAgenda>
-      <AppLayout extraSections={extras} headerExtra={<><AgendaButton /><NotificationBell /></>} />
+      <AppLayout extraSections={extraSections} headerExtra={<><AgendaButton /><NotificationBell /></>} />
     </WithAgenda>
   )
 }
@@ -214,6 +217,13 @@ export default function App() {
                 <Route path="pos" element={<PosPage />} />
                 <Route path="pos/cajas" element={<CajasPage />} />
                 <Route path="pos/cierres" element={<CierresPage />} />
+                {import.meta.env.DEV && (
+                  <>
+                    <Route path="recetas" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><RecetasPage /></RequirePermission>} />
+                    <Route path="ordenes-produccion" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenesPage /></RequirePermission>} />
+                    <Route path="ordenes-produccion/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenDetailPage /></RequirePermission>} />
+                  </>
+                )}
                 <Route path="settings" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><SettingsPage /></RequirePermission>} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>

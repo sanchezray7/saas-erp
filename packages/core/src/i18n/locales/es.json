@@ -76,7 +76,10 @@
     "picking": "Picking",
     "remitos": "Remitos",
     "transportistas": "Transportistas",
-    "valuacion": "Valuación"
+    "valuacion": "Valuación",
+    "sectionProduccion": "🏭 Producción",
+    "recetas": "📋 Recetas",
+    "ordenesProduccion": "⚙️ Órdenes de producción"
   },
   "calendar": {
     "titulo": "Calendario",

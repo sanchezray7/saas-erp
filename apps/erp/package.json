@@ -14,6 +14,7 @@
     "@saas/facturacion": "*",
     "@saas/productos": "*",
     "@saas/pos": "*",
+    "@saas/produccion": "*",
     "@saas/srm": "*",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

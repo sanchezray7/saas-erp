@@ -76,7 +76,10 @@
     "picking": "Separacão",
     "remitos": "Remessas",
     "transportistas": "Transportadoras",
-    "valuacion": "Valoração"
+    "valuacion": "Valoração",
+    "sectionProduccion": "🏭 Produção",
+    "recetas": "📋 Receitas",
+    "ordenesProduccion": "⚙️ Ordens de produção"
   },
   "calendar": {
     "titulo": "Calendário",
