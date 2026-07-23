@@ -83,7 +83,7 @@ function LayoutWithSections() {
 
   return (
     <WithAgenda>
-      <AppLayout extraSections={extraSections} headerExtra={<><AgendaButton /><NotificationBell /></>} />
+      <AppLayout extraSections={extras} headerExtra={<><AgendaButton /><NotificationBell /></>} />
     </WithAgenda>
   )
 }
