@@ -6,6 +6,7 @@
   "main": "src/index.js",
   "dependencies": {
     "@saas/core": "*",
+    "@saas/crm": "*",
     "react": "^19.0.0",
     "react-router-dom": "^7.0.0"
   }
