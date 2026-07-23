@@ -133,6 +133,7 @@ Deno.serve(async (req: Request) => {
         const almacenId = body.almacen_id
         const cantidadProducida = body.cantidad_producida
         const lote = body.lote
+        const consumosReales: Record<string, number> = body.consumos_reales || {}
 
         const orden = await admin.from('ordenes_produccion').select('*, receta:recetas(id,codigo,nombre,cantidad_producida,unidad_medida,instrucciones,producto_final_id)').eq('id', ordenId).single()
         if (orden.error || !orden.data || orden.data.estado !== 'en_proceso') throw new Error('La orden no está en proceso')
@@ -143,14 +144,16 @@ Deno.serve(async (req: Request) => {
 
         for (const ing of (ingredientes || [])) {
           if (ing.es_subproducto) continue
-          const cantidadConsumir = (ing.cantidad / orden.data.receta.cantidad_producida) * cantidadProducida
+          const cantidadPlaneada = (ing.cantidad / orden.data.receta.cantidad_producida) * cantidadProducida
+          const cantidadReal = consumosReales[ing.id] || cantidadPlaneada
 
           const { data: stock } = await admin.from('producto_stock').select('costo_promedio').match({ company_id, producto_id: ing.producto_id, almacen_id: almacenId }).maybeSingle()
           const costoUnit = stock?.costo_promedio || 0
 
+          // Registrar consumo real
           await admin.from('movimientos_stock').insert({
             company_id, producto_id: ing.producto_id, almacen_id: almacenId,
-            tipo: 'salida', cantidad: cantidadConsumir, lote: lote || null,
+            tipo: 'salida', cantidad: cantidadReal, lote: lote || null,
             costo_unitario: costoUnit,
             referencia_type: 'produccion', referencia_id: ordenId,
             motivo: `Consumo OP #${orden.data.numero}`, created_by: body.user_id || null,
@@ -158,10 +161,22 @@ Deno.serve(async (req: Request) => {
 
           await admin.from('orden_consumos').insert({
             orden_id: ordenId, producto_id: ing.producto_id,
-            cantidad: cantidadConsumir, lote: lote || null, costo_unitario: costoUnit,
+            cantidad: cantidadReal, lote: lote || null, costo_unitario: costoUnit,
           })
 
-          costoTotal += costoUnit * cantidadConsumir
+          // Registrar merma si el consumo real superó el planeado
+          const merma = cantidadReal - cantidadPlaneada
+          if (merma > 0) {
+            await admin.from('movimientos_stock').insert({
+              company_id, producto_id: ing.producto_id, almacen_id: almacenId,
+              tipo: 'salida', cantidad: merma, lote: lote || null,
+              costo_unitario: costoUnit,
+              referencia_type: 'produccion', referencia_id: ordenId,
+              motivo: `Merma OP #${orden.data.numero}`, created_by: body.user_id || null,
+            })
+          }
+
+          costoTotal += costoUnit * cantidadReal
         }
 
         const costoFinal = cantidadProducida > 0 ? costoTotal / cantidadProducida : 0

@@ -28,9 +28,10 @@ export async function getObtenciones(ordenId) {
   return produccionFetch('getObtenciones', { orden_id: ordenId })
 }
 
-export async function completarOrden(companyId, userId, ordenId, almacenId, cantidadProducida, lote) {
+export async function completarOrden(companyId, userId, ordenId, almacenId, cantidadProducida, lote, consumosReales = {}) {
   return produccionFetch('completarOrden', {
     company_id: companyId, user_id: userId, orden_id: ordenId,
     almacen_id: almacenId, cantidad_producida: cantidadProducida, lote,
+    consumos_reales: consumosReales,
   })
 }

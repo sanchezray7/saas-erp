@@ -22,6 +22,7 @@ export function OrdenDetailPage() {
   const [loteProduccion, setLoteProduccion] = useState('')
   const [cantidadFinal, setCantidadFinal] = useState(0)
   const [completando, setCompletando] = useState(false)
+  const [consumosReales, setConsumosReales] = useState({})
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -37,6 +38,13 @@ export function OrdenDetailPage() {
       setConsumos(cs)
       setObtenciones(obs)
       setIngredientesReceta(ings)
+
+      // Pre-cargar consumos reales con valores planeados
+      const reales = {}
+      ings.filter((i) => !i.es_subproducto).forEach((ing) => {
+        reales[ing.id] = (ing.cantidad / (o.receta?.cantidad_producida || 1)) * (o.cantidad_planeada || 0)
+      })
+      setConsumosReales(reales)
 
       if (activeCompanyId) {
         getSupabase().from('almacenes').select('id, nombre').eq('company_id', activeCompanyId).order('nombre').then(({ data }) => {
@@ -72,9 +80,28 @@ export function OrdenDetailPage() {
     if (!loteProduccion.trim()) { alertError('Error', 'Ingresá un número de lote'); return }
     if (cantidadFinal <= 0) { alertError('Error', 'La cantidad producida debe ser mayor a 0'); return }
 
+    // Calcular planeados para comparar
+    const planeados = {}
+    ingredientes.filter((i) => !i.es_subproducto).forEach((ing) => {
+      planeados[ing.id] = (ing.cantidad / (orden.receta?.cantidad_producida || 1)) * cantidadFinal
+    })
+
+    // Verificar si hay mermas
+    const mermas = Object.entries(consumosReales).filter(([id, real]) => {
+      return real > (planeados[id] || 0)
+    })
+    if (mermas.length > 0) {
+      const msgs = mermas.map(([id, real]) => {
+        const ing = ingredientes.find((i) => i.id === id)
+        const plan = planeados[id] || 0
+        return `${ing?.producto?.nombre || '?'}: planeado ${Number(plan).toLocaleString()}, real ${Number(real).toLocaleString()} (merma: ${(Number(real) - Number(plan)).toLocaleString()})`
+      })
+      if (!window.confirm(`⚠️ Se detectaron mermas:\n${msgs.join('\n')}\n\n¿Continuar de todas formas?`)) return
+    }
+
     setCompletando(true)
     try {
-      await completarOrden(activeCompanyId, user?.id, id, almacenId, cantidadFinal, loteProduccion.trim())
+      await completarOrden(activeCompanyId, user?.id, id, almacenId, cantidadFinal, loteProduccion.trim(), consumosReales)
       notify('Orden completada exitosamente')
       load()
     } catch (err) { alertError('Error', err.message) }
@@ -130,11 +157,41 @@ export function OrdenDetailPage() {
               {almacenes.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
             </FormField>
             <FormField label="Lote" value={loteProduccion} onChange={(e) => setLoteProduccion(e.target.value)} placeholder="Ej: QSO-2026-001" required />
-            <FormField label="Cantidad producida" type="number" value={cantidadFinal} onChange={(e) => setCantidadFinal(Number(e.target.value))} required />
-            <Button onClick={handleCompletar} disabled={completando} style={{ marginBottom: 4 }}>
-              {completando ? 'Completando...' : '✅ Completar'}
-            </Button>
+            <FormField label="Cantidad producida" type="number" value={cantidadFinal} onChange={(e) => {
+              setCantidadFinal(Number(e.target.value))
+              // Recalcular consumos planeados
+              const factor = (Number(e.target.value) || 0) / (orden.receta?.cantidad_producida || 1)
+              const updated = {}
+              ingredientes.filter((i) => !i.es_subproducto).forEach((ing) => {
+                updated[ing.id] = ing.cantidad * factor
+              })
+              setConsumosReales(updated)
+            }} required />
           </div>
+
+          {ingredientes.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <h4 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 8 }}>⬇️ Consumo real de materia prima</h4>
+              {ingredientes.map((ing) => {
+                const plan = ing.cantidad / (orden.receta?.cantidad_producida || 1) * cantidadFinal
+                const real = consumosReales[ing.id] || plan
+                const merma = real - plan
+                return (
+                  <div key={ing.id} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ flex: 1, fontSize: '0.85rem' }}>{ing.producto?.nombre || '?'}</span>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--color-text-muted)', width: 90, textAlign: 'right' }}>Plan: {Number(plan).toLocaleString()} {ing.unidad_medida}</span>
+                    <input type="number" step="any" value={real} onChange={(e) => setConsumosReales({ ...consumosReales, [ing.id]: Number(e.target.value) })}
+                      style={{ width: 90, padding: '5px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: '0.85rem', textAlign: 'right' }} />
+                    {merma > 0.001 && <span style={{ fontSize: '0.78rem', color: '#ef4444', width: 80 }}>⚠️ +{Number(merma).toLocaleString()}</span>}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          <Button onClick={handleCompletar} disabled={completando} style={{ marginTop: 12 }}>
+            {completando ? 'Completando...' : '✅ Completar'}
+          </Button>
         </div>
       )}
 
