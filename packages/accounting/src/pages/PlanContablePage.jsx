@@ -44,6 +44,7 @@ export function PlanContablePage() {
   const [loading, setLoading] = useState(true)
   const [seedLoading, setSeedLoading] = useState(false)
   const [seedLoadingCL, setSeedLoadingCL] = useState(false)
+  const [seedLoadingCO, setSeedLoadingCO] = useState(false)
   const [editForm, setEditForm] = useState(null)
   const [deleting, setDeleting] = useState(null)
 
@@ -59,15 +60,21 @@ export function PlanContablePage() {
   useEffect(() => { load() }, [load])
 
   async function handleSeed(pais = 'PY') {
-    const nombre = pais === 'CL' ? 'Chile' : 'Paraguay'
+    const nombre = pais === 'CL' ? 'Chile' : pais === 'CO' ? 'Colombia' : 'Paraguay'
     if (!window.confirm(`¿Cargar plan de cuentas de ${nombre}? Las cuentas existentes no se modificarán.`)) return
-    if (pais === 'CL') setSeedLoadingCL(true); else setSeedLoading(true)
+    if (pais === 'CL') setSeedLoadingCL(true)
+    else if (pais === 'CO') setSeedLoadingCO(true)
+    else setSeedLoading(true)
     try {
       await seedAccounts(activeCompanyId, pais)
       notify(`Plan de cuentas de ${nombre} cargado`)
       load()
     } catch (err) { alertError('Error', err.message) }
-    finally { if (pais === 'CL') setSeedLoadingCL(false); else setSeedLoading(false) }
+    finally {
+      if (pais === 'CL') setSeedLoadingCL(false)
+      else if (pais === 'CO') setSeedLoadingCO(false)
+      else setSeedLoading(false)
+    }
   }
 
   async function handleGuardar(e) {
@@ -112,6 +119,7 @@ export function PlanContablePage() {
               <div style="display:flex;gap:6px;flex-wrap:wrap">
                 <Button size="sm" variant="ghost" onClick={() => handleSeed('PY')} disabled={seedLoading}>{seedLoading ? 'Cargando...' : '📥 Plantilla PY'}</Button>
                 <Button size="sm" variant="ghost" onClick={() => handleSeed('CL')} disabled={seedLoadingCL}>{seedLoadingCL ? 'Cargando...' : '📥 Plantilla CL'}</Button>
+                <Button size="sm" variant="ghost" onClick={() => handleSeed('CO')} disabled={seedLoadingCO}>{seedLoadingCO ? 'Cargando...' : '📥 Plantilla CO'}</Button>
               </div>
             )}
             {canEdit && <Button size="sm" onClick={startNew}>+ Nueva cuenta</Button>}

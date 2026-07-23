@@ -117,9 +117,61 @@ export const SEED_ACCOUNTS_CL = [
   { code: '63', name: 'Gastos Financieros', type: 'gasto', parent_code: '6' },
 ]
 
+// Seed para Colombia (PUC - Plan Único de Cuentas)
+export const SEED_ACCOUNTS_CO = [
+  { code: '1', name: 'Activo', type: 'activo', parent_code: null },
+  { code: '11', name: 'Disponible', type: 'activo', parent_code: '1' },
+  { code: '1105', name: 'Caja', type: 'activo', parent_code: '11' },
+  { code: '1110', name: 'Bancos', type: 'activo', parent_code: '11' },
+  { code: '13', name: 'Deudores', type: 'activo', parent_code: '1' },
+  { code: '1305', name: 'Clientes', type: 'activo', parent_code: '13' },
+  { code: '1355', name: 'Anticipo de Impuestos', type: 'activo', parent_code: '13' },
+  { code: '14', name: 'Inventarios', type: 'activo', parent_code: '1' },
+  { code: '1435', name: 'Mercancías', type: 'activo', parent_code: '14' },
+  { code: '15', name: 'Propiedades, Planta y Equipo', type: 'activo', parent_code: '1' },
+  { code: '1505', name: 'Edificios y Terrenos', type: 'activo', parent_code: '15' },
+  { code: '1510', name: 'Equipos de Cómputo', type: 'activo', parent_code: '15' },
+  { code: '2', name: 'Pasivo', type: 'pasivo', parent_code: null },
+  { code: '21', name: 'Obligaciones Financieras', type: 'pasivo', parent_code: '2' },
+  { code: '2105', name: 'Préstamos Bancarios', type: 'pasivo', parent_code: '21' },
+  { code: '22', name: 'Proveedores', type: 'pasivo', parent_code: '2' },
+  { code: '2205', name: 'Proveedores Nacionales', type: 'pasivo', parent_code: '22' },
+  { code: '23', name: 'Cuentas por Pagar', type: 'pasivo', parent_code: '2' },
+  { code: '2365', name: 'Retención en la Fuente', type: 'pasivo', parent_code: '23' },
+  { code: '2367', name: 'Impuesto a las Ventas Retenido (ReteIVA)', type: 'pasivo', parent_code: '23' },
+  { code: '2368', name: 'IVA por Pagar', type: 'pasivo', parent_code: '23' },
+  { code: '2370', name: 'Aportes Nómina por Pagar', type: 'pasivo', parent_code: '23' },
+  { code: '24', name: 'Impuestos por Pagar', type: 'pasivo', parent_code: '2' },
+  { code: '2404', name: 'ICA por Pagar', type: 'pasivo', parent_code: '24' },
+  { code: '25', name: 'Obligaciones Laborales', type: 'pasivo', parent_code: '2' },
+  { code: '2505', name: 'Salarios por Pagar', type: 'pasivo', parent_code: '25' },
+  { code: '28', name: 'Otros Pasivos', type: 'pasivo', parent_code: '2' },
+  { code: '2805', name: 'Anticipos de Clientes', type: 'pasivo', parent_code: '28' },
+  { code: '3', name: 'Patrimonio', type: 'patrimonio', parent_code: null },
+  { code: '3105', name: 'Capital', type: 'patrimonio', parent_code: '3' },
+  { code: '3305', name: 'Utilidad del Ejercicio', type: 'patrimonio', parent_code: '3' },
+  { code: '4', name: 'Ingresos', type: 'ingreso', parent_code: null },
+  { code: '41', name: 'Ingresos Operacionales', type: 'ingreso', parent_code: '4' },
+  { code: '4135', name: 'Comercio al por Mayor y Menor', type: 'ingreso', parent_code: '41' },
+  { code: '42', name: 'Ingresos No Operacionales', type: 'ingreso', parent_code: '4' },
+  { code: '4205', name: 'Otros Ingresos', type: 'ingreso', parent_code: '42' },
+  { code: '5', name: 'Costos', type: 'costo', parent_code: null },
+  { code: '51', name: 'Costo de Ventas', type: 'costo', parent_code: '5' },
+  { code: '5105', name: 'Costo de Mercancías', type: 'costo', parent_code: '51' },
+  { code: '6', name: 'Gastos', type: 'gasto', parent_code: null },
+  { code: '61', name: 'Gastos de Administración', type: 'gasto', parent_code: '6' },
+  { code: '6105', name: 'Gastos de Personal', type: 'gasto', parent_code: '61' },
+  { code: '62', name: 'Gastos de Ventas', type: 'gasto', parent_code: '6' },
+  { code: '6205', name: 'Comisiones', type: 'gasto', parent_code: '62' },
+  { code: '63', name: 'Gastos No Operacionales', type: 'gasto', parent_code: '6' },
+  { code: '6305', name: 'Gastos Financieros', type: 'gasto', parent_code: '63' },
+  { code: '64', name: 'Impuestos', type: 'gasto', parent_code: '6' },
+  { code: '6405', name: 'Impuesto de Industria y Comercio', type: 'gasto', parent_code: '64' },
+]
+
 export async function seedAccounts(companyId, pais = 'PY') {
   const supabase = getSupabase()
-  const seed = pais === 'CL' ? SEED_ACCOUNTS_CL : SEED_ACCOUNTS_PY
+  const seed = pais === 'CL' ? SEED_ACCOUNTS_CL : pais === 'CO' ? SEED_ACCOUNTS_CO : SEED_ACCOUNTS_PY
   const codeMap = {}
   for (const a of seed) {
     const parentId = a.parent_code ? codeMap[a.parent_code] : null
@@ -150,8 +202,8 @@ export async function autoAsignarCuentasImpuestos(companyId) {
   // Buscar cuentas por código
   const { data: accounts } = await supabase.from('accounts').select('*').eq('company_id', companyId)
   if (!accounts) return
-  const creditoAccount = accounts.find((a) => a.code === '1.1.4')
-  const debitoAccount = accounts.find((a) => a.code === '2.1.2')
+  const creditoAccount = accounts.find((a) => a.code === '1.1.4' || a.code === '114' || a.code === '1355')
+  const debitoAccount = accounts.find((a) => a.code === '2.1.2' || a.code === '212' || a.code === '2368')
 
   // Asignar a impuestos que no tengan cuenta
   const { data: taxes } = await supabase.from('taxes').select('*, tax_group:tax_group_id(type)').eq('company_id', companyId).is('account_id', null)

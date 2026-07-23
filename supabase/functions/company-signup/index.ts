@@ -265,6 +265,102 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  if (pais === 'CO') {
+    // Plan de cuentas colombiano (PUC)
+    const CO_ACCOUNTS = [
+      { code: '1', name: 'Activo', type: 'activo' },
+      { code: '11', name: 'Disponible', type: 'activo' },
+      { code: '1105', name: 'Caja', type: 'activo' },
+      { code: '1110', name: 'Bancos', type: 'activo' },
+      { code: '13', name: 'Deudores', type: 'activo' },
+      { code: '1305', name: 'Clientes', type: 'activo' },
+      { code: '1355', name: 'Anticipo de Impuestos', type: 'activo' },
+      { code: '14', name: 'Inventarios', type: 'activo' },
+      { code: '1435', name: 'Mercancías', type: 'activo' },
+      { code: '15', name: 'Propiedades, Planta y Equipo', type: 'activo' },
+      { code: '1505', name: 'Edificios y Terrenos', type: 'activo' },
+      { code: '1510', name: 'Equipos de Cómputo', type: 'activo' },
+      { code: '2', name: 'Pasivo', type: 'pasivo' },
+      { code: '21', name: 'Obligaciones Financieras', type: 'pasivo' },
+      { code: '2105', name: 'Préstamos Bancarios', type: 'pasivo' },
+      { code: '22', name: 'Proveedores', type: 'pasivo' },
+      { code: '2205', name: 'Proveedores Nacionales', type: 'pasivo' },
+      { code: '23', name: 'Cuentas por Pagar', type: 'pasivo' },
+      { code: '2365', name: 'Retención en la Fuente', type: 'pasivo' },
+      { code: '2367', name: 'ReteIVA por Pagar', type: 'pasivo' },
+      { code: '2368', name: 'IVA por Pagar', type: 'pasivo' },
+      { code: '2370', name: 'Aportes Nómina por Pagar', type: 'pasivo' },
+      { code: '24', name: 'Impuestos por Pagar', type: 'pasivo' },
+      { code: '2404', name: 'ICA por Pagar', type: 'pasivo' },
+      { code: '2505', name: 'Salarios por Pagar', type: 'pasivo' },
+      { code: '2805', name: 'Anticipos de Clientes', type: 'pasivo' },
+      { code: '3', name: 'Patrimonio', type: 'patrimonio' },
+      { code: '3105', name: 'Capital', type: 'patrimonio' },
+      { code: '3305', name: 'Utilidad del Ejercicio', type: 'patrimonio' },
+      { code: '4', name: 'Ingresos', type: 'ingreso' },
+      { code: '41', name: 'Ingresos Operacionales', type: 'ingreso' },
+      { code: '4135', name: 'Comercio al por Mayor y Menor', type: 'ingreso' },
+      { code: '42', name: 'Ingresos No Operacionales', type: 'ingreso' },
+      { code: '4205', name: 'Otros Ingresos', type: 'ingreso' },
+      { code: '5', name: 'Costos', type: 'costo' },
+      { code: '51', name: 'Costo de Ventas', type: 'costo' },
+      { code: '5105', name: 'Costo de Mercancías', type: 'costo' },
+      { code: '6', name: 'Gastos', type: 'gasto' },
+      { code: '61', name: 'Gastos de Administración', type: 'gasto' },
+      { code: '6105', name: 'Gastos de Personal', type: 'gasto' },
+      { code: '62', name: 'Gastos de Ventas', type: 'gasto' },
+      { code: '6205', name: 'Comisiones', type: 'gasto' },
+      { code: '63', name: 'Gastos No Operacionales', type: 'gasto' },
+      { code: '6305', name: 'Gastos Financieros', type: 'gasto' },
+      { code: '64', name: 'Impuestos', type: 'gasto' },
+      { code: '6405', name: 'ICA', type: 'gasto' },
+    ]
+    const codeMap: Record<string, string> = {}
+    for (const a of CO_ACCOUNTS) {
+      const parentId = a.code.length > 1 ? codeMap[a.code.slice(0, -1)] : null
+      const { data: acc } = await admin.from('accounts').upsert({
+        company_id: company.id, parent_id: parentId || null,
+        code: a.code, name: a.name, type: a.type,
+      }, { onConflict: 'company_id,code' }).select('id').single()
+      if (acc) codeMap[a.code] = acc.id
+    }
+
+    // Grupos de impuestos colombianos
+    const { data: debitoCo } = await admin.from('tax_groups').upsert({
+      company_id: company.id, name: 'IVA Débito Fiscal', type: 'debito_fiscal',
+    }, { onConflict: 'company_id,name' }).select('id').single()
+    const { data: creditoCo } = await admin.from('tax_groups').upsert({
+      company_id: company.id, name: 'IVA Crédito Fiscal', type: 'credito_fiscal',
+    }, { onConflict: 'company_id,name' }).select('id').single()
+    const { data: retefCo } = await admin.from('tax_groups').upsert({
+      company_id: company.id, name: 'Retención en la Fuente', type: 'retencion_venta',
+    }, { onConflict: 'company_id,name' }).select('id').single()
+    const { data: reteivaCo } = await admin.from('tax_groups').upsert({
+      company_id: company.id, name: 'ReteIVA', type: 'retencion_venta',
+    }, { onConflict: 'company_id,name' }).select('id').single()
+    const { data: icaCo } = await admin.from('tax_groups').upsert({
+      company_id: company.id, name: 'ICA', type: 'retencion_venta',
+    }, { onConflict: 'company_id,name' }).select('id').single()
+
+    // Tasas colombianas
+    const CO_TAXES = [
+      { tax_group_id: debitoCo?.id, name: 'IVA 19%', percentage: 19 },
+      { tax_group_id: debitoCo?.id, name: 'IVA 5%', percentage: 5 },
+      { tax_group_id: creditoCo?.id, name: 'IVA 19%', percentage: 19 },
+      { tax_group_id: creditoCo?.id, name: 'IVA 5%', percentage: 5 },
+      { tax_group_id: retefCo?.id, name: 'Retefuente 2.5%', percentage: 2.5, is_withholding: true },
+      { tax_group_id: retefCo?.id, name: 'Retefuente 3.5%', percentage: 3.5, is_withholding: true },
+      { tax_group_id: reteivaCo?.id, name: 'ReteIVA 15%', percentage: 15, is_withholding: true },
+      { tax_group_id: icaCo?.id, name: 'ICA 0.5%', percentage: 0.5, is_withholding: true },
+    ]
+    for (const t of CO_TAXES) {
+      await admin.from('taxes').upsert({
+        company_id: company.id, tax_group_id: t.tax_group_id,
+        name: t.name, percentage: t.percentage, is_withholding: t.is_withholding || false,
+      }, { onConflict: 'company_id,name' })
+    }
+  }
+
   // 12. Webhook token
   await admin.from('webhook_tokens').insert({ company_id: company.id, token: crypto.randomUUID() }).maybeSingle()
 

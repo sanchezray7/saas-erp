@@ -1,5 +1,5 @@
-export { listarGruposImpuestos, guardarGrupoImpuesto, eliminarGrupoImpuesto, listarImpuestos, guardarImpuesto, eliminarImpuesto, guardarInvoiceTaxLines, listarInvoiceTaxLines, calcularResumenImpuestos, seedImpuestosCL } from './data/impuestos'
-export { listarAccounts, guardarAccount, eliminarAccount, buildAccountTree, seedAccounts, listarAccountsParaSelect, SEED_ACCOUNTS_PY, SEED_ACCOUNTS_CL, autoAsignarCuentasImpuestos } from './data/accounts'
+export { listarGruposImpuestos, guardarGrupoImpuesto, eliminarGrupoImpuesto, listarImpuestos, guardarImpuesto, eliminarImpuesto, guardarInvoiceTaxLines, listarInvoiceTaxLines, calcularResumenImpuestos, seedImpuestosCL, seedImpuestosCO } from './data/impuestos'
+export { listarAccounts, guardarAccount, eliminarAccount, buildAccountTree, seedAccounts, listarAccountsParaSelect, SEED_ACCOUNTS_PY, SEED_ACCOUNTS_CL, SEED_ACCOUNTS_CO, autoAsignarCuentasImpuestos } from './data/accounts'
 export { listarAsientos, obtenerAsiento, generarAsientoFacturaProveedor, generarAsientoFacturaCliente, copiarTaxLinesACliente, generarAsientoPagoProveedor, generarAsientoPagoCliente, generarAsientoAjusteInventario, generarAsientoNomina, generarAsientoPagoNomina, anularAsiento, eliminarAsiento } from './data/asientos'
 export { obtenerAgingAP, obtenerAgingAR } from './data/aging'
 export { listarConciliaciones, obtenerConciliacion, crearConciliacion, cerrarConciliacion, listarExtractos, importarExtracto, toggleConciliarExtracto, obtenerTransaccionLibro } from './data/conciliacion'
