@@ -23,6 +23,7 @@ export function OrdenDetailPage() {
   const [cantidadFinal, setCantidadFinal] = useState(0)
   const [completando, setCompletando] = useState(false)
   const [consumosReales, setConsumosReales] = useState({})
+  const [prodPrecioVenta, setProdPrecioVenta] = useState(0)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -45,6 +46,13 @@ export function OrdenDetailPage() {
         reales[ing.id] = (ing.cantidad / (o.receta?.cantidad_producida || 1)) * (o.cantidad_planeada || 0)
       })
       setConsumosReales(reales)
+
+      // Cargar precio de venta del producto final
+      if (o.receta?.producto_final_id && activeCompanyId) {
+        getSupabase().from('catalogo_productos').select('precio_venta').eq('id', o.receta.producto_final_id).single()
+          .then(({ data }) => setProdPrecioVenta(Number(data?.precio_venta || 0)))
+          .catch(() => {})
+      }
 
       if (activeCompanyId) {
         getSupabase().from('almacenes').select('id, nombre').eq('company_id', activeCompanyId).order('nombre').then(({ data }) => {
@@ -114,6 +122,10 @@ export function OrdenDetailPage() {
   const ingredientes = ingredientesReceta.filter((i) => !i.es_subproducto)
   const subproductos = ingredientesReceta.filter((i) => i.es_subproducto)
 
+  // Costos
+  const ganancia = (Number(orden?.cantidad_producida || 0) * prodPrecioVenta) - Number(orden?.costo_total || 0)
+  const porcentajeGanancia = Number(orden?.costo_total) > 0 ? (ganancia / Number(orden.costo_total)) * 100 : 0
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div className="card">
@@ -146,6 +158,40 @@ export function OrdenDetailPage() {
         </div>
         {orden.notas && <p style={{ marginTop: 12, fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>📝 {orden.notas}</p>}
       </div>
+
+      {/* Costos y rentabilidad */}
+      {orden.estado !== 'programada' && Number(orden.costo_total) > 0 && (
+        <div className="card">
+          <h3 style={{ marginBottom: 12 }}>💰 Costos y rentabilidad</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, fontSize: '0.85rem' }}>
+            <div style={{ background: 'var(--color-surface-alt)', borderRadius: 'var(--radius)', padding: 12 }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginBottom: 4 }}>Costo total</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>${Number(orden.costo_total || 0).toLocaleString()}</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: 4 }}>
+                ${(Number(orden.costo_total || 0) / (orden.cantidad_producida || 1)).toLocaleString()} / unidad
+              </div>
+            </div>
+            <div style={{ background: 'var(--color-surface-alt)', borderRadius: 'var(--radius)', padding: 12 }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginBottom: 4 }}>Valor producido</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800 }}>
+                ${(Number(orden.cantidad_producida || 0) * prodPrecioVenta).toLocaleString()}
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: 4 }}>
+                ${prodPrecioVenta.toLocaleString()} / unidad (precio venta)
+              </div>
+            </div>
+            <div style={{ background: 'var(--color-surface-alt)', borderRadius: 'var(--radius)', padding: 12 }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginBottom: 4 }}>Rentabilidad</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: ganancia >= 0 ? '#16a34a' : '#dc2626' }}>
+                {ganancia >= 0 ? '+' : ''}${Number(ganancia).toLocaleString()}
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)', marginTop: 4 }}>
+                {porcentajeGanancia >= 0 ? '+' : ''}{porcentajeGanancia.toFixed(1)}% margen
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Completar orden */}
       {orden.estado === 'en_proceso' && (
