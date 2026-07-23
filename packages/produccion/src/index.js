@@ -3,4 +3,5 @@ export { listarOrdenes, guardarOrden, getOrden, iniciarOrden, completarOrden, ca
 export { RecetasPage } from './pages/RecetasPage'
 export { OrdenesPage } from './pages/OrdenesPage'
 export { OrdenDetailPage } from './pages/OrdenDetailPage'
+export { DashboardProduccion } from './pages/DashboardProduccion'
 export { NAV_SECTION_PRODUCCION } from './navItems'

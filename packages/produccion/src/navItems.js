@@ -5,6 +5,7 @@ export const NAV_SECTION_PRODUCCION = {
   labelKey: 'nav.sectionProduccion',
   icon: '🏭',
   items: [
+    { to: '/produccion', labelKey: 'nav.dashboardProduccion', icon: '📊', permission: PERMISSIONS.DEAL_VER },
     { to: '/recetas', labelKey: 'nav.recetas', icon: '📋', permission: PERMISSIONS.CONFIG_VER },
     { to: '/ordenes-produccion', labelKey: 'nav.ordenesProduccion', icon: '⚙️', permission: PERMISSIONS.DEAL_VER },
   ],

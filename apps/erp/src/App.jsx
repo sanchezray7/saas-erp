@@ -30,7 +30,7 @@ import { EmpleadosPage, EmpleadoFormPage, EmpleadoDetailPage, OrganigramaPage, A
 import { ConfigNominaPage, PeriodosNominaPage, PeriodoDetailPage, ReciboPage, NovedadesPage, NominaDashboardPage, LibroSueldosPage, NAV_SECTION_NOMINA } from '@saas/nomina'
 import { ProveedoresPage, ProveedorFormPage, ProveedorDetailPage, OrdenesCompraPage, OrdenCompraFormPage, OrdenCompraDetailPage, CalendarioPagosPage, FacturasProveedorPage, FacturaProveedorFormPage, FacturaProveedorDetailPage, ScorecardsPage, AlertasVencimientoPage, HistorialPreciosPage, SugerenciasOCPage, CuentasPagarPage } from '@saas/srm'
 import { PosPage, CajasPage, CierresPage, NAV_SECTION_POS } from '@saas/pos'
-import { RecetasPage, OrdenesPage, OrdenDetailPage, NAV_SECTION_PRODUCCION } from '@saas/produccion'
+import { RecetasPage, OrdenesPage, OrdenDetailPage, DashboardProduccion, NAV_SECTION_PRODUCCION } from '@saas/produccion'
 import { PresupuestosPage, PresupuestoFormPage, PresupuestoDetailPage, OrdenesTrabajoPage, OrdenTrabajoFormPage, OrdenTrabajoDetailPage, NAV_SECTION_SERVICIOS } from '@saas/servicios'
 
 function LS({ children }) {
@@ -220,6 +220,7 @@ export default function App() {
                 <Route path="pos/cierres" element={<CierresPage />} />
                 {import.meta.env.DEV && (
                   <>
+                    <Route path="produccion" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><DashboardProduccion /></RequirePermission>} />
                     <Route path="recetas" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><RecetasPage /></RequirePermission>} />
                     <Route path="ordenes-produccion" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenesPage /></RequirePermission>} />
                     <Route path="ordenes-produccion/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenDetailPage /></RequirePermission>} />
