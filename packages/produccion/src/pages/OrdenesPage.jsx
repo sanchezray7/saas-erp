@@ -45,12 +45,39 @@ export function OrdenesPage() {
 
   if (loading) return <Skeleton.Card />
 
+  const pendientes = ordenes.filter((o) => o.estado === 'programada')
+  const enProceso = ordenes.filter((o) => o.estado === 'en_proceso')
+  const completadas = ordenes.filter((o) => o.estado === 'completada')
+  const wipUnidades = enProceso.reduce((s, o) => s + Number(o.cantidad_planeada || 0), 0)
+  const wipCosto = enProceso.reduce((s, o) => s + Number(o.costo_total || 0), 0)
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       <div className="card">
         <div className="page-header">
           <h1>⚙️ Órdenes de producción</h1>
           <Button onClick={() => setShowForm(true)}>+ Nueva orden</Button>
+        </div>
+
+        {/* Resumen WIP */}
+        <div style={{ display: 'flex', gap: 16, marginBottom: 16, fontSize: '0.82rem' }}>
+          <div style={{ flex: 1, background: 'var(--color-surface-alt)', borderRadius: 'var(--radius)', padding: 12, textAlign: 'center' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{pendientes.length}</div>
+            <div style={{ color: 'var(--color-text-muted)' }}>🟡 Pendientes</div>
+          </div>
+          <div style={{ flex: 1, background: '#eff6ff', borderRadius: 'var(--radius)', padding: 12, textAlign: 'center', border: '1px solid #bfdbfe' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#2563eb' }}>{enProceso.length}</div>
+            <div style={{ color: '#2563eb', fontSize: '0.85rem' }}>🔵 En proceso</div>
+            {wipUnidades > 0 && <div style={{ color: '#2563eb', fontSize: '0.75rem', marginTop: 2 }}>{wipUnidades.toLocaleString()} uds · ${wipCosto.toLocaleString()}</div>}
+          </div>
+          <div style={{ flex: 1, background: 'var(--color-surface-alt)', borderRadius: 'var(--radius)', padding: 12, textAlign: 'center' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{completadas.length}</div>
+            <div style={{ color: 'var(--color-text-muted)' }}>✅ Completadas</div>
+          </div>
+          <div style={{ flex: 1, background: 'var(--color-surface-alt)', borderRadius: 'var(--radius)', padding: 12, textAlign: 'center' }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>{ordenes.length}</div>
+            <div style={{ color: 'var(--color-text-muted)' }}>📊 Total</div>
+          </div>
         </div>
 
         {showForm && (
@@ -87,6 +114,7 @@ export function OrdenesPage() {
                 <th>Lote</th>
                 <th>Planificado</th>
                 <th>Producido</th>
+                <th>Costo</th>
                 <th>Estado</th>
                 <th>Fecha</th>
                 <th></th>
@@ -100,6 +128,9 @@ export function OrdenesPage() {
                   <td className="meta">{o.lote || '—'}</td>
                   <td>{Number(o.cantidad_planeada).toLocaleString()}</td>
                   <td>{o.cantidad_producida ? Number(o.cantidad_producida).toLocaleString() : '—'}</td>
+                  <td style={{ fontWeight: o.costo_total > 0 ? 600 : 400 }}>
+                    {o.costo_total > 0 ? `$${Number(o.costo_total).toLocaleString()}` : o.estado === 'en_proceso' ? '🔄 WIP' : '—'}
+                  </td>
                   <td>{ESTADOS[o.estado] || o.estado}</td>
                   <td className="meta">{o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}</td>
                   <td><Link to={`/ordenes-produccion/${o.id}`} className="btn-icon">👁️</Link></td>
