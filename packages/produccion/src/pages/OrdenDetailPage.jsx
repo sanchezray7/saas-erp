@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth, Button, Skeleton, notify, alertError, FormField, getSupabase } from '@saas/core'
-import { getOrden, getConsumos, getObtenciones, iniciarOrden, completarOrden, cancelarOrden, registrarConsumo, registrarObtencion } from '../data/ordenes'
+import { getOrden, getConsumos, getObtenciones, iniciarOrden, completarOrden, cancelarOrden } from '../data/ordenes'
 import { listarIngredientes } from '../data/recetas'
 
 const ESTADOS = { programada: '🟡 Programada', en_proceso: '🔵 En proceso', completada: '✅ Completada', cancelada: '❌ Cancelada' }
