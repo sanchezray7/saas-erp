@@ -23,6 +23,8 @@ export function BillingPage() {
     if (!activeCompanyId) return
     setLoading(true)
 
+    let verifyingTimer
+
     function loadData() {
       Promise.all([
         billingFetch('get-plans'),
@@ -45,6 +47,7 @@ export function BillingPage() {
           if (result?.status === 'activated') {
             notify(`✅ Plan ${result.plan} activado correctamente`)
             loadData()
+            setTimeout(() => setVerifying(false), 1000)
           } else if (result?.status === 'PAID' || result?.status === 'PENDING') {
             notify('Pago recibido, activando plan...')
             setTimeout(() => window.location.reload(), 2000)
@@ -55,7 +58,10 @@ export function BillingPage() {
       }
     }
     window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      clearTimeout(verifyingTimer)
+    }
   }, [activeCompanyId])
 
   async function handleCreateCheckout() {
@@ -86,6 +92,10 @@ export function BillingPage() {
         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
         <h2>Verificando tu pago...</h2>
         <p className="meta">Estamos confirmando el pago con dLocal. Esto puede tomar unos segundos.</p>
+        <button onClick={() => { setVerifying(false); window.location.reload() }}
+          style={{ marginTop: 16, padding: '8px 16px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', background: 'var(--color-surface)', cursor: 'pointer', fontSize: '0.85rem' }}>
+          ↻ Reintentar
+        </button>
       </div>
     )
   }
