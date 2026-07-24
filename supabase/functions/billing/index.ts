@@ -229,6 +229,8 @@ Deno.serve(async (req: Request) => {
                 current_period_start: payment.approved_date || new Date().toISOString(),
               }).eq('id', sub.id)
               await admin.from('companies').update({ plan: sub.plan }).eq('id', company_id)
+              // Sucursales: mismas RIF, heredan el plan
+              await admin.from('companies').update({ plan: sub.plan }).eq('parent_company_id', company_id)
               await admin.from('billing_invoices').insert({
                 company_id, subscription_id: sub.id,
                 provider: 'dlocal', provider_invoice_id: sub.provider_subscription_id,

@@ -75,6 +75,7 @@ Deno.serve(async (req: Request) => {
         }).eq('id', sub.id)
 
         await admin.from('companies').update({ plan }).eq('id', companyId)
+        await admin.from('companies').update({ plan }).eq('parent_company_id', companyId)
 
         await admin.from('billing_invoices').insert({
           company_id: companyId, subscription_id: sub.id,
@@ -105,6 +106,7 @@ Deno.serve(async (req: Request) => {
           }).eq('id', sub.id)
 
           await admin.from('companies').update({ plan: sub.plan }).eq('id', sub.company_id)
+          await admin.from('companies').update({ plan: sub.plan }).eq('parent_company_id', sub.company_id)
 
           await admin.from('billing_invoices').insert({
             company_id: sub.company_id, subscription_id: sub.id,
@@ -122,6 +124,7 @@ Deno.serve(async (req: Request) => {
           if (sub) {
             await admin.from('subscriptions').update({ status: 'canceled', canceled_at: new Date().toISOString() }).eq('id', sub.id)
             await admin.from('companies').update({ plan: 'free' }).eq('id', sub.company_id)
+            await admin.from('companies').update({ plan: 'free' }).eq('parent_company_id', sub.company_id)
           }
           break
         }
