@@ -180,7 +180,7 @@ export function BillingPage() {
             const price = plans.find((p) => p.plan === planKey && p.interval === selectedInterval)
             const monthly = plans.find((p) => p.plan === planKey && p.interval === 'month')
             const isSelected = selectedPlan === planKey
-            const isCurrent = subscription?.plan === planKey && subscription?.status === 'active'
+            const isCurrent = (subscription?.plan === planKey && subscription?.status === 'active') || (!subscription && companyPlan === planKey)
             const ahorro = selectedInterval === 'year' && monthly ? Math.round((monthly.amount * 12) - price?.amount) : 0
             return (
               <div key={planKey} onClick={() => !isCurrent && setSelectedPlan(planKey)}
