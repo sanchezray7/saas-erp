@@ -7,17 +7,11 @@ const corsHeaders = {
 }
 
 const DLOCAL_API = Deno.env.get('DLOCAL_ENV') === 'production'
-  ? 'https://api.dlocal.com'
-  : 'https://sandbox.dlocal.com'
+  ? 'https://api.dlocalgo.com/v1'
+  : 'https://api-sbx.dlocalgo.com/v1'
 
 const DLOCAL_API_KEY = Deno.env.get('DLOCAL_API_KEY')!
 const DLOCAL_SECRET = Deno.env.get('DLOCAL_SECRET')!
-const _btoa = (s: string) => {
-  const chars = new TextEncoder().encode(s)
-  let bin = ''
-  for (let i = 0; i < chars.length; i++) bin += String.fromCharCode(chars[i])
-  return btoa(bin)
-}
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -27,9 +21,8 @@ async function dlocalRequest(path: string, method = 'GET', body?: unknown) {
   const res = await fetch(`${DLOCAL_API}${path}`, {
     method,
     headers: {
-      'Authorization': `Basic ${_btoa(`${DLOCAL_API_KEY}:${DLOCAL_SECRET}`)}`,
+      'Authorization': `Bearer ${DLOCAL_API_KEY}:${DLOCAL_SECRET}`,
       'Content-Type': 'application/json',
-      'X-Date': new Date().toISOString(),
     },
     body: body ? JSON.stringify(body) : undefined,
   })
@@ -44,7 +37,7 @@ async function getPayPalAccessToken(): Promise<string> {
   const base = Deno.env.get('PAYPAL_ENV') === 'production'
     ? 'https://api-m.paypal.com'
     : 'https://api-m.sandbox.paypal.com'
-  const auth = _btoa(`${clientId}:${secret}`)
+  const auth = btoa(`${clientId}:${secret}`)
   const res = await fetch(`${base}/v1/oauth2/token`, {
     method: 'POST',
     headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
