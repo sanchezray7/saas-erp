@@ -99,29 +99,29 @@ Deno.serve(async (req: Request) => {
         const description = `Saas Empresarial - ${plan}${interval === 'year' ? ' Anual' : ''}`
 
         if (provider === 'dlocal') {
-          // Metadata codificada en order_id (solo caracteres seguros)
-          const orderId = `${company_id.replace(/-/g, '')}_${plan}_${interval || 'month'}_${Date.now()}`
-          const dlocalBody = {
-            amount: Number(price.amount),
-            currency: price.currency || 'USD',
-            country: 'PY',
+          // Crear un plan de suscripción en dLocal (cobro recurrente automático)
+          const planBody = {
+            name: description.slice(0, 50),
             description: description.slice(0, 100),
+            currency: price.currency || 'USD',
+            amount: Number(price.amount),
+            frequency_type: interval === 'year' ? 'YEARLY' : 'MONTHLY',
+            frequency_value: 1,
             notification_url: webhookUrl,
             success_url: successUrl,
             back_url: cancelUrl,
-            order_id: orderId,
           }
 
-          const result = await dlocalRequest('/payments', 'POST', dlocalBody)
+          const planResult = await dlocalRequest('/subscription/plan', 'POST', planBody)
 
-          // Guardar referencia en DB
+          // Guardar el plan de dLocal en nuestra BD
           await admin.from('subscriptions').insert({
             company_id, plan, status: 'trialing', provider: 'dlocal',
-            provider_subscription_id: result.id,
+            provider_subscription_id: String(planResult.id),
             interval: interval || 'month',
           }).maybeSingle()
 
-          return json({ checkout_url: result.redirect_url, id: result.id })
+          return json({ checkout_url: planResult.subscribe_url, id: String(planResult.id) })
         }
 
         if (provider === 'paypal') {
@@ -222,24 +222,33 @@ Deno.serve(async (req: Request) => {
 
         if (sub.provider === 'dlocal' && sub.provider_subscription_id) {
           try {
-            const payment = await dlocalRequest(`/payments/${sub.provider_subscription_id}`, 'GET')
-            if (payment.status === 'PAID') {
+            // Para suscripciones dLocal: consultar las subscriptiones del plan
+            const subsResult = await dlocalRequest(
+              `/subscription/plan/${sub.provider_subscription_id}/subscription/all`, 'GET'
+            )
+            const dlocalSubs = subsResult?.data || []
+            const confirmed = dlocalSubs.find((s: any) => s.status === 'CONFIRMED' || s.active === true)
+
+            if (confirmed) {
+              // Primer pago realizado, activar
               await admin.from('subscriptions').update({
                 status: 'active',
-                current_period_start: payment.approved_date || new Date().toISOString(),
+                provider_plan_token: confirmed.subscription_token,
+                current_period_start: confirmed.created_at ? new Date(confirmed.created_at).toISOString() : new Date().toISOString(),
               }).eq('id', sub.id)
               await admin.from('companies').update({ plan: sub.plan }).eq('id', company_id)
-              // Sucursales: mismas RIF, heredan el plan
               await admin.from('companies').update({ plan: sub.plan }).eq('parent_company_id', company_id)
+              // Registrar primera factura
               await admin.from('billing_invoices').insert({
                 company_id, subscription_id: sub.id,
-                provider: 'dlocal', provider_invoice_id: sub.provider_subscription_id,
-                amount: Number(payment.amount || 0), currency: payment.currency || 'USD',
+                provider: 'dlocal', provider_invoice_id: confirmed.id ? String(confirmed.id) : sub.provider_subscription_id,
+                amount: Number(confirmed.amount_paid || confirmed.plan?.amount || 0),
+                currency: confirmed.currency || 'USD',
                 status: 'paid',
               }).maybeSingle()
               return json({ status: 'activated', plan: sub.plan })
             }
-            return json({ status: payment.status })
+            return json({ status: dlocalSubs.length > 0 ? (dlocalSubs[0].status || 'PENDING') : 'PENDING' })
           } catch (err) {
             return json({ status: 'error', error: err.message })
           }
