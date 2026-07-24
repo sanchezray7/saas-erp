@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useAuth, Button, Skeleton, getSupabase, alertError, notify } from '@saas/core'
 
-function billingFetch(action, params = {}) {
-  return getSupabase().functions.invoke('billing', { body: { action, ...params } })
+async function billingFetch(action, params = {}) {
+  const { data, error } = await getSupabase().functions.invoke('billing', { body: { action, ...params } })
+  if (error) throw new Error(error.message)
+  return data
 }
 
 export function BillingPage() {
