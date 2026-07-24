@@ -159,64 +159,68 @@ export function BillingPage() {
         )}
       </div>
 
-      {/* Planes disponibles (solo si no hay activa) */}
-      {(!subscription || subscription.status !== 'active') && (
-        <div className="card">
-          <h3 style={{ marginBottom: 16 }}>📊 Elegí tu plan</h3>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-              <input type="radio" checked={selectedInterval === 'month'} onChange={() => setSelectedInterval('month')} /> Mensual
-            </label>
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-              <input type="radio" checked={selectedInterval === 'year'} onChange={() => setSelectedInterval('year')} /> Anual (11 meses)
-            </label>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            {['starter', 'business'].map((planKey) => {
-              const price = plans.find((p) => p.plan === planKey && p.interval === selectedInterval)
-              const monthly = plans.find((p) => p.plan === planKey && p.interval === 'month')
-              const isSelected = selectedPlan === planKey
-              const ahorro = selectedInterval === 'year' && monthly ? Math.round((monthly.amount * 12) - price?.amount) : 0
-              return (
-                <div key={planKey} onClick={() => setSelectedPlan(planKey)}
-                  style={{
-                    border: `2px solid ${isSelected ? 'var(--color-accent)' : 'var(--color-border)'}`,
-                    borderRadius: 'var(--radius-lg)', padding: 20, cursor: 'pointer',
-                    background: isSelected ? 'var(--color-accent-soft)' : 'var(--color-surface)',
-                    transition: 'border-color 0.15s',
-                  }}>
-                  <div style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'capitalize', marginBottom: 4 }}>{planKey}</div>
-                  {price && (
-                    <div>
-                      <span style={{ fontSize: '1.4rem', fontWeight: 900 }}>${Number(price.amount).toLocaleString()}</span>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>/{selectedInterval === 'year' ? 'año' : 'mes'}</span>
-                    </div>
-                  )}
-                  {ahorro > 0 && <div style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 600, marginTop: 4 }}>Ahorrás ${ahorro}</div>}
-                </div>
-              )
-            })}
-          </div>
-
-          {selectedPlan && (
-            <div style={{ marginTop: 16 }}>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 8, display: 'block' }}>Método de pago</label>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                <label style={{ ...styles.radioBtn, borderColor: selectedProvider === 'dlocal' ? 'var(--color-accent)' : 'var(--color-border)' }}>
-                  <input type="radio" checked={selectedProvider === 'dlocal'} onChange={() => setSelectedProvider('dlocal')} style={{ marginRight: 6 }} /> 💳 Tarjeta (dLocal)
-                </label>
-                <label style={{ ...styles.radioBtn, borderColor: selectedProvider === 'paypal' ? 'var(--color-accent)' : 'var(--color-border)' }}>
-                  <input type="radio" checked={selectedProvider === 'paypal'} onChange={() => setSelectedProvider('paypal')} style={{ marginRight: 6 }} /> 🅿️ PayPal
-                </label>
-              </div>
-              <Button onClick={handleCreateCheckout} disabled={creando} className="w-full">
-                {creando ? 'Preparando pago...' : '💳 Ir a pagar'}
-              </Button>
-            </div>
-          )}
+      {/* Planes disponibles (siempre visibles) */}
+      <div className="card">
+        <h3 style={{ marginBottom: 16 }}>
+          {subscription?.status === 'active' ? '📊 Cambiar de plan' : '📊 Elegí tu plan'}
+        </h3>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+            <input type="radio" checked={selectedInterval === 'month'} onChange={() => setSelectedInterval('month')} /> Mensual
+          </label>
+          <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+            <input type="radio" checked={selectedInterval === 'year'} onChange={() => setSelectedInterval('year')} /> Anual (11 meses)
+          </label>
         </div>
-      )}
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {['starter', 'business'].map((planKey) => {
+            const price = plans.find((p) => p.plan === planKey && p.interval === selectedInterval)
+            const monthly = plans.find((p) => p.plan === planKey && p.interval === 'month')
+            const isSelected = selectedPlan === planKey
+            const isCurrent = subscription?.plan === planKey && subscription?.status === 'active'
+            const ahorro = selectedInterval === 'year' && monthly ? Math.round((monthly.amount * 12) - price?.amount) : 0
+            return (
+              <div key={planKey} onClick={() => !isCurrent && setSelectedPlan(planKey)}
+                style={{
+                  border: `2px solid ${isCurrent ? '#16a34a' : isSelected ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                  borderRadius: 'var(--radius-lg)', padding: 20, cursor: isCurrent ? 'default' : 'pointer',
+                  background: isCurrent ? '#f0fdf4' : isSelected ? 'var(--color-accent-soft)' : 'var(--color-surface)',
+                  transition: 'border-color 0.15s', opacity: isCurrent ? 0.7 : 1,
+                }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700, textTransform: 'capitalize', marginBottom: 4 }}>
+                  {planKey} {isCurrent && '✅'}
+                </div>
+                {price && (
+                  <div>
+                    <span style={{ fontSize: '1.4rem', fontWeight: 900 }}>${Number(price.amount).toLocaleString()}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>/{selectedInterval === 'year' ? 'año' : 'mes'}</span>
+                  </div>
+                )}
+                {ahorro > 0 && <div style={{ fontSize: '0.78rem', color: '#16a34a', fontWeight: 600, marginTop: 4 }}>Ahorrás ${ahorro}</div>}
+                {isCurrent && <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: 4 }}>Plan actual</div>}
+              </div>
+            )
+          })}
+        </div>
+
+        {selectedPlan && selectedPlan !== subscription?.plan && (
+          <div style={{ marginTop: 16 }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 8, display: 'block' }}>Método de pago</label>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <label style={{ ...styles.radioBtn, borderColor: selectedProvider === 'dlocal' ? 'var(--color-accent)' : 'var(--color-border)' }}>
+                <input type="radio" checked={selectedProvider === 'dlocal'} onChange={() => setSelectedProvider('dlocal')} style={{ marginRight: 6 }} /> 💳 Tarjeta (dLocal)
+              </label>
+              <label style={{ ...styles.radioBtn, borderColor: selectedProvider === 'paypal' ? 'var(--color-accent)' : 'var(--color-border)' }}>
+                <input type="radio" checked={selectedProvider === 'paypal'} onChange={() => setSelectedProvider('paypal')} style={{ marginRight: 6 }} /> 🅿️ PayPal
+              </label>
+            </div>
+            <Button onClick={handleCreateCheckout} disabled={creando} className="w-full">
+              {creando ? 'Preparando pago...' : subscription?.status === 'active' ? '⬆️ Cambiar a este plan' : '💳 Ir a pagar'}
+            </Button>
+          </div>
+        )}
+      </div>
 
       {/* Historial de facturas */}
       {invoices.length > 0 && (
