@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth, usePlan, planLabel, getSupabase } from '@saas/core'
 
 const QUOTA_KEYS = ['usuarios', 'productos', 'contactos', 'oportunidades', 'facturas_mes']
@@ -87,26 +88,22 @@ export default function PlanSection() {
       )}
 
       {nextPlan && (
-        <div style={{
-          padding: '1rem',
-          background: '#fef3c7',
-          border: '1px solid #f59e0b',
-          borderRadius: 8,
-          textAlign: 'center',
-        }}>
-          <p style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', color: '#92400e' }}>
-            ¿Necesitás más capacidad? Actualizá a <strong>{nextPlan.name} ({nextPlan.price})</strong>
-          </p>
-          <a
-            href="https://chat.whatsapp.com/EX9BT6vHQNW3lRLs1Y1d4q"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn-primary"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-          >
-            💬 Contactar por WhatsApp
-          </a>
-        </div>
+        <Link to="/settings/billing" style={{ textDecoration: 'none' }}>
+          <div style={{
+            padding: '1rem',
+            background: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: 8,
+            textAlign: 'center',
+          }}>
+            <p style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', color: '#92400e' }}>
+              ¿Necesitás más capacidad? Actualizá a <strong>{nextPlan.name} ({nextPlan.price})</strong>
+            </p>
+            <span className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+              💳 Ver planes
+            </span>
+          </div>
+        </Link>
       )}
     </div>
   )

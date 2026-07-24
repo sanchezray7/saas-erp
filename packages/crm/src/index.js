@@ -25,6 +25,7 @@ export { CotizacionPublicPage } from './pages/CotizacionPublicPage'
 export { LeadFormPage } from './pages/LeadFormPage'
 export { CuentasCobrarPage } from './pages/CuentasCobrarPage'
 export { AlertasARPage } from './pages/AlertasARPage'
+export { BillingPage } from './pages/BillingPage'
 
 export { listarContactos, obtenerContacto, guardarContacto, eliminarContacto } from './data/contacts'
 export { listarOrganizaciones, obtenerOrganizacion, guardarOrganizacion, eliminarOrganizacion } from './data/organizations'

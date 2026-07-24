@@ -47,6 +47,6 @@ export const QUOTA_LABELS = {
 // Nombres y precios de los planes
 export const PLAN_LABELS = {
   free: { name: 'Free', price: 'Gratis' },
-  starter: { name: 'Starter', price: '$39/mes' },
+  starter: { name: 'Starter', price: '$49/mes' },
   business: { name: 'Business', price: '$89/mes' },
 }

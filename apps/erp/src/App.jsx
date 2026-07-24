@@ -20,6 +20,7 @@ import { NAV_SECTION_CRM, LoginPage, RegisterPage,
   LeadFormPage,
   CuentasCobrarPage,
   AlertasARPage,
+  BillingPage,
 } from '@saas/crm'
 import { CatalogPage } from '@saas/productos'
 import { ImpuestosConfigPage, PlanContablePage, AsientosPage, AsientoDetailPage, NuevoAsientoPage, ReportsPage as AccountingReportsPage, AgingPage, ConciliacionPage, ConciliacionNuevaPage, ConciliacionDetailPage, ConsolidacionPage } from '@saas/accounting'
@@ -226,6 +227,7 @@ export default function App() {
                 <Route path="ordenes-trabajo" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenesTrabajoPage /></RequirePermission>} />
                 <Route path="ordenes-trabajo/nueva" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><OrdenTrabajoFormPage /></RequirePermission>} />
                 <Route path="ordenes-trabajo/:id" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><OrdenTrabajoDetailPage /></RequirePermission>} />
+                <Route path="settings/billing" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><BillingPage /></RequirePermission>} />
                 <Route path="settings" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><SettingsPage /></RequirePermission>} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>
