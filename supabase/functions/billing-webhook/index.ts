@@ -43,9 +43,33 @@ Deno.serve(async (req: Request) => {
       // Consultar estado del pago a dLocal
       const payment = await dlocalGet(`/payments/${paymentId}`)
 
-      // Analizar order_id → companyId_plan_interval_timestamp (uuid sin guiones)
-      const parts = (payment.order_id || '').split('_')
-      // Reconstruir UUID: first 8 + 4 + 4 + 4 + last 12
+      // Determinar si es un pago de suscripción por order_id
+      const orderId: string = payment.order_id || ''
+      const isSubscriptionPayment = orderId.startsWith('ST-')
+
+      if (isSubscriptionPayment) {
+        // Es un cobro recurrente de suscripción
+        // order_id formato: ST-{subscription_token}-{N}
+        const token = orderId.split('-')[1]
+        if (!token) return json({ error: 'token no encontrado' }, 200)
+
+        // Buscar subscription por provider_plan_token
+        const { data: subs } = await admin.from('subscriptions')
+          .select('*').eq('provider_plan_token', token).maybeSingle()
+
+        if (subs && payment.status === 'PAID') {
+          await admin.from('billing_invoices').insert({
+            company_id: subs.company_id, subscription_id: subs.id,
+            provider: 'dlocal', provider_invoice_id: paymentId,
+            amount: Number(payment.amount || 0), currency: payment.currency || 'USD',
+            status: 'paid', paid_at: payment.approved_date || new Date().toISOString(),
+          }).maybeSingle()
+        }
+        return json({ received: true, is_subscription: true })
+      }
+
+      // Pago único (flujo legacy) - intentar parsear order_id anterior
+      const parts = orderId.split('_')
       const rawId = parts[0] || ''
       const companyId = rawId.length === 32
         ? `${rawId.slice(0,8)}-${rawId.slice(8,12)}-${rawId.slice(12,16)}-${rawId.slice(16,20)}-${rawId.slice(20)}`
@@ -53,30 +77,25 @@ Deno.serve(async (req: Request) => {
       const plan = parts[1] || 'starter'
       const interval = parts[2] || 'month'
 
-      if (!companyId) return json({ error: 'order_id inválido', order_id: payment.order_id }, 200)
+      if (!companyId) return json({ error: 'order_id inválido' }, 200)
 
-      // Buscar suscripción existente o crear una
       let { data: sub } = await admin.from('subscriptions')
         .select('*').eq('provider_subscription_id', paymentId).maybeSingle()
 
       if (!sub) {
-        const { data: newSub, error } = await admin.from('subscriptions').insert({
+        const { data: newSub } = await admin.from('subscriptions').insert({
           company_id: companyId, plan, status: 'active', provider: 'dlocal',
           provider_subscription_id: paymentId, interval,
         }).select('id').single()
-        if (error) throw error
-        sub = { id: newSub.id, company_id: companyId, plan }
+        sub = newSub ? { id: newSub.id, company_id: companyId, plan } : null
       }
 
-      // Si el pago fue exitoso, activar
-      if (payment.status === 'PAID') {
+      if (sub && payment.status === 'PAID') {
         await admin.from('subscriptions').update({
           status: 'active', current_period_start: payment.approved_date || new Date().toISOString(),
         }).eq('id', sub.id)
-
         await admin.from('companies').update({ plan }).eq('id', companyId)
         await admin.from('companies').update({ plan }).eq('parent_company_id', companyId)
-
         await admin.from('billing_invoices').insert({
           company_id: companyId, subscription_id: sub.id,
           provider: 'dlocal', provider_invoice_id: paymentId,
