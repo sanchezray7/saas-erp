@@ -37,7 +37,7 @@ async function getPayPalAccessToken(): Promise<string> {
   const base = Deno.env.get('PAYPAL_ENV') === 'production'
     ? 'https://api-m.paypal.com'
     : 'https://api-m.sandbox.paypal.com'
-  const auth = btoa(`${clientId}:${secret}`)
+  const auth = btoa(String.fromCharCode(...new TextEncoder().encode(`${clientId}:${secret}`)))
   const res = await fetch(`${base}/v1/oauth2/token`, {
     method: 'POST',
     headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -93,6 +93,7 @@ Deno.serve(async (req: Request) => {
         if (!price) return json({ error: 'Plan no encontrado' }, 404)
 
         const baseUrl = Deno.env.get('PUBLIC_APP_URL') || 'http://localhost:5173'
+        const webhookUrl = `${supabaseUrl}/functions/v1/billing-webhook`
         const successUrl = `${baseUrl}/settings/billing?success=true`
         const cancelUrl = `${baseUrl}/settings/billing?canceled=true`
 
@@ -106,8 +107,10 @@ Deno.serve(async (req: Request) => {
             redirect_url: successUrl,
             cancel_url: cancelUrl,
             description: `Saas Empresarial - Plan ${plan}${interval === 'year' ? ' anual' : ''}`,
-            notification_url: `${baseUrl}/functions/v1/billing-webhook`,
+            notification_url: webhookUrl,
             order_id: `${company_id.slice(0, 8)}-${Date.now()}`,
+            // Datos adicionales para el webhook
+            x_metadata: JSON.stringify({ company_id, plan, interval: interval || 'month' }),
           }
 
           const result = await dlocalRequest('/payments', 'POST', dlocalBody)
@@ -123,61 +126,46 @@ Deno.serve(async (req: Request) => {
         }
 
         if (provider === 'paypal') {
-          const base = Deno.env.get('PAYPAL_ENV') === 'production'
-            ? 'https://api-m.paypal.com'
-            : 'https://api-m.sandbox.paypal.com'
-
-          const planObj = {
-            name: `Saas Empresarial - ${plan}${interval === 'year' ? ' Anual' : ''}`,
-            description: `Plan ${plan} - $${Number(price.amount)}/${interval === 'year' ? 'año' : 'mes'}`,
-            billing_cycles: [{
-              frequency: { interval_unit: interval === 'year' ? 'YEAR' : 'MONTH', interval_count: 1 },
-              tenure_type: 'REGULAR',
-              sequence: 1,
-              pricing_scheme: { fixed_price: { value: String(Number(price.amount).toFixed(2)), currency_code: 'USD' } },
+          // Crear una orden de pago única vía PayPal Orders API
+          const orderPayload = {
+            intent: 'CAPTURE',
+            purchase_units: [{
+              reference_id: `${company_id.slice(0, 8)}-${Date.now()}`,
+              description: `Saas Empresarial - Plan ${plan}${interval === 'year' ? ' Anual' : ''}`,
+              amount: {
+                currency_code: 'USD',
+                value: String(Number(price.amount).toFixed(2)),
+                breakdown: { item_total: { currency_code: 'USD', value: String(Number(price.amount).toFixed(2)) } },
+              },
+              items: [{
+                name: `Plan ${plan}${interval === 'year' ? ' Anual' : ''}`,
+                description: `Saas Empresarial - ${plan}`,
+                unit_amount: { currency_code: 'USD', value: String(Number(price.amount).toFixed(2)) },
+                quantity: '1',
+                category: 'DIGITAL_GOODS',
+              }],
             }],
-            payment_preferences: {
-              auto_bill_outstanding: true,
-              setup_fee: { value: '0', currency_code: 'USD' },
-              setup_fee_failure_action: 'CANCEL',
-              payment_failure_threshold: 3,
-            },
-          }
-
-          // PayPal no tiene "11 meses" nativo, cobramos el total anual upfront
-          if (interval === 'year') {
-            planObj.billing_cycles = [{
-              frequency: { interval_unit: 'YEAR', interval_count: 1 },
-              tenure_type: 'REGULAR',
-              sequence: 1,
-              total_cycles: 1,
-              pricing_scheme: { fixed_price: { value: String(Number(price.amount).toFixed(2)), currency_code: 'USD' } },
-            }]
-          }
-
-          const planResult = await paypalRequest('/v1/billing/plans', 'POST', planObj)
-
-          // Crear suscripción
-          const subResult = await paypalRequest('/v1/billing/subscriptions', 'POST', {
-            plan_id: planResult.id,
             application_context: {
               brand_name: 'Saas Empresarial',
-              locale: 'es-PY',
-              shipping_preference: 'NO_SHIPPING',
-              user_action: 'SUBSCRIBE_NOW',
+              landing_page: 'LOGIN',
+              user_action: 'PAY_NOW',
               return_url: successUrl,
               cancel_url: cancelUrl,
+              shipping_preference: 'NO_SHIPPING',
             },
-          })
+          }
 
+          const orderResult = await paypalRequest('/v2/checkout/orders', 'POST', orderPayload)
+
+          // Guardar referencia en DB
           await admin.from('subscriptions').insert({
             company_id, plan, status: 'trialing', provider: 'paypal',
-            provider_subscription_id: subResult.id,
+            provider_subscription_id: orderResult.id,
             interval: interval || 'month',
           }).maybeSingle()
 
-          const approveUrl = subResult.links?.find((l: any) => l.rel === 'approve')?.href
-          return json({ checkout_url: approveUrl, id: subResult.id })
+          const approveUrl = orderResult.links?.find((l: any) => l.rel === 'approve')?.href
+          return json({ checkout_url: approveUrl, id: orderResult.id })
         }
 
         return json({ error: 'Proveedor no soportado' }, 400)

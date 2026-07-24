@@ -20,66 +20,54 @@ Deno.serve(async (req: Request) => {
 
   try {
     const payload = await req.json()
-    const event = payload.event || payload.event_type || ''
-    const isDlocal = event.startsWith('EVT_')
-    const isPaypal = !!payload.resource?.id || !!payload.create_time
+    const body = payload // dLocal envía el payment object directamente o como { event, ... }
+
+    // Detectar origen: dLocal vs PayPal
+    const isDlocal = body.id && typeof body.id === 'string' && body.id.startsWith('T-')
+    const isPaypal = !!body.event_type || body.resource?.id
 
     if (isDlocal) {
-      // Webhook de dLocal
-      console.log('dLocal event:', event, JSON.stringify(payload).slice(0, 500))
+      // Webhook de dLocal — recibe el payment object directamente
+      const paymentId = body.id
+      const metadata = body.x_metadata ? JSON.parse(body.x_metadata) : {}
+      const companyId = metadata.company_id || body.company_id
+      const plan = metadata.plan || body.plan || 'starter'
+      const interval = metadata.interval || body.interval || 'month'
 
-      const subId = payload.subscription_id || payload.id
-      const companyId = payload.company_id // lo enviamos como metadata personalizada
+      // Buscar suscripción por payment_id
+      let { data: sub } = await admin.from('subscriptions')
+        .select('*').eq('provider_subscription_id', paymentId).maybeSingle()
 
-      switch (event) {
-        case 'EVT_PAYMENT_SUCCEEDED':
-        case 'EVT_SUBSCRIPTION_CREATED': {
-          // Buscar la suscripción por provider_subscription_id
-          const { data: sub } = await admin.from('subscriptions')
-            .select('*, company:company_id(plan)')
-            .eq('provider_subscription_id', subId)
-            .maybeSingle()
-          if (!sub) return json({ error: 'Suscripción no encontrada' }, 404)
-
-          // Actualizar suscripción
-          await admin.from('subscriptions').update({
-            status: 'active',
-            plan: sub.plan,
-            current_period_start: payload.created_at ? new Date(payload.created_at).toISOString() : new Date().toISOString(),
-          }).eq('id', sub.id)
-
-          // Actualizar plan de la compañía
-          await admin.from('companies').update({ plan: sub.plan }).eq('id', sub.company_id)
-
-          // Registrar factura
-          await admin.from('billing_invoices').insert({
-            company_id: sub.company_id,
-            subscription_id: sub.id,
-            provider: 'dlocal',
-            provider_invoice_id: payload.id || payload.payment_id,
-            amount: payload.amount?.total || payload.amount || 0,
-            currency: payload.currency || 'USD',
-            status: 'paid',
-            paid_at: new Date().toISOString(),
-          }).maybeSingle()
-          break
-        }
-
-        case 'EVT_SUBSCRIPTION_CANCELLED': {
-          await admin.from('subscriptions').update({
-            status: 'canceled', canceled_at: new Date().toISOString(),
-          }).eq('provider_subscription_id', subId)
-
-          const { data: sub } = await admin.from('subscriptions').select('company_id').eq('provider_subscription_id', subId).single()
-          if (sub) await admin.from('companies').update({ plan: 'free' }).eq('id', sub.company_id)
-          break
-        }
-
-        case 'EVT_PAYMENT_FAILED': {
-          await admin.from('subscriptions').update({ status: 'past_due' }).eq('provider_subscription_id', subId)
-          break
-        }
+      if (!sub && companyId) {
+        // Si no existe, la creamos (pago sin checkout previo)
+        const { data: newSub } = await admin.from('subscriptions').insert({
+          company_id: companyId, plan, status: 'active', provider: 'dlocal',
+          provider_subscription_id: paymentId, interval,
+        }).select('id').single()
+        sub = newSub ? { ...newSub, company_id: companyId, plan } : null
       }
+
+      if (!sub) return json({ error: 'Suscripción no encontrada' }, 200)
+
+      // Actualizar suscripción
+      await admin.from('subscriptions').update({ status: 'active' }).eq('id', sub.id)
+
+      // Actualizar plan de la compañía
+      if (sub.company_id) {
+        await admin.from('companies').update({ plan: sub.plan || plan }).eq('id', sub.company_id)
+      }
+
+      // Registrar factura
+      await admin.from('billing_invoices').insert({
+        company_id: sub.company_id,
+        subscription_id: sub.id,
+        provider: 'dlocal',
+        provider_invoice_id: paymentId,
+        amount: Number(body.amount || body.total_amount || 0),
+        currency: body.currency || 'USD',
+        status: 'paid',
+        paid_at: new Date().toISOString(),
+      }).maybeSingle()
 
       return json({ received: true })
     }
