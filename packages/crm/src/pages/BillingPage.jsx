@@ -46,8 +46,7 @@ export function BillingPage() {
         billingFetch('verify-payment', { company_id: activeCompanyId }).then((result) => {
           if (result?.status === 'activated') {
             notify(`✅ Plan ${result.plan} activado correctamente`)
-            loadData()
-            setTimeout(() => setVerifying(false), 1000)
+            setTimeout(() => window.location.reload(), 1500)
           } else if (result?.status === 'PAID') {
             notify('Pago confirmado, activando plan...')
             setTimeout(() => window.location.reload(), 2000)
