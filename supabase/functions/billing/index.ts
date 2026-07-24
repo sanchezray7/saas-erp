@@ -96,21 +96,20 @@ Deno.serve(async (req: Request) => {
         const webhookUrl = `${supabaseUrl}/functions/v1/billing-webhook`
         const successUrl = `${baseUrl}/settings/billing?success=true`
         const cancelUrl = `${baseUrl}/settings/billing?canceled=true`
+        const description = `Saas Empresarial - ${plan}${interval === 'year' ? ' Anual' : ''}`
 
         if (provider === 'dlocal') {
-          // Crear pago único con redirect
-          const dlocalBody: any = {
+          // Metadata codificada en order_id (solo caracteres seguros)
+          const orderId = `${company_id.replace(/-/g, '')}_${plan}_${interval || 'month'}_${Date.now()}`
+          const dlocalBody = {
             amount: Number(price.amount),
             currency: price.currency || 'USD',
             country: 'PY',
-            payment_method_flow: 'REDIRECT',
-            redirect_url: successUrl,
-            cancel_url: cancelUrl,
-            description: `Saas Empresarial - Plan ${plan}${interval === 'year' ? ' anual' : ''}`,
+            description: description.slice(0, 100),
             notification_url: webhookUrl,
-            order_id: `${company_id.slice(0, 8)}-${Date.now()}`,
-            // Datos adicionales para el webhook
-            x_metadata: JSON.stringify({ company_id, plan, interval: interval || 'month' }),
+            success_url: successUrl,
+            back_url: cancelUrl,
+            order_id: orderId,
           }
 
           const result = await dlocalRequest('/payments', 'POST', dlocalBody)
