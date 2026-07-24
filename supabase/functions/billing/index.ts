@@ -10,7 +10,14 @@ const DLOCAL_API = Deno.env.get('DLOCAL_ENV') === 'production'
   ? 'https://api.dlocal.com'
   : 'https://sandbox.dlocal.com'
 
-const DLOCAL_AUTH = btoa(`${Deno.env.get('DLOCAL_API_KEY')}:${Deno.env.get('DLOCAL_SECRET')}`)
+const DLOCAL_API_KEY = Deno.env.get('DLOCAL_API_KEY')!
+const DLOCAL_SECRET = Deno.env.get('DLOCAL_SECRET')!
+const _btoa = (s: string) => {
+  const chars = new TextEncoder().encode(s)
+  let bin = ''
+  for (let i = 0; i < chars.length; i++) bin += String.fromCharCode(chars[i])
+  return btoa(bin)
+}
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -20,15 +27,15 @@ async function dlocalRequest(path: string, method = 'GET', body?: unknown) {
   const res = await fetch(`${DLOCAL_API}${path}`, {
     method,
     headers: {
-      'Authorization': `Basic ${DLOCAL_AUTH}`,
+      'Authorization': `Basic ${_btoa(`${DLOCAL_API_KEY}:${DLOCAL_SECRET}`)}`,
       'Content-Type': 'application/json',
-      'X-Dlocal-Checkout-Cache': 'true',
+      'X-Date': new Date().toISOString(),
     },
     body: body ? JSON.stringify(body) : undefined,
   })
-  const data = await res.json()
-  if (!res.ok) throw new Error(data.message || `dLocal error: ${res.status}`)
-  return data
+  const text = await res.text()
+  if (!res.ok) throw new Error(`dLocal error ${res.status}: ${text.slice(0, 300)}`)
+  try { return JSON.parse(text) } catch { return text }
 }
 
 async function getPayPalAccessToken(): Promise<string> {
@@ -37,7 +44,7 @@ async function getPayPalAccessToken(): Promise<string> {
   const base = Deno.env.get('PAYPAL_ENV') === 'production'
     ? 'https://api-m.paypal.com'
     : 'https://api-m.sandbox.paypal.com'
-  const auth = btoa(`${clientId}:${secret}`)
+  const auth = _btoa(`${clientId}:${secret}`)
   const res = await fetch(`${base}/v1/oauth2/token`, {
     method: 'POST',
     headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -97,7 +104,7 @@ Deno.serve(async (req: Request) => {
         const cancelUrl = `${baseUrl}/settings/billing?canceled=true`
 
         if (provider === 'dlocal') {
-          // Crear pago único con suscripción en dLocal
+          // Crear pago único con redirect
           const dlocalBody: any = {
             amount: Number(price.amount),
             currency: price.currency || 'USD',
@@ -107,20 +114,10 @@ Deno.serve(async (req: Request) => {
             cancel_url: cancelUrl,
             description: `Saas Empresarial - Plan ${plan}${interval === 'year' ? ' anual' : ''}`,
             notification_url: `${baseUrl}/functions/v1/billing-webhook`,
+            order_id: `${company_id.slice(0, 8)}-${Date.now()}`,
           }
 
-          // Si es año, usamos un plan de suscripción con 11 cobros
-          if (interval === 'year') {
-            dlocalBody.plan = {
-              installments: 1,
-              interval: 'M',
-              interval_count: 11, // 11 meses ≠ 12 (oferta)
-              max_charges: 11,
-              name: `Saas Empresarial - ${plan} Anual`,
-            }
-          }
-
-          const result = await dlocalRequest('/subscriptions', 'POST', dlocalBody)
+          const result = await dlocalRequest('/payments', 'POST', dlocalBody)
 
           // Guardar referencia en DB
           await admin.from('subscriptions').insert({
