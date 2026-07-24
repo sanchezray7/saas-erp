@@ -21,6 +21,7 @@ import { NAV_SECTION_CRM, LoginPage, RegisterPage,
   CuentasCobrarPage,
   AlertasARPage,
   BillingPage,
+  PaymentSuccessPage,
 } from '@saas/crm'
 import { CatalogPage } from '@saas/productos'
 import { ImpuestosConfigPage, PlanContablePage, AsientosPage, AsientoDetailPage, NuevoAsientoPage, ReportsPage as AccountingReportsPage, AgingPage, ConciliacionPage, ConciliacionNuevaPage, ConciliacionDetailPage, ConsolidacionPage } from '@saas/accounting'
@@ -112,6 +113,7 @@ export default function App() {
               <Route path="/403" element={<ErrorBoundary><ForbiddenPage /></ErrorBoundary>} />
               <Route path="/s/cotizacion/:token" element={<ErrorBoundary><CotizacionPublicPage /></ErrorBoundary>} />
               <Route path="/lead/:token" element={<ErrorBoundary><LeadFormPage /></ErrorBoundary>} />
+              <Route path="/payment/success" element={<ErrorBoundary><PaymentSuccessPage /></ErrorBoundary>} />
 
               <Route path="/" element={
                 <ErrorBoundary><ProtectedRoute><RequireCompany>

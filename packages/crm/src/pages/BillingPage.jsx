@@ -22,33 +22,29 @@ export function BillingPage() {
   useEffect(() => {
     if (!activeCompanyId) return
     setLoading(true)
-    const params = new URLSearchParams(window.location.search)
 
-    Promise.all([
-      billingFetch('get-plans'),
-      billingFetch('subscription-status', { company_id: activeCompanyId }),
-      billingFetch('invoices', { company_id: activeCompanyId }),
-    ]).then(([p, sub, inv]) => {
-      setPlans(p || [])
-      setSubscription(sub)
-      setInvoices(inv || [])
+    function loadData() {
+      Promise.all([
+        billingFetch('get-plans'),
+        billingFetch('subscription-status', { company_id: activeCompanyId }),
+        billingFetch('invoices', { company_id: activeCompanyId }),
+      ]).then(([p, sub, inv]) => {
+        setPlans(p || [])
+        setSubscription(sub)
+        setInvoices(inv || [])
+      }).catch(() => {}).finally(() => setLoading(false))
+    }
 
-      // Si volvemos de un pago exitoso, verificar el estado
-      if (params.get('success') === 'true' && (!sub || sub.status !== 'active')) {
+    loadData()
+
+    // Escuchar mensaje de la ventana de pago
+    function handleMessage(e) {
+      if (e.data === 'payment-success') {
         setVerifying(true)
         billingFetch('verify-payment', { company_id: activeCompanyId }).then((result) => {
           if (result?.status === 'activated') {
             notify(`✅ Plan ${result.plan} activado correctamente`)
-            window.history.replaceState({}, '', '/settings/billing')
-            // Recargar
-            Promise.all([
-              billingFetch('subscription-status', { company_id: activeCompanyId }),
-              billingFetch('invoices', { company_id: activeCompanyId }),
-            ]).then(([s, inv2]) => {
-              setSubscription(s)
-              setInvoices(inv2 || [])
-              setVerifying(false)
-            })
+            loadData()
           } else if (result?.status === 'PAID' || result?.status === 'PENDING') {
             notify('Pago recibido, activando plan...')
             setTimeout(() => window.location.reload(), 2000)
@@ -57,7 +53,9 @@ export function BillingPage() {
           }
         }).catch(() => setVerifying(false))
       }
-    }).catch(() => {}).finally(() => setLoading(false))
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
   }, [activeCompanyId])
 
   async function handleCreateCheckout() {

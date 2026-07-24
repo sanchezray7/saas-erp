@@ -26,6 +26,7 @@ export { LeadFormPage } from './pages/LeadFormPage'
 export { CuentasCobrarPage } from './pages/CuentasCobrarPage'
 export { AlertasARPage } from './pages/AlertasARPage'
 export { BillingPage } from './pages/BillingPage'
+export { PaymentSuccessPage } from './pages/PaymentSuccessPage'
 
 export { listarContactos, obtenerContacto, guardarContacto, eliminarContacto } from './data/contacts'
 export { listarOrganizaciones, obtenerOrganizacion, guardarOrganizacion, eliminarOrganizacion } from './data/organizations'

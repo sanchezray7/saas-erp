@@ -94,7 +94,7 @@ Deno.serve(async (req: Request) => {
 
         const baseUrl = Deno.env.get('PUBLIC_APP_URL') || 'http://localhost:5173'
         const webhookUrl = `${supabaseUrl}/functions/v1/billing-webhook`
-        const successUrl = `${baseUrl}/settings/billing?success=true`
+        const successUrl = `${baseUrl}/payment/success`
         const cancelUrl = `${baseUrl}/settings/billing?canceled=true`
         const description = `Saas Empresarial - ${plan}${interval === 'year' ? ' Anual' : ''}`
 
