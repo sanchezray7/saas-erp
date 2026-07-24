@@ -209,6 +209,43 @@ Deno.serve(async (req: Request) => {
         return json({ success: true })
       }
 
+      // === VERIFICAR ESTADO DE UN PAGO (después de redirect) ===
+      case 'verify-payment': {
+        if (!company_id) return json({ error: 'Falta company_id' }, 400)
+
+        // Buscar la suscripción más reciente en estado trialing
+        const { data: sub } = await admin.from('subscriptions')
+          .select('*').eq('company_id', company_id).eq('status', 'trialing')
+          .order('created_at', { ascending: false }).limit(1).maybeSingle()
+
+        if (!sub) return json({ status: 'no_trialing' })
+
+        if (sub.provider === 'dlocal' && sub.provider_subscription_id) {
+          try {
+            const payment = await dlocalRequest(`/payments/${sub.provider_subscription_id}`, 'GET')
+            if (payment.status === 'PAID') {
+              await admin.from('subscriptions').update({
+                status: 'active',
+                current_period_start: payment.approved_date || new Date().toISOString(),
+              }).eq('id', sub.id)
+              await admin.from('companies').update({ plan: sub.plan }).eq('id', company_id)
+              await admin.from('billing_invoices').insert({
+                company_id, subscription_id: sub.id,
+                provider: 'dlocal', provider_invoice_id: sub.provider_subscription_id,
+                amount: Number(payment.amount || 0), currency: payment.currency || 'USD',
+                status: 'paid',
+              }).maybeSingle()
+              return json({ status: 'activated', plan: sub.plan })
+            }
+            return json({ status: payment.status })
+          } catch (err) {
+            return json({ status: 'error', error: err.message })
+          }
+        }
+
+        return json({ status: 'unknown' })
+      }
+
       default:
         return json({ error: 'Acción no válida' }, 400)
     }

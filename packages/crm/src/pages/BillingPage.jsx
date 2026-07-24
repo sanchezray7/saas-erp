@@ -13,15 +13,17 @@ export function BillingPage() {
   const [subscription, setSubscription] = useState(null)
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
+  const [verifying, setVerifying] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState('')
   const [selectedInterval, setSelectedInterval] = useState('month')
   const [selectedProvider, setSelectedProvider] = useState('dlocal')
-  const [checkoutUrl, setCheckoutUrl] = useState('')
   const [creando, setCreando] = useState(false)
 
   useEffect(() => {
     if (!activeCompanyId) return
     setLoading(true)
+    const params = new URLSearchParams(window.location.search)
+
     Promise.all([
       billingFetch('get-plans'),
       billingFetch('subscription-status', { company_id: activeCompanyId }),
@@ -30,6 +32,31 @@ export function BillingPage() {
       setPlans(p || [])
       setSubscription(sub)
       setInvoices(inv || [])
+
+      // Si volvemos de un pago exitoso, verificar el estado
+      if (params.get('success') === 'true' && (!sub || sub.status !== 'active')) {
+        setVerifying(true)
+        billingFetch('verify-payment', { company_id: activeCompanyId }).then((result) => {
+          if (result?.status === 'activated') {
+            notify(`✅ Plan ${result.plan} activado correctamente`)
+            window.history.replaceState({}, '', '/settings/billing')
+            // Recargar
+            Promise.all([
+              billingFetch('subscription-status', { company_id: activeCompanyId }),
+              billingFetch('invoices', { company_id: activeCompanyId }),
+            ]).then(([s, inv2]) => {
+              setSubscription(s)
+              setInvoices(inv2 || [])
+              setVerifying(false)
+            })
+          } else if (result?.status === 'PAID' || result?.status === 'PENDING') {
+            notify('Pago recibido, activando plan...')
+            setTimeout(() => window.location.reload(), 2000)
+          } else {
+            setVerifying(false)
+          }
+        }).catch(() => setVerifying(false))
+      }
     }).catch(() => {}).finally(() => setLoading(false))
   }, [activeCompanyId])
 
@@ -42,14 +69,28 @@ export function BillingPage() {
         interval: selectedInterval, provider: selectedProvider,
       })
       if (result?.checkout_url) {
-        window.open(result.checkout_url, '_blank')
-        notify('Redirigiendo al portal de pago...')
+        // Abrir en popup centrado para mejor UX
+        const w = 500, h = 700
+        const left = (screen.width - w) / 2
+        const top = (screen.height - h) / 2
+        window.open(result.checkout_url, 'pago-dlocal',
+          `width=${w},height=${h},left=${left},top=${top},resizable=yes,scrollbars=yes`)
       }
     } catch (err) { alertError('Error', err.message) }
     finally { setCreando(false) }
   }
 
   if (loading) return <Skeleton.Card />
+
+  if (verifying) {
+    return (
+      <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⏳</div>
+        <h2>Verificando tu pago...</h2>
+        <p className="meta">Estamos confirmando el pago con dLocal. Esto puede tomar unos segundos.</p>
+      </div>
+    )
+  }
 
   const currentPlan = subscription?.plan || 'free'
 
