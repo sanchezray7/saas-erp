@@ -140,7 +140,14 @@ export function BillingPage() {
               </div>
             </>
           )}
-          {!subscription && <div style={{ gridColumn: 'span 2', ...styles.center }}><span className="meta">Sin suscripción activa</span></div>}
+          {!subscription && (
+            <div style={{ gridColumn: 'span 2', ...styles.center }}>
+              {companyPlan === 'free'
+                ? <span className="meta">Sin suscripción activa</span>
+                : <span style={{ fontSize: '0.9rem' }}>Plan <strong style={{ textTransform: 'capitalize' }}>{companyPlan}</strong> · Sin suscripción recurrente</span>
+              }
+            </div>
+          )}
         </div>
 
         {subscription?.status === 'active' && (
