@@ -48,13 +48,20 @@ export function BillingPage() {
             notify(`✅ Plan ${result.plan} activado correctamente`)
             loadData()
             setTimeout(() => setVerifying(false), 1000)
-          } else if (result?.status === 'PAID' || result?.status === 'PENDING') {
-            notify('Pago recibido, activando plan...')
+          } else if (result?.status === 'PAID') {
+            notify('Pago confirmado, activando plan...')
             setTimeout(() => window.location.reload(), 2000)
+          } else if (result?.status === 'PENDING') {
+            setVerifying(false)
+            notify('⏳ Pago recibido, esperando confirmación')
           } else {
             setVerifying(false)
+            notify('⚠️ Recargá la página para ver el estado del pago')
           }
-        }).catch(() => setVerifying(false))
+        }).catch(() => {
+          setVerifying(false)
+          notify('⚠️ Error al verificar. Recargá la página.')
+        })
       }
     }
     window.addEventListener('message', handleMessage)
