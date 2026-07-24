@@ -11,6 +11,7 @@ export function BillingPage() {
   const { activeCompanyId, user } = useAuth()
   const [plans, setPlans] = useState([])
   const [subscription, setSubscription] = useState(null)
+  const [companyPlan, setCompanyPlan] = useState('free')
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
   const [verifying, setVerifying] = useState(false)
@@ -30,10 +31,12 @@ export function BillingPage() {
         billingFetch('get-plans'),
         billingFetch('subscription-status', { company_id: activeCompanyId }),
         billingFetch('invoices', { company_id: activeCompanyId }),
-      ]).then(([p, sub, inv]) => {
+        getSupabase().from('companies').select('plan').eq('id', activeCompanyId).single().then(({ data }) => data?.plan || 'free'),
+      ]).then(([p, sub, inv, dbPlan]) => {
         setPlans(p || [])
         setSubscription(sub)
         setInvoices(inv || [])
+        setCompanyPlan(dbPlan || 'free')
       }).catch(() => {}).finally(() => setLoading(false))
     }
 
@@ -106,7 +109,7 @@ export function BillingPage() {
     )
   }
 
-  const currentPlan = subscription?.plan || 'free'
+  const currentPlan = subscription?.plan || companyPlan
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
