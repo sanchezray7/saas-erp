@@ -5,6 +5,7 @@ import { useAuth, FormField, Button, notify, alertError } from '@saas/core'
 import { guardarProveedor, obtenerProveedor } from '../data/proveedores'
 import { listarContactos } from '@saas/crm'
 import { listarAccounts } from '@saas/accounting'
+import { listarIndustries } from '@saas/crm'
 
 export function ProveedorFormPage() {
   const { t } = useTranslation()
@@ -13,6 +14,7 @@ export function ProveedorFormPage() {
   const { activeCompanyId } = useAuth()
   const isEdit = Boolean(id)
   const [contacts, setContacts] = useState([])
+  const [industries, setIndustries] = useState([])
   const [accounts, setAccounts] = useState([])
   const [loading, setLoading] = useState(isEdit)
   const [submitting, setSubmitting] = useState(false)
@@ -23,7 +25,7 @@ export function ProveedorFormPage() {
   function set(field, value) { setForm((prev) => ({ ...prev, [field]: value })) }
 
   useEffect(() => {
-    Promise.all([listarContactos(activeCompanyId), listarAccounts(activeCompanyId)]).then(([c, a]) => { setContacts(c); setAccounts(a.filter((acc) => acc.type === 'pasivo')) }).catch(() => {})
+    Promise.all([listarContactos(activeCompanyId), listarAccounts(activeCompanyId), listarIndustries(activeCompanyId)]).then(([c, a, ind]) => { setContacts(c); setAccounts(a.filter((acc) => acc.type === 'pasivo')); setIndustries(ind || []) }).catch(() => {})
     if (!isEdit) return
     obtenerProveedor(id).then((d) => {
       setForm({
@@ -58,7 +60,10 @@ export function ProveedorFormPage() {
         <FormField label="Nombre" required value={form.nombre} onChange={(e) => set('nombre', e.target.value)} autoFocus />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <FormField label="RUC" value={form.ruc} onChange={(e) => set('ruc', e.target.value)} />
-          <FormField label="Categoría" value={form.categoria} onChange={(e) => set('categoria', e.target.value)} placeholder="Ej: Insumos, Servicios" />
+          <FormField label="Categoría" as="select" value={form.categoria} onChange={(e) => set('categoria', e.target.value)}>
+            <option value="">— Seleccionar —</option>
+            {industries.map((ind) => <option key={ind.id} value={ind.name}>{ind.name}</option>)}
+          </FormField>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <FormField label="Email" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
