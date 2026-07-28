@@ -27,6 +27,7 @@ export async function guardarProveedor(companyId, proveedor) {
   const payload = { ...proveedor, company_id: companyId }
   if (!payload.id) delete payload.id
   if (!payload.contact_id) payload.contact_id = null
+  if (!payload.account_proveedor_id) payload.account_proveedor_id = null
   const { data, error } = await supabase.from('proveedores').upsert(payload).select().single()
   if (error) throw error
   return data
