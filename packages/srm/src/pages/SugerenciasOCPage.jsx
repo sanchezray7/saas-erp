@@ -82,18 +82,30 @@ export function SugerenciasOCPage() {
       const nuevasCant = { ...cantidades }
       const nuevasJust = { ...justificaciones }
 
+      // Mapear sugerencias por nombre (la IA puede devolver IDs incorrectos)
       for (const s of sug) {
-        if (s.producto_id && s.proveedor_id) {
-          nuevasAsig[s.producto_id] = s.proveedor_id
-          if (s.cantidad > 0) nuevasCant[s.producto_id] = s.cantidad
-          nuevasJust[s.producto_id] = s.justificacion || s.justificación || s.razon || s.motivo || 'Optimizado por IA'
-        }
+        const match = productos.find((p) =>
+          p.producto_nombre === s.producto_nombre ||
+          p.producto_codigo === s.producto_id ||
+          p.producto_id === s.producto_id
+        )
+        if (!match || !s.proveedor_id) continue
+
+        // Buscar proveedor por nombre (la IA puede devolver nombre en vez de UUID)
+        const provMatch = match.proveedores?.find((pr) =>
+          pr.proveedor_id === s.proveedor_id || pr.proveedor_nombre === s.proveedor_id
+        )
+        if (!provMatch) continue
+
+        nuevasAsig[match.producto_id] = provMatch.proveedor_id
+        if (s.cantidad > 0) nuevasCant[match.producto_id] = s.cantidad
+        nuevasJust[match.producto_id] = s.justificacion || s.justificación || s.razon || s.motivo || 'Optimizado por IA'
       }
 
       setAsignaciones(nuevasAsig)
       setCantidades(nuevasCant)
       setJustificaciones(nuevasJust)
-      notify(`🤖 IA optimizó ${sug.length} producto(s)`)
+      notify(`🤖 IA optimizó ${Object.keys(nuevasJust).length} producto(s)`)
     } catch (err) { alertError('Error al optimizar con IA', err.message) }
     finally { setOptimizando(false) }
   }

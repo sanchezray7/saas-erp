@@ -64,6 +64,7 @@ Devolvé SOLO un JSON válido sin explicaciones adicionales, con este formato ex
   "sugerencias": [
     {
       "producto_id": "uuid-del-producto",
+      "producto_nombre": "nombre del producto (para identificación)",
       "proveedor_id": "uuid-del-proveedor-seleccionado",
       "cantidad": numero,
       "justificacion": "Breve explicación de la decisión (máx 100 caracteres)"
