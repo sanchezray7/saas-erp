@@ -10,10 +10,13 @@ export function IntelligentPurchasePage() {
   const monedaLocal = MONEDA_POR_PAIS[pais] || 'PYG'
   const [productos, setProductos] = useState([])
   const [busqueda, setBusqueda] = useState('')
-  const [seleccion, setSeleccion] = useState({})       // { [producto_id]: cantidad }
-  const [asignaciones, setAsignaciones] = useState({})  // { [producto_id]: proveedor_id }
+  const [seleccion, setSeleccion] = useState({})
+  const [asignaciones, setAsignaciones] = useState({})
   const [justificaciones, setJustificaciones] = useState({})
+  // Mapa de proveedores por producto: { [producto_id]: [{ proveedor_id, proveedor_nombre, precio, moneda }] }
+  const [provPorProducto, setProvPorProducto] = useState({})
   const [loading, setLoading] = useState(true)
+  const [cargandoProv, setCargandoProv] = useState(false)
   const [optimizando, setOptimizando] = useState(false)
   const [generando, setGenerando] = useState(false)
 
@@ -23,9 +26,26 @@ export function IntelligentPurchasePage() {
     try {
       const data = await listarProductos(activeCompanyId, false)
       setProductos(data || [])
+      // Cargar proveedores de TODOS los productos en lote
+      setCargandoProv(true)
+      const { data: ppData } = await getSupabase().from('proveedor_productos')
+        .select('producto_id, proveedor_id, precio_proveedor, moneda, proveedor:proveedores!proveedor_id(nombre)')
+        .in('producto_id', (data || []).filter((p) => p.tipo !== 'servicio').map((p) => p.id))
+      const map = {}
+      for (const row of (ppData || [])) {
+        if (!map[row.producto_id]) map[row.producto_id] = []
+        map[row.producto_id].push({
+          proveedor_id: row.proveedor_id,
+          proveedor_nombre: row.proveedor?.nombre || '?',
+          precio: Number(row.precio_proveedor || 0),
+          moneda: row.moneda || monedaLocal,
+        })
+      }
+      setProvPorProducto(map)
+      setCargandoProv(false)
     } catch (err) { alertError('Error', err.message) }
     finally { setLoading(false) }
-  }, [activeCompanyId])
+  }, [activeCompanyId, monedaLocal])
 
   useEffect(() => { load() }, [load])
 
@@ -47,48 +67,45 @@ export function IntelligentPurchasePage() {
     setSeleccion((prev) => ({ ...prev, [id]: Math.max(0, cant || 0) }))
   }
 
-  function getPrecio(productoId, proveedorId) {
-    if (!proveedorId) return 0
-    const p = productos.find((pr) => pr.id === productoId)
-    return Number(p?.precio_compra || 0)
+  function setProveedor(productoId, proveedorId) {
+    setAsignaciones((prev) => ({ ...prev, [productoId]: proveedorId }))
+  }
+
+  function getPrecioProveedor(productoId, proveedorId) {
+    const provs = provPorProducto[productoId] || []
+    const p = provs.find((pr) => pr.proveedor_id === proveedorId)
+    return p?.precio || 0
+  }
+
+  function getMonedaProveedor(productoId, proveedorId) {
+    const provs = provPorProducto[productoId] || []
+    const p = provs.find((pr) => pr.proveedor_id === proveedorId)
+    return p?.moneda || monedaLocal
   }
 
   const seleccionados = productos.filter((p) => seleccion[p.id] > 0)
 
   async function handleOptimizar() {
-    const items = seleccionados.map((p) => {
-      const catAlm = { materia_prima: true, manufacturado: true, producto: true, subproducto: true, insumo: true }
-      return {
-        producto_id: p.id,
-        producto_nombre: p.nombre,
-        producto_codigo: p.codigo || '',
-        stock_total: 0,
-        stock_minimo: 0,
-        tipo: p.tipo || 'producto',
-        proveedores: [], // se cargan debajo
-      }
-    })
-    if (items.length === 0) return
+    if (seleccionados.length === 0) return
+    // Armar items con proveedores desde el cache
+    const items = seleccionados.map((p) => ({
+      producto_id: p.id,
+      producto_nombre: p.nombre,
+      producto_codigo: p.codigo || '',
+      stock_total: 0,
+      stock_minimo: 0,
+      tipo: p.tipo || 'producto',
+      proveedores: provPorProducto[p.id] || [],
+    })).filter((it) => it.proveedores.length > 0)
 
-    // Cargar proveedores para cada producto
+    if (items.length === 0) { alertError('Error', 'Ningún producto tiene proveedores asociados'); return }
+
     setOptimizando(true)
     try {
-      for (const item of items) {
-        const { data } = await getSupabase().from('proveedor_productos')
-          .select('proveedor_id, precio_proveedor, moneda, proveedor:proveedores!proveedor_id(nombre)')
-          .eq('producto_id', item.producto_id)
-        item.proveedores = (data || []).map((pp) => ({
-          proveedor_id: pp.proveedor_id,
-          proveedor_nombre: pp.proveedor?.nombre || '?',
-          precio: Number(pp.precio_proveedor || 0),
-          moneda: pp.moneda || monedaLocal,
-        }))
-      }
-
       const result = await optimizarConIA(activeCompanyId, items)
       const sug = result?.sugerencias || []
-      const nuevasAsig = {}
-      const nuevasJust = {}
+      const nuevasAsig = { ...asignaciones }
+      const nuevasJust = { ...justificaciones }
 
       for (const s of sug) {
         const match = items.find((it) =>
@@ -108,12 +125,9 @@ export function IntelligentPurchasePage() {
       setAsignaciones(nuevasAsig)
       setJustificaciones(nuevasJust)
 
-      // Pre-llenar cantidades si no se definieron
       setSeleccion((prev) => {
         const next = { ...prev }
-        items.forEach((it) => {
-          if (!next[it.producto_id]) next[it.producto_id] = 1
-        })
+        items.forEach((it) => { if (!next[it.producto_id]) next[it.producto_id] = 1 })
         return next
       })
 
@@ -124,23 +138,20 @@ export function IntelligentPurchasePage() {
 
   async function handleGenerar() {
     const itemsParaOC = seleccionados.filter((p) => asignaciones[p.id])
-    if (itemsParaOC.length === 0) { alertError('Error', 'Primero optimizá con IA para asignar proveedores'); return }
-
+    if (itemsParaOC.length === 0) { alertError('Error', 'Seleccioná un proveedor para cada producto'); return }
     setGenerando(true)
     try {
-      // Construir estructura similar a SugerenciasOCPage
       const lista = itemsParaOC.map((p) => {
         const provId = asignaciones[p.id]
-        const prov = [] // no necesitamos todos los proveedores, solo el asignado
+        const precio = getPrecioProveedor(p.id, provId)
         return {
           producto_id: p.id,
           producto_nombre: p.nombre,
           stock_total: 0,
           stock_minimo: 0,
-          proveedores: [{ proveedor_id: provId, proveedor_nombre: '', precio: getPrecio(p.id, provId), moneda: monedaLocal }],
+          proveedores: [{ proveedor_id: provId, proveedor_nombre: '', precio, moneda: getMonedaProveedor(p.id, provId) }],
         }
       })
-
       const creadas = await generarOCs(activeCompanyId, lista, asignaciones)
       notify(`${creadas.length} OC(s) generada(s): ${creadas.map((c) => c.numero).join(', ')}`)
       if (creadas.length === 1) navigate(`/ordenes-compra/${creadas[0].id}`)
@@ -158,18 +169,18 @@ export function IntelligentPurchasePage() {
           <div>
             <h1>🤖 Compra inteligente</h1>
             <p className="meta">
-              {Object.keys(seleccion).length} producto(s) seleccionados
-              {Object.keys(asignaciones).length > 0 && ` · 🤖 ${Object.keys(asignaciones).length} optimizado(s)`}
+              {Object.keys(seleccion).length} seleccionado(s)
+              {Object.keys(asignaciones).length > 0 && ` · 🤖 ${Object.keys(justificaciones).length} optimizado(s)`}
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {seleccionados.length > 0 && (
               <>
-                <Button onClick={handleOptimizar} disabled={optimizando} variant="ghost">
+                <Button onClick={handleOptimizar} disabled={optimizando || cargandoProv} variant="ghost">
                   {optimizando ? 'Optimizando...' : '🤖 Optimizar con IA'}
                 </Button>
                 <Button onClick={handleGenerar} disabled={generando || Object.keys(asignaciones).length === 0}>
-                  {generando ? 'Generando...' : `📋 Crear OC(s)`}
+                  {generando ? 'Generando...' : '📋 Crear OC(s)'}
                 </Button>
               </>
             )}
@@ -177,14 +188,9 @@ export function IntelligentPurchasePage() {
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <input
-            type="search"
-            placeholder="Buscar productos por nombre o código..."
-            className="form-input"
+          <input type="search" placeholder="Buscar productos por nombre o código..." className="form-input"
             style={{ width: '100%', maxWidth: 400, fontSize: '0.85rem' }}
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
+            value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
         </div>
 
         {filtrados.length === 0 ? (
@@ -197,10 +203,10 @@ export function IntelligentPurchasePage() {
                   <th style={{ width: 40 }}></th>
                   <th>Producto</th>
                   <th>Código</th>
-                  <th>Tipo</th>
-                  <th style={{ textAlign: 'right' }}>Precio compra</th>
-                  <th style={{ width: 100, textAlign: 'center' }}>Cantidad</th>
-                  <th>Proveedor</th>
+                  <th style={{ width: 80, textAlign: 'center' }}>Cantidad</th>
+                  <th style={{ minWidth: 180 }}>Proveedor</th>
+                  <th style={{ textAlign: 'right' }}>Precio</th>
+                  <th style={{ textAlign: 'right' }}>Subtotal</th>
                   <th style={{ width: 30 }}></th>
                 </tr>
               </thead>
@@ -209,11 +215,14 @@ export function IntelligentPurchasePage() {
                   const sel = seleccion[p.id] > 0
                   const provId = asignaciones[p.id]
                   const just = justificaciones[p.id]
+                  const provs = provPorProducto[p.id] || []
+                  const precio = getPrecioProveedor(p.id, provId)
+                  const monedaProv = getMonedaProveedor(p.id, provId)
+                  const cant = sel ? (seleccion[p.id] || 0) : 0
+                  const subtotal = cant * precio
                   return (
                     <tr key={p.id} style={{ opacity: sel ? 1 : 0.6 }}>
-                      <td>
-                        <input type="checkbox" checked={sel} onChange={() => toggleProducto(p.id)} />
-                      </td>
+                      <td><input type="checkbox" checked={sel} onChange={() => toggleProducto(p.id)} /></td>
                       <td>
                         <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
                           {p.nombre}
@@ -221,29 +230,37 @@ export function IntelligentPurchasePage() {
                         </div>
                       </td>
                       <td className="meta">{p.codigo || '—'}</td>
-                      <td style={{ fontSize: '0.78rem' }}>{p.tipo || 'producto'}</td>
-                      <td style={{ textAlign: 'right' }}>{p.precio_compra ? formatMoney(p.precio_compra, monedaLocal) : '—'}</td>
                       <td style={{ textAlign: 'center' }}>
-                        <input
-                          type="number"
-                          min="0"
-                          value={sel ? seleccion[p.id] : ''}
+                        <input type="number" min="0" value={sel ? cant : ''}
                           onChange={(e) => sel && setCantidad(p.id, Number(e.target.value))}
-                          style={{ width: 70, padding: '4px 6px', textAlign: 'right', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: '0.85rem' }}
-                          disabled={!sel}
-                        />
-                      </td>
-                      <td style={{ fontSize: '0.82rem' }}>
-                        {provId ? (
-                          <span>{provId.slice(0, 8)}…</span>
-                        ) : (
-                          <span className="meta">—</span>
-                        )}
+                          style={{ width: 65, padding: '4px 6px', textAlign: 'right', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: '0.85rem' }}
+                          disabled={!sel} />
                       </td>
                       <td>
-                        {sel && (
-                          <button onClick={() => toggleProducto(p.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>
+                        {sel && provs.length > 0 ? (
+                          <select value={provId || ''} onChange={(e) => setProveedor(p.id, e.target.value)}
+                            style={{ width: '100%', padding: '4px 6px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: '0.82rem', background: 'var(--color-surface)' }}>
+                            <option value="">— Seleccionar —</option>
+                            {provs.map((pr) => (
+                              <option key={pr.proveedor_id} value={pr.proveedor_id}>
+                                {pr.proveedor_nombre} ({formatMoney(pr.precio, pr.moneda)})
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="meta" style={{ fontSize: '0.78rem' }}>
+                            {sel ? 'Sin proveedor' : '—'}
+                          </span>
                         )}
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                        {provId ? formatMoney(precio, monedaProv) : '—'}
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 700 }}>
+                        {provId && cant > 0 ? formatMoney(subtotal, monedaProv) : '—'}
+                      </td>
+                      <td>
+                        {sel && <button onClick={() => toggleProducto(p.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>}
                       </td>
                     </tr>
                   )
