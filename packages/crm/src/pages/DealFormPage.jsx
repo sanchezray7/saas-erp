@@ -11,7 +11,7 @@ export function DealFormPage() {
   const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
-  const { activeCompanyId } = useAuth()
+  const { activeCompanyId, user } = useAuth()
   const isEdit = Boolean(id)
   const [loading, setLoading] = useState(isEdit)
   const [submitting, setSubmitting] = useState(false)
@@ -68,6 +68,7 @@ export function DealFormPage() {
         ...form,
         value: form.value ? parseFloat(form.value) : 0,
         probability: form.probability ? parseInt(form.probability, 10) : null,
+        created_by: !isEdit ? user?.id : undefined,
       }
       await guardarDeal(activeCompanyId, payload)
       notify(isEdit ? t('common.actualizado') : t('common.guardado'))
