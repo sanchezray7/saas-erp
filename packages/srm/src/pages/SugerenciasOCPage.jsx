@@ -86,7 +86,7 @@ export function SugerenciasOCPage() {
         if (s.producto_id && s.proveedor_id) {
           nuevasAsig[s.producto_id] = s.proveedor_id
           if (s.cantidad > 0) nuevasCant[s.producto_id] = s.cantidad
-          if (s.justificacion) nuevasJust[s.producto_id] = s.justificacion
+          nuevasJust[s.producto_id] = s.justificacion || s.justificación || s.razon || s.motivo || 'Optimizado por IA'
         }
       }
 
