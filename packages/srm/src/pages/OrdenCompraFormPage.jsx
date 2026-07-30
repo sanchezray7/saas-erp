@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth, Button, FormField, alertError, notify, MONEDA_POR_PAIS } from '@saas/core'
-import { listarProveedores } from '../data/proveedores'
+import { listarProveedores, listarProductosDeProveedor } from '../data/proveedores'
 import { guardarOrden, obtenerOrden } from '../data/ordenesCompra'
 import { listarProductos } from '@saas/productos'
 
@@ -10,11 +10,13 @@ export function OrdenCompraFormPage() {
   const { t } = useTranslation()
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { activeCompanyId, pais } = useAuth()
   const moneda = MONEDA_POR_PAIS[pais] || 'PYG'
   const isEdit = Boolean(id)
   const [proveedores, setProveedores] = useState([])
   const [productos, setProductos] = useState([])
+  const [productosProveedor, setProductosProveedor] = useState({}) // { producto_id: { nombre, precio_proveedor, moneda } }
   const [loading, setLoading] = useState(isEdit)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ proveedor_id: '', numero: '', fecha_entrega_estimada: '', notas: '', moneda })
@@ -24,6 +26,13 @@ export function OrdenCompraFormPage() {
     Promise.all([listarProveedores(activeCompanyId), listarProductos(activeCompanyId)]).then(([provs, prods]) => {
       setProveedores(provs)
       setProductos(prods)
+
+      // Preseleccionar proveedor desde URL
+      const proveedorParam = searchParams.get('proveedor')
+      if (proveedorParam && !isEdit) {
+        setForm((prev) => ({ ...prev, proveedor_id: proveedorParam }))
+        loadProductosProveedor(proveedorParam)
+      }
     }).catch(() => {})
     if (!isEdit) {
       setForm((prev) => ({ ...prev, numero: 'OC-' + Date.now().toString(36).toUpperCase() }))
@@ -32,19 +41,43 @@ export function OrdenCompraFormPage() {
     obtenerOrden(id).then((d) => {
       setForm({ id: d.id, proveedor_id: d.proveedor_id, numero: d.numero, fecha_entrega_estimada: d.fecha_entrega_estimada?.slice(0, 10) || '', notas: d.notas || '', moneda: d.moneda })
       setItems(d.items?.map((i) => ({ producto_id: i.producto_id, descripcion: i.descripcion || '', cantidad: Number(i.cantidad), precio_unitario: Number(i.precio_unitario) })) || [{ producto_id: '', descripcion: '', cantidad: 1, precio_unitario: 0 }])
+      if (d.proveedor_id) loadProductosProveedor(d.proveedor_id)
       setLoading(false)
     }).catch((err) => { alertError('Error', err.message); setLoading(false) })
-  }, [id, isEdit, activeCompanyId])
+  }, [id, isEdit, activeCompanyId, searchParams])
+
+  async function loadProductosProveedor(proveedorId) {
+    if (!proveedorId) { setProductosProveedor({}); return }
+    try {
+      const data = await listarProductosDeProveedor(proveedorId)
+      const map = {}
+      data.forEach((pp) => {
+        map[pp.producto_id] = {
+          nombre: pp.producto?.nombre || '',
+          codigo: pp.producto?.codigo || '',
+          precio_proveedor: Number(pp.precio_proveedor || 0),
+          moneda: pp.moneda || moneda,
+        }
+      })
+      setProductosProveedor(map)
+    } catch { setProductosProveedor({}) }
+  }
 
   function set(field, value) { setForm((prev) => ({ ...prev, [field]: value })) }
 
+  function handleProveedorChange(provId) {
+    set('proveedor_id', provId)
+    loadProductosProveedor(provId)
+  }
+
   function handleSelectProducto(idx, prodId) {
     const prod = productos.find((p) => p.id === prodId)
+    const pp = productosProveedor[prodId]
     setItems((prev) => prev.map((item, i) => i === idx ? {
       producto_id: prodId,
       descripcion: prod?.nombre || '',
       cantidad: item.cantidad,
-      precio_unitario: item.precio_unitario || Number(prod?.precio_compra || 0),
+      precio_unitario: pp?.precio_proveedor || item.precio_unitario || Number(prod?.precio_compra || 0),
     } : item))
   }
 
@@ -70,6 +103,12 @@ export function OrdenCompraFormPage() {
 
   if (loading) return <div className="card"><p className="meta">Cargando...</p></div>
 
+  // Productos visibles: si el proveedor tiene productos asociados, solo esos; si no, todos
+  const tieneFiltro = Object.keys(productosProveedor).length > 0
+  const productosVisibles = tieneFiltro
+    ? productos.filter((p) => productosProveedor[p.id])
+    : productos
+
   return (
     <div className="card">
       <div className="page-header">
@@ -79,7 +118,7 @@ export function OrdenCompraFormPage() {
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <FormField label="Proveedor" as="select" required value={form.proveedor_id} onChange={(e) => set('proveedor_id', e.target.value)}>
+          <FormField label="Proveedor" as="select" required value={form.proveedor_id} onChange={(e) => handleProveedorChange(e.target.value)}>
             <option value="">— Seleccionar —</option>
             {proveedores.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
           </FormField>
@@ -91,6 +130,12 @@ export function OrdenCompraFormPage() {
             <option value="PYG">PYG</option><option value="USD">USD</option><option value="BRL">BRL</option>
           </FormField>
         </div>
+
+        {tieneFiltro && (
+          <p className="meta" style={{ fontSize: '0.78rem', margin: 0 }}>
+            Mostrando solo productos que <strong>{proveedores.find((p) => p.id === form.proveedor_id)?.nombre}</strong> provee según catálogo
+          </p>
+        )}
 
         <div>
           <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 8 }}>Items</h3>
@@ -111,7 +156,11 @@ export function OrdenCompraFormPage() {
                   <td>
                     <select className="form-input" style={{ fontSize: '0.82rem', padding: '4px 8px', width: '100%' }} value={item.producto_id} onChange={(e) => handleSelectProducto(idx, e.target.value)}>
                       <option value="">—</option>
-                      {productos.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                      {productosVisibles.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nombre}{productosProveedor[p.id] ? ` ($${Number(productosProveedor[p.id].precio_proveedor).toLocaleString()})` : ''}
+                        </option>
+                      ))}
                     </select>
                   </td>
                   <td><input className="form-input" style={{ fontSize: '0.82rem', padding: '4px 8px', width: '100%' }} value={item.descripcion} onChange={(e) => updateItem(idx, 'descripcion', e.target.value)} /></td>
