@@ -85,7 +85,10 @@ Devolvé SOLO un JSON válido sin explicaciones adicionales, con este formato ex
     const parsed = JSON.parse(jsonMatch[0])
 
     return json({
-      sugerencias: parsed.sugerencias || [],
+      sugerencias: (parsed.sugerencias || []).map((s: any) => ({
+        ...s,
+        justificacion: s.justificacion || s.justificación || s.razon || s.motivo || 'Optimizado por IA',
+      })),
       model: result.model,
       usage: result.usage,
     })

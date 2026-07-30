@@ -193,8 +193,8 @@ export function SugerenciasOCPage() {
                         <td>
                           <div style={{ fontWeight: 600 }}>
                             {p.producto_nombre}
-                            {justificaciones[p.producto_id] && (
-                              <span title={justificaciones[p.producto_id]} style={{ cursor: 'help', marginLeft: 6, fontSize: '0.72rem', color: '#16a34a' }}>🤖</span>
+                            {(justificaciones[p.producto_id] !== undefined) && (
+                              <span title={justificaciones[p.producto_id] || 'Optimizado por IA'} style={{ cursor: 'help', marginLeft: 6, fontSize: '0.72rem', color: '#16a34a' }}>🤖</span>
                             )}
                           </div>
                           <div className="meta">{p.producto_codigo || ''}</div>
