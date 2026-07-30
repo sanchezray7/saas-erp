@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, Button, Skeleton, formatMoney, alertError, notify } from '@saas/core'
-import { obtenerSugerencias, generarOCs } from '../data/sugerenciasOC'
+import { obtenerSugerencias, generarOCs, optimizarConIA } from '../data/sugerenciasOC'
 
 export function SugerenciasOCPage() {
   const { activeCompanyId } = useAuth()
@@ -9,8 +9,10 @@ export function SugerenciasOCPage() {
   const [productos, setProductos] = useState([])
   const [asignaciones, setAsignaciones] = useState({})
   const [cantidades, setCantidades] = useState({})
+  const [justificaciones, setJustificaciones] = useState({})
   const [loading, setLoading] = useState(true)
   const [generando, setGenerando] = useState(false)
+  const [optimizando, setOptimizando] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -69,6 +71,33 @@ export function SugerenciasOCPage() {
     finally { setGenerando(false) }
   }
 
+  async function handleOptimizarIA() {
+    setOptimizando(true)
+    try {
+      const result = await optimizarConIA(activeCompanyId, productos)
+      const sug = result?.sugerencias || []
+      if (sug.length === 0) { notify('⚠️ La IA no generó sugerencias'); return }
+
+      const nuevasAsig = { ...asignaciones }
+      const nuevasCant = { ...cantidades }
+      const nuevasJust = { ...justificaciones }
+
+      for (const s of sug) {
+        if (s.producto_id && s.proveedor_id) {
+          nuevasAsig[s.producto_id] = s.proveedor_id
+          if (s.cantidad > 0) nuevasCant[s.producto_id] = s.cantidad
+          if (s.justificacion) nuevasJust[s.producto_id] = s.justificacion
+        }
+      }
+
+      setAsignaciones(nuevasAsig)
+      setCantidades(nuevasCant)
+      setJustificaciones(nuevasJust)
+      notify(`🤖 IA optimizó ${sug.length} producto(s)`)
+    } catch (err) { alertError('Error al optimizar con IA', err.message) }
+    finally { setOptimizando(false) }
+  }
+
   const sinProveedor = productos.filter((p) => !asignaciones[p.producto_id] || (p.proveedores?.length || 0) === 0)
 
   if (loading) return <Skeleton.Card />
@@ -85,9 +114,14 @@ export function SugerenciasOCPage() {
             </p>
           </div>
           {gruposArray.length > 0 && (
-            <Button onClick={handleGenerar} disabled={generando}>
-              {generando ? 'Generando...' : `📋 Crear ${gruposArray.length} OC(s)`}
-            </Button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button onClick={handleOptimizarIA} disabled={optimizando} variant="ghost">
+                {optimizando ? 'Optimizando...' : '🤖 Optimizar con IA'}
+              </Button>
+              <Button onClick={handleGenerar} disabled={generando}>
+                {generando ? 'Generando...' : `📋 Crear ${gruposArray.length} OC(s)`}
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -157,7 +191,12 @@ export function SugerenciasOCPage() {
                     return (
                       <tr key={p.producto_id}>
                         <td>
-                          <div style={{ fontWeight: 600 }}>{p.producto_nombre}</div>
+                          <div style={{ fontWeight: 600 }}>
+                            {p.producto_nombre}
+                            {justificaciones[p.producto_id] && (
+                              <span title={justificaciones[p.producto_id]} style={{ cursor: 'help', marginLeft: 6, fontSize: '0.72rem', color: '#16a34a' }}>🤖</span>
+                            )}
+                          </div>
                           <div className="meta">{p.producto_codigo || ''}</div>
                         </td>
                         <td style={{ textAlign: 'center' }}>

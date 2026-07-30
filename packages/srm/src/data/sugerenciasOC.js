@@ -10,6 +10,15 @@ export async function obtenerSugerencias(companyId) {
   return data || []
 }
 
+export async function optimizarConIA(companyId, productos) {
+  const supabase = getSupabase()
+  const { data, error } = await supabase.functions.invoke('sugerir-oc-optimizada', {
+    body: { company_id: companyId, productos },
+  })
+  if (error) throw new Error(error.message)
+  return data
+}
+
 function sugerirCantidad(stockTotal, stockMinimo) {
   const faltante = Math.max(0, stockMinimo - stockTotal)
   return Math.max(faltante, stockMinimo)
