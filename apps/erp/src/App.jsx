@@ -30,7 +30,7 @@ import { FacturarModal, NotasCDPage, NotaCDFormPage, NotaCDDetailPage } from '@s
 import { NAV_SECTION_SRM } from '@saas/srm'
 import { EmpleadosPage, EmpleadoFormPage, EmpleadoDetailPage, OrganigramaPage, AsistenciaPage, AusenciasPage, VacacionesPage, ImportarAsistenciaPage, ReporteAsistenciaPage, TurnosPage, RotacionPatronesPage, PlanificarTurnosPage, ControlHorarioPage, NAV_SECTION_RRHH } from '@saas/rrhh'
 import { ConfigNominaPage, PeriodosNominaPage, PeriodoDetailPage, ReciboPage, NovedadesPage, NominaDashboardPage, LibroSueldosPage, NAV_SECTION_NOMINA } from '@saas/nomina'
-import { ProveedoresPage, ProveedorFormPage, ProveedorDetailPage, OrdenesCompraPage, OrdenCompraFormPage, OrdenCompraDetailPage, CalendarioPagosPage, FacturasProveedorPage, FacturaProveedorFormPage, FacturaProveedorDetailPage, ScorecardsPage, AlertasVencimientoPage, HistorialPreciosPage, SugerenciasOCPage, CuentasPagarPage } from '@saas/srm'
+import { ProveedoresPage, ProveedorFormPage, ProveedorDetailPage, OrdenesCompraPage, OrdenCompraFormPage, OrdenCompraDetailPage, CalendarioPagosPage, FacturasProveedorPage, FacturaProveedorFormPage, FacturaProveedorDetailPage, ScorecardsPage, AlertasVencimientoPage, HistorialPreciosPage, SugerenciasOCPage, IntelligentPurchasePage, CuentasPagarPage } from '@saas/srm'
 import { PosPage, CajasPage, CierresPage, NAV_SECTION_POS } from '@saas/pos'
 import { RecetasPage, OrdenesPage, OrdenDetailPage, DashboardProduccion, NAV_SECTION_PRODUCCION } from '@saas/produccion'
 import { PresupuestosPage, PresupuestoFormPage, PresupuestoDetailPage, OrdenesTrabajoPage, OrdenTrabajoFormPage, OrdenTrabajoDetailPage, NAV_SECTION_SERVICIOS } from '@saas/servicios'
@@ -145,6 +145,7 @@ export default function App() {
                 <Route path="alertas-vencimiento" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><AlertasVencimientoPage /></RequirePermission>} />
                 <Route path="historial-precios" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><HistorialPreciosPage /></RequirePermission>} />
                 <Route path="sugerencias-oc" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><SugerenciasOCPage /></RequirePermission>} />
+                <Route path="ordenes-compra/inteligente" element={<RequirePermission perm={PERMISSIONS.DEAL_CREAR}><IntelligentPurchasePage /></RequirePermission>} />
                 <Route path="cuentas-pagar" element={<RequirePermission perm={PERMISSIONS.DEAL_VER}><CuentasPagarPage /></RequirePermission>} />
                 <Route path="impuestos" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><ImpuestosConfigPage /></RequirePermission>} />
                 <Route path="plan-contable" element={<RequirePermission perm={PERMISSIONS.CONFIG_VER}><PlanContablePage /></RequirePermission>} />
