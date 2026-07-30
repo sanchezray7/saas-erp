@@ -222,7 +222,7 @@ export function IntelligentPurchasePage() {
                       </td>
                       <td className="meta">{p.codigo || '—'}</td>
                       <td style={{ fontSize: '0.78rem' }}>{p.tipo || 'producto'}</td>
-                      <td style={{ textAlign: 'right' }}>{p.precio_compra ? `$${Number(p.precio_compra).toLocaleString()}` : '—'}</td>
+                      <td style={{ textAlign: 'right' }}>{p.precio_compra ? formatMoney(p.precio_compra, monedaLocal) : '—'}</td>
                       <td style={{ textAlign: 'center' }}>
                         <input
                           type="number"
