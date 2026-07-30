@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth, Button, Skeleton, formatMoney, notify, alertError, getSupabase } from '@saas/core'
+import { useAuth, Button, Skeleton, formatMoney, notify, alertError, getSupabase, MONEDA_POR_PAIS } from '@saas/core'
 import { generarOCs, optimizarConIA } from '../data/sugerenciasOC'
 import { listarProductos } from '@saas/productos'
 
 export function IntelligentPurchasePage() {
-  const { activeCompanyId } = useAuth()
+  const { activeCompanyId, pais } = useAuth()
   const navigate = useNavigate()
+  const monedaLocal = MONEDA_POR_PAIS[pais] || 'PYG'
   const [productos, setProductos] = useState([])
   const [busqueda, setBusqueda] = useState('')
   const [seleccion, setSeleccion] = useState({})       // { [producto_id]: cantidad }
@@ -29,6 +30,7 @@ export function IntelligentPurchasePage() {
   useEffect(() => { load() }, [load])
 
   const filtrados = productos.filter((p) => {
+    if (p.tipo === 'servicio') return false
     if (!busqueda) return true
     const q = busqueda.toLowerCase()
     return p.nombre?.toLowerCase().includes(q) || p.codigo?.toLowerCase().includes(q)
@@ -79,7 +81,7 @@ export function IntelligentPurchasePage() {
           proveedor_id: pp.proveedor_id,
           proveedor_nombre: pp.proveedor?.nombre || '?',
           precio: Number(pp.precio_proveedor || 0),
-          moneda: pp.moneda || 'PYG',
+          moneda: pp.moneda || monedaLocal,
         }))
       }
 
@@ -135,7 +137,7 @@ export function IntelligentPurchasePage() {
           producto_nombre: p.nombre,
           stock_total: 0,
           stock_minimo: 0,
-          proveedores: [{ proveedor_id: provId, proveedor_nombre: '', precio: getPrecio(p.id, provId), moneda: 'PYG' }],
+          proveedores: [{ proveedor_id: provId, proveedor_nombre: '', precio: getPrecio(p.id, provId), moneda: monedaLocal }],
         }
       })
 
