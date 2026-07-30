@@ -19,7 +19,7 @@ export function ProveedorFormPage() {
   const [loading, setLoading] = useState(isEdit)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({
-    nombre: '', ruc: '', email: '', telefono: '', direccion: '', sitio_web: '', categoria: '', contact_id: '', estado: 'activo', account_proveedor_id: '',
+    nombre: '', ruc: '', email: '', telefono: '', direccion: '', sitio_web: '', categoria: '', contact_id: '', estado: 'activo', account_proveedor_id: '', payment_terms_days: 30,
   })
 
   function set(field, value) { setForm((prev) => ({ ...prev, [field]: value })) }
@@ -32,6 +32,7 @@ export function ProveedorFormPage() {
         nombre: d.nombre || '', ruc: d.ruc || '', email: d.email || '', telefono: d.telefono || '',
         direccion: d.direccion || '', sitio_web: d.sitio_web || '', categoria: d.categoria || '',
         contact_id: d.contact_id || '', estado: d.estado || 'activo', account_proveedor_id: d.account_proveedor_id || '',
+        payment_terms_days: d.payment_terms_days ?? 30,
       })
       setLoading(false)
     }).catch((err) => { alertError('Error', err.message); setLoading(false) })
@@ -79,6 +80,7 @@ export function ProveedorFormPage() {
           <option value="activo">Activo</option>
           <option value="inactivo">Inactivo</option>
         </FormField>
+        <FormField label="Días de crédito" type="number" min="0" max="365" value={form.payment_terms_days} onChange={(e) => set('payment_terms_days', Number(e.target.value))} hint="Plazo en días que otorga este proveedor para pagar (ej: 15, 30, 60, 90)" />
         <FormField label="Cuenta contable (proveedor)" as="select" value={form.account_proveedor_id} onChange={(e) => set('account_proveedor_id', e.target.value)}>
           <option value="">— Por defecto (2.1.1 Proveedores) —</option>
           {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}

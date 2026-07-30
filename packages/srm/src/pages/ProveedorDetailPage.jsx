@@ -151,6 +151,7 @@ export function ProveedorDetailPage() {
           <DetailField label="Sitio web" value={proveedor.sitio_web} />
           <DetailField label="Estado" value={proveedor.estado} />
           <DetailField label="Contacto vinculado" value={proveedor.contact?.name || '—'} />
+          <DetailField label="Días de crédito" value={proveedor.payment_terms_days ? `${proveedor.payment_terms_days} días` : '—'} />
         </div>
       </div>
 

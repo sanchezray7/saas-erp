@@ -121,7 +121,19 @@ export function FacturaProveedorFormPage() {
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <FormField label="Proveedor" as="select" required value={form.proveedor_id} onChange={(e) => set('proveedor_id', e.target.value)}>
+          <FormField label="Proveedor" as="select" required value={form.proveedor_id} onChange={async (e) => {
+            const provId = e.target.value
+            set('proveedor_id', provId)
+            if (provId) {
+              const { data: prov } = await getSupabase().from('proveedores').select('payment_terms_days').eq('id', provId).single()
+              const days = prov?.payment_terms_days ?? paymentTermsDays
+              setPaymentTermsDays(days)
+              if (!id) {
+                const venc = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+                setForm((prev) => ({ ...prev, fecha_vencimiento: venc }))
+              }
+            }
+          }}>
             <option value="">— Seleccionar —</option>
             {proveedores.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
           </FormField>
