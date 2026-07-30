@@ -99,6 +99,7 @@ export function SugerenciasOCPage() {
   }
 
   const sinProveedor = productos.filter((p) => !asignaciones[p.producto_id] || (p.proveedores?.length || 0) === 0)
+  const justCount = Object.keys(justificaciones).length
 
   if (loading) return <Skeleton.Card />
 
@@ -111,6 +112,7 @@ export function SugerenciasOCPage() {
             <p className="meta">
               {productos.length} producto(s) con stock bajo el mínimo
               {gruposArray.length > 0 && ` — ${gruposArray.length} OC(s) sugerida(s)`}
+              {justCount > 0 && ` · 🤖 ${justCount} optimizado(s)`}
             </p>
           </div>
           {gruposArray.length > 0 && (
@@ -193,7 +195,7 @@ export function SugerenciasOCPage() {
                         <td>
                           <div style={{ fontWeight: 600 }}>
                             {p.producto_nombre}
-                            {(justificaciones[p.producto_id] !== undefined) && (
+                            {Object.prototype.hasOwnProperty.call(justificaciones, p.producto_id) && (
                               <span title={justificaciones[p.producto_id] || 'Optimizado por IA'} style={{ cursor: 'help', marginLeft: 6, fontSize: '0.72rem', color: '#16a34a' }}>🤖</span>
                             )}
                           </div>
