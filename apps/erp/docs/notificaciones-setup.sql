@@ -183,19 +183,21 @@ begin
   if old.stage_id is distinct from new.stage_id then
     select name into stage_name from stages where id = new.stage_id;
 
-    -- Notificar al creador/asignado del deal
-    assignees := array[new.created_by, new.assigned_to];
+    -- Notificar al creador/asignado del deal (solo si no son nulos)
+    assignees := array_remove(array[new.created_by, new.assigned_to], null);
 
-    insert into notifications (company_id, user_id, type, title, message, link, created_by)
-    select
-      new.company_id,
-      unnest(assignees),
-      'deal_stage_change',
-      'Cambio de etapa',
-      'La oportunidad "' || new.title || '" pasó a: ' || coalesce(stage_name, 'sin etapa'),
-      '/deals/' || new.id,
-      new.updated_by
-    on conflict do nothing;
+    if array_length(assignees, 1) > 0 then
+      insert into notifications (company_id, user_id, type, title, message, link, created_by)
+      select
+        new.company_id,
+        unnest(assignees),
+        'deal_stage_change',
+        'Cambio de etapa',
+        'La oportunidad "' || new.title || '" pasó a: ' || coalesce(stage_name, 'sin etapa'),
+        '/deals/' || new.id,
+        new.updated_by
+      on conflict do nothing;
+    end if;
   end if;
   return new;
 end;
