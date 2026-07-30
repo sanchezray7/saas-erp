@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth, Button, Skeleton, FormField, formatMoney, MONEDA_POR_PAIS, getSupabase, alertError, notify } from '@saas/core'
-import { obtenerProveedor } from '../data/proveedores'
+import { obtenerProveedor, listarProductosDeProveedor, agregarProductoAProveedor, eliminarProductoDeProveedor } from '../data/proveedores'
 import { listarOrdenes } from '../data/ordenesCompra'
 import { enviarWhatsApp, WhatsAppTemplateModal, obtenerHistorialWhatsappProveedor } from '@saas/whatsapp'
 import { obtenerScorecardDeProveedor, calcularScorecards } from '../data/scorecard'
@@ -27,6 +27,13 @@ export function ProveedorDetailPage() {
   const [whatsappTemplates, setWhatsappTemplates] = useState([])
   const [alternativas, setAlternativas] = useState([])
   const [altLoading, setAltLoading] = useState(true)
+  const [productosProv, setProductosProv] = useState([])
+  const [productosProvLoading, setProductosProvLoading] = useState(true)
+  const [catalogo, setCatalogo] = useState([])
+  const [nuevoProdId, setNuevoProdId] = useState('')
+  const [nuevoPrecio, setNuevoPrecio] = useState('')
+  const [nuevoMoneda, setNuevoMoneda] = useState(moneda)
+  const [agregando, setAgregando] = useState(false)
 
   useEffect(() => {
     if (!activeCompanyId) return
@@ -79,11 +86,21 @@ export function ProveedorDetailPage() {
 
   useEffect(() => {
     if (!id) return
+    loadProductos()
+    getSupabase().from('catalogo_productos').select('id, nombre, codigo, unidad_medida')
+      .eq('company_id', activeCompanyId).eq('tipo', 'producto').order('nombre')
+      .then(({ data }) => setCatalogo(data || []))
+      .catch(() => {})
     obtenerHistorialWhatsappProveedor(id)
       .then(setWhatsappHistorial)
       .catch(() => {})
       .finally(() => setHistorialLoading(false))
-  }, [id])
+  }, [id, activeCompanyId])
+
+  function loadProductos() {
+    setProductosProvLoading(true)
+    listarProductosDeProveedor(id).then(setProductosProv).catch(() => {}).finally(() => setProductosProvLoading(false))
+  }
 
   useEffect(() => {
     if (!id || !activeCompanyId) return
@@ -241,39 +258,81 @@ export function ProveedorDetailPage() {
         )}
       </div>
 
-      {/* Productos y alternativas */}
+      {/* Productos que provee */}
       <div className="card">
         <div className="page-header" style={{ marginBottom: 12 }}>
           <h3 style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0 }}>📦 Productos que provee</h3>
         </div>
-        {altLoading ? <div className="skeleton" style={{ width: '100%', height: 80 }} /> : alternativas.length === 0 ? (
-          <p className="meta" style={{ textAlign: 'center', padding: 16 }}>Sin productos registrados para este proveedor</p>
+
+        {/* Formulario para agregar producto */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <select value={nuevoProdId} onChange={(e) => setNuevoProdId(e.target.value)}
+            style={{ flex: 1, minWidth: 180, padding: '6px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: '0.85rem', background: 'var(--color-surface)' }}>
+            <option value="">— Seleccionar producto —</option>
+            {catalogo.filter((p) => !productosProv.find((pp) => pp.producto_id === p.id)).map((p) => (
+              <option key={p.id} value={p.id}>{p.codigo ? `[${p.codigo}] ` : ''}{p.nombre} ({p.unidad_medida})</option>
+            ))}
+          </select>
+          <input type="number" value={nuevoPrecio} onChange={(e) => setNuevoPrecio(e.target.value)} placeholder="Precio"
+            style={{ width: 100, padding: '6px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: '0.85rem' }} />
+          <select value={nuevoMoneda} onChange={(e) => setNuevoMoneda(e.target.value)}
+            style={{ width: 80, padding: '6px 8px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', fontSize: '0.85rem' }}>
+            <option value="PYG">PYG</option>
+            <option value="USD">USD</option>
+          </select>
+          <Button size="sm" disabled={!nuevoProdId || agregando} onClick={async () => {
+            setAgregando(true)
+            try {
+              await agregarProductoAProveedor(id, nuevoProdId, Number(nuevoPrecio) || 0, nuevoMoneda)
+              notify('Producto agregado')
+              setNuevoProdId(''); setNuevoPrecio('')
+              loadProductos()
+            } catch (err) { alertError('Error', err.message) }
+            finally { setAgregando(false) }
+          }}>+ Agregar</Button>
+        </div>
+
+        {/* Lista de productos del proveedor */}
+        {productosProvLoading ? <div className="skeleton" style={{ width: '100%', height: 60 }} /> : productosProv.length === 0 ? (
+          <p className="meta" style={{ textAlign: 'center', padding: 16 }}>Sin productos registrados</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {alternativas.map((prod) => (
-              <div key={prod.producto_id} style={{ padding: '8px 12px', background: 'var(--bg-soft)', borderRadius: 6, fontSize: '0.82rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: prod.alternativas?.length > 0 ? 6 : 0 }}>
-                  <span style={{ fontWeight: 600, flex: 1 }}>{prod.producto_nombre}</span>
-                  <span style={{ fontWeight: 700 }}>{formatMoney(prod.precio_actual, prod.moneda)}</span>
-                  {prod.unidad_medida && <span className="meta">{prod.unidad_medida}</span>}
-                </div>
-                {prod.alternativas?.length > 0 && (
-                  <div style={{ paddingLeft: 12, borderLeft: '2px solid var(--color-border)', marginTop: 4 }}>
-                    <div className="meta" style={{ fontSize: '0.72rem', marginBottom: 4 }}>Alternativas:</div>
-                    {prod.alternativas.map((alt) => (
-                      <div key={alt.proveedor_id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.78rem' }}>
-                        <Link to={`/proveedores/${alt.proveedor_id}`} className="link">{alt.proveedor_nombre}</Link>
-                        <span style={{ fontWeight: 600 }}>{formatMoney(alt.precio, alt.moneda)}</span>
-                        {alt.precio < prod.precio_actual && <span className="badge" style={{ background: '#dcfce7', color: '#16a34a', fontSize: '0.7rem' }}>Más barato</span>}
-                      </div>
-                    ))}
-                  </div>
-                )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+            {productosProv.map((pp) => (
+              <div key={`${pp.proveedor_id}-${pp.producto_id}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', background: 'var(--color-surface-alt)', borderRadius: 6, fontSize: '0.85rem' }}>
+                <span style={{ flex: 1, fontWeight: 600 }}>{pp.producto?.nombre || '?'}</span>
+                {pp.producto?.codigo && <span className="meta">[{pp.producto.codigo}]</span>}
+                <span style={{ fontWeight: 700 }}>{formatMoney(pp.precio_proveedor, pp.moneda)}</span>
+                <button onClick={async () => {
+                  if (!window.confirm('¿Quitar este producto?')) return
+                  try { await eliminarProductoDeProveedor(id, pp.producto_id); notify('Producto quitado'); loadProductos() }
+                  catch (err) { alertError('Error', err.message) }
+                }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '1rem' }}>✕</button>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Alternativas (otros proveedores) */}
+      {alternativas.length > 0 && (
+        <div className="card">
+          <h3 style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: 12 }}>🔁 Alternativas más baratas</h3>
+          {alternativas.map((prod) => prod.alternativas?.length > 0 && (
+            <div key={prod.producto_id} style={{ padding: '6px 0', fontSize: '0.82rem' }}>
+              <span style={{ fontWeight: 600 }}>{prod.producto_nombre}</span>
+              <div style={{ paddingLeft: 12, borderLeft: '2px solid var(--color-border)', marginTop: 4 }}>
+                {prod.alternativas.map((alt) => (
+                  <div key={alt.proveedor_id} style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.78rem', marginBottom: 2 }}>
+                    <Link to={`/proveedores/${alt.proveedor_id}`} className="link">{alt.proveedor_nombre}</Link>
+                    <span style={{ fontWeight: 600 }}>{formatMoney(alt.precio, alt.moneda)}</span>
+                    {alt.precio < prod.precio_actual && <span className="badge" style={{ background: '#dcfce7', color: '#16a34a', fontSize: '0.7rem' }}>Más barato</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* WhatsApp historial */}
       <div className="card">
