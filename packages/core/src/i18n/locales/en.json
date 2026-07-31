@@ -435,5 +435,16 @@
     "vendedor": "Seller",
     "deals": "Deals",
     "total": "Total"
+  },
+  "assistant": {
+    "titulo": "Assistant",
+    "bienvenida": "Hi! 👋 I'm the system assistant. Ask me how to do anything: create a supplier, issue an invoice, log attendance…",
+    "placeholder": "Type your question…",
+    "enviar": "Send",
+    "escribiendo": "Typing…",
+    "error": "Oops, I couldn't answer. Try again.",
+    "pregunta1": "How do I create a supplier?",
+    "pregunta2": "How do I issue an invoice?",
+    "pregunta3": "How do I log attendance?"
   }
 }

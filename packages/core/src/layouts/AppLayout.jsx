@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useCompanyConfig } from '../theme/companyConfigContext'
 import { Logo } from '../components/Logo'
+import { AssistantWidget } from '../components/AssistantWidget'
 import { CompanyConfigProvider } from '../theme/CompanyConfigProvider'
 import { Sidebar } from './Sidebar'
 import { PlanOutlet } from './PlanOutlet'
@@ -33,6 +34,8 @@ function LayoutInner({ extraSections = [], footerExtra, headerExtra }) {
           <PlanOutlet />
         </main>
       </div>
+
+      <AssistantWidget />
 
       <style>{`
         .app-content { margin-left: 260px; flex: 1; min-height: 100vh; display: flex; flex-direction: column; }

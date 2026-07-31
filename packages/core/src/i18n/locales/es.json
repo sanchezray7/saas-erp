@@ -435,5 +435,16 @@
     "vendedor": "Vendedor",
     "deals": "Oportunidades",
     "total": "Total"
+  },
+  "assistant": {
+    "titulo": "Asistente",
+    "bienvenida": "Hola! 👋 Soy el asistente del sistema. Preguntame cómo hacer cualquier cosa: crear un proveedor, emitir una factura, registrar asistencia…",
+    "placeholder": "Escribí tu pregunta…",
+    "enviar": "Enviar",
+    "escribiendo": "Escribiendo…",
+    "error": "Ups, no pude responder. Intentá de nuevo.",
+    "pregunta1": "¿Cómo creo un proveedor?",
+    "pregunta2": "¿Cómo emito una factura?",
+    "pregunta3": "¿Cómo registro asistencia?"
   }
 }
