@@ -1,6 +1,23 @@
 -- Asistente virtual: conversaciones y mensajes persistentes
--- Ejecutar después de produccion-setup.sql (usa user_has_company)
--- NOTA: tras correrla, ejecutar: NOTIFY pgrst, 'reload schema';
+-- Autocontenido: define user_has_company si no existe (idempotente, no requiere produccion-setup)
+
+-- Función helper SECURITY DEFINER (igual que en produccion-setup.sql)
+CREATE OR REPLACE FUNCTION public.user_has_company(target_company_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = 'public'
+AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'company_members') THEN
+    RETURN EXISTS (
+      SELECT 1 FROM company_members WHERE user_id = auth.uid() AND company_id = target_company_id
+    );
+  END IF;
+  RETURN true;
+END;
+$$;
 
 -- Tabla de conversaciones (una por usuario+empresa, puede haber varias)
 CREATE TABLE IF NOT EXISTS public.chat_conversaciones (
