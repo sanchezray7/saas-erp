@@ -448,6 +448,16 @@
     "pregunta3": "Como registro presença?",
     "moduloBloqueado": "Este módulo exige o plano {{plan}} ou superior. Atualize seu plano para usá-lo."
   },
+  "cmd": {
+    "ayuda": "Lista as seções de ajuda",
+    "modulos": "Módulos do sistema",
+    "plan": "Info do seu plano",
+    "factura": "Como emitir uma fatura",
+    "stock": "Ver estoque e alertas",
+    "cobrar": "Como cobrar de um cliente",
+    "pos": "Usar o ponto de venda",
+    "reporte": "Relatórios disponíveis"
+  },
   "sug": {
     "crearOc": "Como crio uma ordem de compra?",
     "facturaProveedor": "Como registro uma fatura de fornecedor?",

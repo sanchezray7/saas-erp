@@ -104,13 +104,94 @@ function buildModuleText(mod: any): string {
   return parts.join('\n')
 }
 
+// ---------- Slash commands ----------
+
+interface CommandDef {
+  descripcion: string
+  pregunta?: string // se convierte en pregunta normal (usa búsqueda HELP)
+  especial?: (ctx: any) => string // respuesta instantánea sin IA
+}
+
+const COMMANDS: Record<string, CommandDef> = {
+  '/ayuda': {
+    descripcion: 'Lista las secciones de ayuda disponibles',
+    especial: () => {
+      const lineas = Object.values(HELP).map((s: any) => {
+        const mods = (s.modulos || []).map((m: any) => m.titulo).join(' · ')
+        return `**${s.titulo}** (${s.icon || ''}): ${mods}`
+      })
+      return `Estas son las secciones de ayuda disponibles:\n\n${lineas.join('\n\n')}\n\nEscribime qué querés hacer y te guío paso a paso.`
+    },
+  },
+  '/modulos': {
+    descripcion: 'Lista los módulos del sistema',
+    especial: () => {
+      const modulos = ['📊 Dashboard', '👥 CRM (contactos, oportunidades, actividades)', '🧾 Facturación y cotizaciones', '🛒 Compras (proveedores, OC, facturas proveedor)', '📦 Inventario (stock, kardex, transferencias)', '🧮 Contabilidad (asientos, plan de cuentas)', '💵 POS (cajas, cobros)', '👷 RRHH (empleados, asistencia, turnos)', '💰 Nómina', '🏭 Producción (recetas, órdenes)', '🛠 Servicios (presupuestos, órdenes de trabajo)', '📈 Reportes']
+      return `Módulos del sistema:\n\n${modulos.map((m) => `- ${m}`).join('\n')}\n\nProbá un comando como /factura o /stock para atajos, o preguntame lo que necesites.`
+    },
+  },
+  '/plan': {
+    descripcion: 'Info sobre tu plan actual',
+    pregunta: '¿Qué incluye mi plan actual y qué necesito para activar más módulos?',
+  },
+  '/factura': {
+    descripcion: 'Cómo emitir una factura',
+    pregunta: '¿Cómo emito una factura paso a paso?',
+  },
+  '/stock': {
+    descripcion: 'Cómo ver el stock y alertas',
+    pregunta: '¿Cómo veo el stock de mis productos y las alertas de stock bajo?',
+  },
+  '/cobrar': {
+    descripcion: 'Cómo cobrar a un cliente',
+    pregunta: '¿Cómo registro un cobro de un cliente o una cuota pendiente?',
+  },
+  '/pos': {
+    descripcion: 'Cómo usar el punto de venta',
+    pregunta: '¿Cómo hago un cobro en el POS y cierro la caja?',
+  },
+  '/reporte': {
+    descripcion: 'Qué reportes existen',
+    pregunta: '¿Qué reportes puedo generar?',
+  },
+}
+
+function handleCommand(message: string, contexto: any): { respuesta: string, instantanea: boolean, nuevaPregunta?: string } | null {
+  const [cmdRaw, ...rest] = message.trim().split(/\s+/)
+  const cmd = cmdRaw.toLowerCase()
+  const def = COMMANDS[cmd]
+  if (!def) return null
+
+  if (def.especial) {
+    return { respuesta: def.especial(contexto), instantanea: true }
+  }
+  if (def.pregunta) {
+    // Enriquecer con el resto del comando si hay algo escrito
+    const extra = rest.join(' ').trim()
+    return { respuesta: def.pregunta, instantanea: false, nuevaPregunta: extra ? `${def.pregunta} Además: ${extra}` : def.pregunta }
+  }
+  return null
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
   if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
 
   try {
-    const { message, locale = 'es', contexto = null } = await req.json()
-    if (!message || typeof message !== 'string') return json({ error: 'Falta mensaje' }, 400)
+    const { message: rawMessage, locale = 'es', contexto = null } = await req.json()
+    if (!rawMessage || typeof rawMessage !== 'string') return json({ error: 'Falta mensaje' }, 400)
+
+    // Slash commands: respuesta instantánea o reemplazo de la pregunta
+    let message = rawMessage
+    if (message.trim().startsWith('/')) {
+      const cmdResult = handleCommand(message, contexto)
+      if (cmdResult) {
+        if (cmdResult.instantanea) {
+          return json({ respuesta: cmdResult.respuesta, encontro_guia: true, modulos: [], model: null, comando: true })
+        }
+        if (cmdResult.nuevaPregunta) message = cmdResult.nuevaPregunta
+      }
+    }
 
     const relevant = findRelevantModules(message)
     const hasHelp = relevant.length > 0

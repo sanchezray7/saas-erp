@@ -448,6 +448,16 @@
     "pregunta3": "¿Cómo registro asistencia?",
     "moduloBloqueado": "Este módulo requiere el plan {{plan}} o superior. Actualizá tu plan para usarlo."
   },
+  "cmd": {
+    "ayuda": "Lista las secciones de ayuda",
+    "modulos": "Módulos del sistema",
+    "plan": "Info de tu plan",
+    "factura": "Cómo emitir una factura",
+    "stock": "Ver stock y alertas",
+    "cobrar": "Cómo cobrar a un cliente",
+    "pos": "Usar el punto de venta",
+    "reporte": "Reportes disponibles"
+  },
   "sug": {
     "crearOc": "¿Cómo creo una orden de compra?",
     "facturaProveedor": "¿Cómo registro una factura de proveedor?",

@@ -6,8 +6,10 @@ import { getPathContext } from '../data/pathContext'
 import { useAuth } from '../auth/context'
 import { usePlan } from '../data/plan'
 import { PLAN_LABELS } from '../data/planConfig'
+import { getOrCreateConversacion, listarMensajes, guardarMensaje, borrarConversaciones } from '../data/chat'
 
 const STORAGE_KEY = 'asistente_chat_v1'
+const CONV_KEY = 'asistente_conv_id'
 
 // Chips contextuales por feature (sugerencias proactivas según la página)
 const FEATURE_SUGGESTIONS = {
@@ -71,7 +73,7 @@ function boldify(text) {
 export function AssistantWidget() {
   const { t, i18n } = useTranslation()
   const location = useLocation()
-  const { activeCompanyId, companies } = useAuth()
+  const { activeCompanyId, companies, user } = useAuth()
   const { plan, featureEnabled, featurePlan } = usePlan({ companyId: activeCompanyId })
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState(() => {
@@ -85,11 +87,35 @@ export function AssistantWidget() {
   const [error, setError] = useState('')
   const listRef = useRef(null)
   const inputRef = useRef(null)
+  const convIdRef = useRef(null)
+  const dbReadyRef = useRef(false)
 
   const ctx = getPathContext(location.pathname)
   const modBloqueado = ctx.featureKey ? !featureEnabled(ctx.featureKey) : false
-  const planLabel = PLAN_LABELS[plan]?.name || plan
   const planActual = companies.find((c) => c.id === activeCompanyId)?.plan || plan
+
+  // Cargar conversación desde la DB (reemplaza el estado local si hay sesión)
+  useEffect(() => {
+    if (!activeCompanyId || !user?.id) return
+    let alive = true
+    ;(async () => {
+      try {
+        const conv = await getOrCreateConversacion(activeCompanyId, user.id)
+        if (!alive) return
+        convIdRef.current = conv.id
+        localStorage.setItem(CONV_KEY, conv.id)
+        const historial = await listarMensajes(conv.id)
+        if (!alive) return
+        dbReadyRef.current = true
+        if (historial.length > 0) setMessages(historial)
+        else localStorage.removeItem(STORAGE_KEY)
+      } catch {
+        // Si la tabla no existe o hay RLS, seguimos con localStorage
+        dbReadyRef.current = false
+      }
+    })()
+    return () => { alive = false }
+  }, [activeCompanyId, user?.id])
 
   // Chips contextuales: prioriza la feature de la página actual
   const sugerencias = ctx.featureKey && FEATURE_SUGGESTIONS[ctx.featureKey]
@@ -113,6 +139,11 @@ export function AssistantWidget() {
     setInput('')
     setError('')
     setLoading(true)
+
+    if (convIdRef.current) {
+      guardarMensaje(convIdRef.current, 'user', message).catch(() => {})
+    }
+
     try {
       const supabase = getSupabase()
       const { data, error: fnError } = await supabase.functions.invoke('asistente', {
@@ -127,7 +158,11 @@ export function AssistantWidget() {
         },
       })
       if (fnError) throw fnError
-      setMessages((m) => [...m, { role: 'assistant', content: data.respuesta || t('assistant.error') }])
+      const respuesta = data.respuesta || t('assistant.error')
+      setMessages((m) => [...m, { role: 'assistant', content: respuesta }])
+      if (convIdRef.current) {
+        guardarMensaje(convIdRef.current, 'assistant', respuesta).catch(() => {})
+      }
     } catch {
       setMessages((m) => [...m, { role: 'assistant', content: t('assistant.error') }])
       setError(t('assistant.error'))
@@ -136,7 +171,23 @@ export function AssistantWidget() {
     }
   }
 
-  const clearChat = () => setMessages([])
+  const clearChat = async () => {
+    setMessages([])
+    if (convIdRef.current && activeCompanyId && user?.id) {
+      borrarConversaciones(activeCompanyId, user.id).then(() => {
+        localStorage.removeItem(STORAGE_KEY)
+        localStorage.removeItem(CONV_KEY)
+        convIdRef.current = null
+        getOrCreateConversacion(activeCompanyId, user.id).then((conv) => {
+          convIdRef.current = conv.id
+          localStorage.setItem(CONV_KEY, conv.id)
+        }).catch(() => {})
+      }).catch(() => {})
+    }
+  }
+
+  const slashActive = input.startsWith('/')
+  const COMMANDS_LIST = ['/ayuda', '/modulos', '/plan', '/factura', '/stock', '/cobrar', '/pos', '/reporte']
 
   return (
     <>
@@ -203,14 +254,26 @@ export function AssistantWidget() {
           </div>
 
           <div className="asistente-footer">
-            <input
-              ref={inputRef}
-              className="asistente-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') send() }}
-              placeholder={t('assistant.placeholder')}
-            />
+            <div className="asistente-inputwrap">
+              {slashActive && (
+                <div className="asistente-cmds">
+                  {COMMANDS_LIST.map((cmd) => (
+                    <button key={cmd} type="button" onClick={() => setInput(cmd + ' ')}>
+                      <code>{cmd}</code>
+                      <span>{t(`cmd.${cmd.slice(1)}`)}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <input
+                ref={inputRef}
+                className="asistente-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') send() }}
+                placeholder={t('assistant.placeholder')}
+              />
+            </div>
             <button type="button" className="asistente-send" onClick={() => send()} disabled={loading || !input.trim()}>
               ➤
             </button>
@@ -277,7 +340,22 @@ export function AssistantWidget() {
 
         .asistente-error { color: var(--color-danger); font-size: 0.8rem; }
 
-        .asistente-footer { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--color-border); background: var(--color-surface); }
+        .asistente-footer { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--color-border); background: var(--color-surface); position: relative; }
+        .asistente-inputwrap { flex: 1; position: relative; }
+        .asistente-cmds {
+          position: absolute; bottom: calc(100% + 8px); left: 0; right: 0;
+          background: var(--color-surface); border: 1px solid var(--color-border);
+          border-radius: var(--radius); box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+          max-height: 220px; overflow-y: auto; z-index: 5;
+        }
+        .asistente-cmds button {
+          display: flex; align-items: center; gap: 10px; width: 100%;
+          padding: 9px 12px; background: none; border: none; cursor: pointer;
+          color: var(--color-text); font-size: 0.85rem; text-align: left;
+        }
+        .asistente-cmds button:hover { background: var(--color-surface-alt); }
+        .asistente-cmds code { color: var(--color-accent); font-weight: 600; font-family: var(--font-mono); }
+        .asistente-cmds span { color: var(--color-text-muted); }
         .asistente-input {
           flex: 1; padding: 10px 12px; border-radius: var(--radius);
           border: 1px solid var(--color-border); background: var(--color-surface-alt); color: var(--color-text); font-size: 0.9rem;

@@ -448,6 +448,16 @@
     "pregunta3": "How do I log attendance?",
     "moduloBloqueado": "This module requires the {{plan}} plan or higher. Upgrade your plan to use it."
   },
+  "cmd": {
+    "ayuda": "List help sections",
+    "modulos": "System modules",
+    "plan": "Your plan info",
+    "factura": "How to issue an invoice",
+    "stock": "View stock and alerts",
+    "cobrar": "How to collect from a client",
+    "pos": "Use the point of sale",
+    "reporte": "Available reports"
+  },
   "sug": {
     "crearOc": "How do I create a purchase order?",
     "facturaProveedor": "How do I record a supplier invoice?",
