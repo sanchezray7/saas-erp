@@ -12,3 +12,4 @@ netlify/functions
 
 # Landing page (repo separado)
 landing/
+supabase/.temp/
