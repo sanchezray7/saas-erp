@@ -109,11 +109,18 @@ Deno.serve(async (req: Request) => {
   if (req.method !== 'POST') return json({ error: 'Método no permitido' }, 405)
 
   try {
-    const { message, locale = 'es' } = await req.json()
+    const { message, locale = 'es', contexto = null } = await req.json()
     if (!message || typeof message !== 'string') return json({ error: 'Falta mensaje' }, 400)
 
     const relevant = findRelevantModules(message)
     const hasHelp = relevant.length > 0
+
+    const idioma = locale === 'en' ? 'inglés' : locale === 'pt-BR' ? 'portugués' : 'español'
+    const ctxBlock = contexto
+      ? `El usuario está ahora en el módulo "${contexto.modulo || 'inicio'}" (ruta ${contexto.ruta || '/'}).
+El plan de su empresa es: ${contexto.plan || 'free'}.
+${contexto.modulo ? `Si su pregunta es sobre otro módulo, priorizá de todos modos ayudarlo con lo que pide.` : ''}`
+      : ''
 
     let systemPrompt: string
     let userPrompt: string
@@ -126,7 +133,8 @@ Deno.serve(async (req: Request) => {
       systemPrompt = `Sos el asistente virtual del ERP "Saas Empresarial".
 Tenés acceso a guías oficiales del sistema. Respondé SIEMPRE basándote en la guía provista, en lenguaje claro y amigable.
 Si la pregunta no coincide exactamente con la guía, usala como referencia y respondé lo mejor posible.
-Formateá la respuesta con pasos numerados cuando corresponda. Respondé en ${locale === 'en' ? 'inglés' : locale === 'pt-BR' ? 'portugués' : 'español'}.`
+Formateá la respuesta con pasos numerados cuando corresponda. Respondé en ${idioma}.
+${ctxBlock}`
 
       userPrompt = `Pregunta del usuario: "${message}"
 
@@ -138,7 +146,8 @@ Respondé ayudando al usuario paso a paso.`
       systemPrompt = `Sos el asistente virtual del ERP "Saas Empresarial".
 Ayudás a los usuarios a usar el sistema: CRM, facturación, inventario, compras, contabilidad, RRHH, nómina, POS, producción y servicios.
 Respondé de forma clara y amigable. Si no sabés algo específico, orientá al usuario a la sección Ayuda del sistema.
-Respondé en ${locale === 'en' ? 'inglés' : locale === 'pt-BR' ? 'portugués' : 'español'}.`
+Respondé en ${idioma}.
+${ctxBlock}`
 
       userPrompt = `Pregunta del usuario: "${message}"`
     }

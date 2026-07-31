@@ -445,6 +445,30 @@
     "error": "Ops, não consegui responder. Tente novamente.",
     "pregunta1": "Como crio um fornecedor?",
     "pregunta2": "Como emito uma fatura?",
-    "pregunta3": "Como registro presença?"
+    "pregunta3": "Como registro presença?",
+    "moduloBloqueado": "Este módulo exige o plano {{plan}} ou superior. Atualize seu plano para usá-lo."
+  },
+  "sug": {
+    "crearOc": "Como crio uma ordem de compra?",
+    "facturaProveedor": "Como registro uma fatura de fornecedor?",
+    "transferencia": "Como faço uma transferência de estoque?",
+    "kardex": "O que é o kardex e como uso?",
+    "asiento": "Como registro um lançamento contábil?",
+    "planCuentas": "Como configuro o plano de contas?",
+    "aging": "Como leio o aging de saldos?",
+    "conciliacion": "Como faço uma conciliação bancária?",
+    "asistencia": "Como registro presença?",
+    "vacaciones": "Como gerencio férias?",
+    "liquidarNomina": "Como fecho um período de folha?",
+    "reciboSueldo": "Como gero recibos de salário?",
+    "cobroPos": "Como faço um pagamento no POS?",
+    "cierreCaja": "Como fecho o caixa?",
+    "ordenProduccion": "Como crio uma ordem de produção?",
+    "receta": "Como crio uma receita?",
+    "presupuestoServicio": "Como faço um orçamento de serviço?",
+    "ordenTrabajo": "Como crio uma ordem de trabalho?",
+    "notaCD": "Como faço uma nota de crédito?",
+    "reportes": "Quais relatórios posso ver?",
+    "activarModulo": "O módulo {{modulo}} está bloqueado. Como ativo?"
   }
 }

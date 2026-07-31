@@ -445,6 +445,30 @@
     "error": "Oops, I couldn't answer. Try again.",
     "pregunta1": "How do I create a supplier?",
     "pregunta2": "How do I issue an invoice?",
-    "pregunta3": "How do I log attendance?"
+    "pregunta3": "How do I log attendance?",
+    "moduloBloqueado": "This module requires the {{plan}} plan or higher. Upgrade your plan to use it."
+  },
+  "sug": {
+    "crearOc": "How do I create a purchase order?",
+    "facturaProveedor": "How do I record a supplier invoice?",
+    "transferencia": "How do I make a stock transfer?",
+    "kardex": "What is the kardex and how do I use it?",
+    "asiento": "How do I record an accounting entry?",
+    "planCuentas": "How do I set up the chart of accounts?",
+    "aging": "How do I read the aging report?",
+    "conciliacion": "How do I do a bank reconciliation?",
+    "asistencia": "How do I log attendance?",
+    "vacaciones": "How do I manage vacations?",
+    "liquidarNomina": "How do I settle a payroll period?",
+    "reciboSueldo": "How do I generate payslips?",
+    "cobroPos": "How do I make a POS payment?",
+    "cierreCaja": "How do I close the cash register?",
+    "ordenProduccion": "How do I create a production order?",
+    "receta": "How do I create a recipe?",
+    "presupuestoServicio": "How do I create a service quote?",
+    "ordenTrabajo": "How do I create a work order?",
+    "notaCD": "How do I issue a credit note?",
+    "reportes": "What reports can I view?",
+    "activarModulo": "The {{modulo}} module is locked. How do I activate it?"
   }
 }

@@ -445,6 +445,30 @@
     "error": "Ups, no pude responder. Intentá de nuevo.",
     "pregunta1": "¿Cómo creo un proveedor?",
     "pregunta2": "¿Cómo emito una factura?",
-    "pregunta3": "¿Cómo registro asistencia?"
+    "pregunta3": "¿Cómo registro asistencia?",
+    "moduloBloqueado": "Este módulo requiere el plan {{plan}} o superior. Actualizá tu plan para usarlo."
+  },
+  "sug": {
+    "crearOc": "¿Cómo creo una orden de compra?",
+    "facturaProveedor": "¿Cómo registro una factura de proveedor?",
+    "transferencia": "¿Cómo hago una transferencia de stock?",
+    "kardex": "¿Qué es el kardex y cómo lo uso?",
+    "asiento": "¿Cómo registro un asiento contable?",
+    "planCuentas": "¿Cómo configuro el plan de cuentas?",
+    "aging": "¿Cómo leo el aging de saldos?",
+    "conciliacion": "¿Cómo hago una conciliación bancaria?",
+    "asistencia": "¿Cómo registro asistencia?",
+    "vacaciones": "¿Cómo gestiono vacaciones?",
+    "liquidarNomina": "¿Cómo liquido un período de nómina?",
+    "reciboSueldo": "¿Cómo genero recibos de sueldo?",
+    "cobroPos": "¿Cómo hago un cobro en el POS?",
+    "cierreCaja": "¿Cómo hago el cierre de caja?",
+    "ordenProduccion": "¿Cómo creo una orden de producción?",
+    "receta": "¿Cómo creo una receta?",
+    "presupuestoServicio": "¿Cómo hago un presupuesto de servicio?",
+    "ordenTrabajo": "¿Cómo creo una orden de trabajo?",
+    "notaCD": "¿Cómo hago una nota de crédito?",
+    "reportes": "¿Qué reportes puedo ver?",
+    "activarModulo": "El módulo {{modulo}} está bloqueado. ¿Cómo lo activo?"
   }
 }

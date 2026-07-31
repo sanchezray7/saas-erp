@@ -35,6 +35,7 @@ export { setLocaleFromPais } from './i18n/index'
 
 export { HelpPage } from './pages/HelpPage'
 export { HELP } from './data/helpContent'
+export { PATH_FEATURES, FEATURE_MODULE_NAMES, getPathContext } from './data/pathContext'
 
 export { ProtectedRoute } from './routes/ProtectedRoute'
 export { RequireCompany } from './routes/RequireCompany'

@@ -1,8 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router-dom'
 import { getSupabase } from '../lib/supabase'
+import { getPathContext } from '../data/pathContext'
+import { useAuth } from '../auth/context'
+import { usePlan } from '../data/plan'
+import { PLAN_LABELS } from '../data/planConfig'
 
 const STORAGE_KEY = 'asistente_chat_v1'
+
+// Chips contextuales por feature (sugerencias proactivas según la página)
+const FEATURE_SUGGESTIONS = {
+  srm: ['sug.crearOc', 'sug.facturaProveedor'],
+  inventario: ['sug.transferencia', 'sug.kardex'],
+  contabilidad: ['sug.asiento', 'sug.planCuentas'],
+  contabilidad_avanzada: ['sug.aging', 'sug.conciliacion'],
+  rrhh: ['sug.asistencia', 'sug.vacaciones'],
+  nomina: ['sug.liquidarNomina', 'sug.reciboSueldo'],
+  pos: ['sug.cobroPos', 'sug.cierreCaja'],
+  produccion: ['sug.ordenProduccion', 'sug.receta'],
+  servicios: ['sug.presupuestoServicio', 'sug.ordenTrabajo'],
+  notas_cd: ['sug.notaCD'],
+  reportes: ['sug.reportes'],
+}
 
 // Renderiza texto con soporte básico de markdown (**negrita**, listas)
 function renderText(text) {
@@ -50,6 +70,9 @@ function boldify(text) {
 
 export function AssistantWidget() {
   const { t, i18n } = useTranslation()
+  const location = useLocation()
+  const { activeCompanyId, companies } = useAuth()
+  const { plan, featureEnabled, featurePlan } = usePlan({ companyId: activeCompanyId })
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState(() => {
     try {
@@ -62,6 +85,16 @@ export function AssistantWidget() {
   const [error, setError] = useState('')
   const listRef = useRef(null)
   const inputRef = useRef(null)
+
+  const ctx = getPathContext(location.pathname)
+  const modBloqueado = ctx.featureKey ? !featureEnabled(ctx.featureKey) : false
+  const planLabel = PLAN_LABELS[plan]?.name || plan
+  const planActual = companies.find((c) => c.id === activeCompanyId)?.plan || plan
+
+  // Chips contextuales: prioriza la feature de la página actual
+  const sugerencias = ctx.featureKey && FEATURE_SUGGESTIONS[ctx.featureKey]
+    ? FEATURE_SUGGESTIONS[ctx.featureKey]
+    : ['assistant.pregunta1', 'assistant.pregunta2', 'assistant.pregunta3']
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)) } catch { /* noop */ }
@@ -83,7 +116,15 @@ export function AssistantWidget() {
     try {
       const supabase = getSupabase()
       const { data, error: fnError } = await supabase.functions.invoke('asistente', {
-        body: { message, locale },
+        body: {
+          message,
+          locale,
+          contexto: {
+            ruta: location.pathname,
+            modulo: ctx.modulo,
+            plan: planActual,
+          },
+        },
       })
       if (fnError) throw fnError
       setMessages((m) => [...m, { role: 'assistant', content: data.respuesta || t('assistant.error') }])
@@ -120,10 +161,25 @@ export function AssistantWidget() {
             {messages.length === 0 && (
               <div className="asistente-welcome">
                 <p>{t('assistant.bienvenida')}</p>
+                {modBloqueado && ctx.featureKey && (
+                  <div className="asistente-aviso">
+                    <p><strong>🔒 {ctx.modulo}</strong></p>
+                    <p className="asistente-aviso-text">
+                      {t('assistant.moduloBloqueado', { plan: PLAN_LABELS[featurePlan(ctx.featureKey)]?.name })}
+                    </p>
+                    <div className="asistente-chips">
+                      <button type="button" onClick={() => send(t('sug.activarModulo', { modulo: ctx.modulo }))}>
+                        {t('sug.activarModulo', { modulo: ctx.modulo })}
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <div className="asistente-chips">
-                  <button type="button" onClick={() => send(t('assistant.pregunta1'))}>{t('assistant.pregunta1')}</button>
-                  <button type="button" onClick={() => send(t('assistant.pregunta2'))}>{t('assistant.pregunta2')}</button>
-                  <button type="button" onClick={() => send(t('assistant.pregunta3'))}>{t('assistant.pregunta3')}</button>
+                  {sugerencias.map((key) => (
+                    <button key={key} type="button" onClick={() => send(t(key))}>
+                      {t(key)}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -189,7 +245,12 @@ export function AssistantWidget() {
         .asistente-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
         .asistente-welcome { color: var(--color-text-muted); font-size: 0.9rem; line-height: 1.5; }
         .asistente-chips { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-        .asistente-chips button {
+        .asistente-aviso {
+          margin-top: 12px; padding: 12px; border-radius: var(--radius);
+          border: 1px solid var(--color-warning); background: var(--color-warning-bg); color: var(--color-text);
+          font-size: 0.85rem; line-height: 1.5;
+        }
+        .asistente-aviso-text { margin-top: 4px; }        .asistente-chips button {
           text-align: left; padding: 9px 12px; border-radius: var(--radius);
           border: 1px solid var(--color-border); background: var(--color-surface-alt); color: var(--color-text);
           cursor: pointer; font-size: 0.85rem;
