@@ -1295,16 +1295,34 @@ function SucursalForm({ rif, companyId }) {
         .select('id').eq('company_id', original.id).eq('user_id', user.id).eq('role', 'admin').maybeSingle()
       if (!member) throw new Error('Solo un administrador puede crear sucursales')
 
-      // Crear sucursal
-      const { data: company, error: createError } = await supabase.from('companies').insert({
-        name: nombre.trim(), rif, pais: 'PY', plan: original.plan,
-        status: 'active', parent_company_id: original.id,
-      }).select('id').single()
-      if (createError) throw createError
+      let companyId = null
 
-      await supabase.from('company_config').insert({ company_id: company.id, app_name: nombre.trim() }).maybeSingle()
-      await supabase.from('pipelines').insert({ company_id: company.id, name: 'Pipeline por defecto', description: 'Pipeline principal de ventas' }).maybeSingle()
-      await supabase.from('company_members').insert({ company_id: company.id, user_id: user.id, role: 'admin' })
+      // 1) Intentar RPC crear_sucursal (SECURITY DEFINER, transaccional)
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('crear_sucursal', {
+        p_user_id: user.id,
+        p_company_name: nombre.trim(),
+        p_rif: rif,
+        p_pais: 'PY',
+      })
+      if (!rpcError && rpcResult) {
+        companyId = rpcResult
+      } else if (!rpcError?.message?.includes('does not exist')) {
+        throw rpcError
+      }
+
+      // 2) Fallback: queries directas (si el RPC no está desplegado)
+      if (!companyId) {
+        const { data: company, error: createError } = await supabase.from('companies').insert({
+          name: nombre.trim(), rif, pais: 'PY', plan: original.plan,
+          status: 'active', parent_company_id: original.id,
+        }).select('id').single()
+        if (createError) throw createError
+        companyId = company.id
+
+        await supabase.from('company_config').insert({ company_id: companyId, app_name: nombre.trim() }).maybeSingle()
+        await supabase.from('pipelines').insert({ company_id: companyId, name: 'Pipeline por defecto', description: 'Pipeline principal de ventas' }).maybeSingle()
+        await supabase.from('company_members').insert({ company_id: companyId, user_id: user.id, role: 'admin' })
+      }
 
       notify('Sucursal creada correctamente')
       setNombre('')
